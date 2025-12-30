@@ -62,6 +62,20 @@ export function Header() {
             </span>
           </Link>
 
+          {/* Mobile Search */}
+          <div className="flex md:hidden flex-1 mx-2">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="search"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-9 pl-9 pr-3 rounded-full border border-border bg-muted/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              />
+            </div>
+          </div>
+
           {/* Desktop Search */}
           <div className="hidden md:flex flex-1 max-w-xl mx-4">
             <div className="relative w-full">

@@ -1,7 +1,8 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
-  Search,
+  Heart,
+  Flame,
   Store,
   PlusCircle,
   MessageCircle,
@@ -17,7 +18,10 @@ export function MobileBottomNav() {
   // Build nav items dynamically based on user status
   const navItems = [
     { path: '/', label: 'Home', icon: Home, requiresAuth: false },
-    { path: '/products', label: 'Browse', icon: Search, requiresAuth: false },
+    // Second item: Wishlist for logged in users, Hot Deals for guests
+    isAuthenticated
+      ? { path: '/wishlist', label: 'Wishlist', icon: Heart, requiresAuth: true }
+      : { path: '/products?sort=hot', label: 'Hot Deals', icon: Flame, requiresAuth: false, isHot: true },
     // Middle item: My Store for owners, Sell for non-owners
     user?.isOwner 
       ? { path: '/seller/dashboard', label: 'My Store', icon: Store, requiresAuth: true, isStore: true }
@@ -36,10 +40,10 @@ export function MobileBottomNav() {
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur border-t border-border safe-area-bottom">
       <div className="flex items-center justify-around h-16">
-        {navItems.map(({ path, label, icon: Icon, requiresAuth, isProfile, isStore, isSell }) => {
+        {navItems.map(({ path, label, icon: Icon, requiresAuth, isProfile, isStore, isSell, isHot }) => {
           const isActive = path === '/' 
             ? location.pathname === '/' 
-            : location.pathname.startsWith(path);
+            : location.pathname.startsWith(path.split('?')[0]);
 
           // Check if this is the profile tab and user has a profile image
           const showProfileImage = isProfile && isAuthenticated && user?.profileImage;
@@ -76,6 +80,8 @@ export function MobileBottomNav() {
                   }`}>
                     <Icon className="h-5 w-5 text-white" />
                   </div>
+                ) : isHot ? (
+                  <Icon className={`h-5 w-5 ${isActive ? 'stroke-[2.5px] text-orange-500' : 'text-orange-500'}`} />
                 ) : (
                   <Icon className={`h-5 w-5 ${isActive ? 'stroke-[2.5px]' : ''}`} />
                 )}
