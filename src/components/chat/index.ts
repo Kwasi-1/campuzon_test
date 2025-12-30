@@ -1,0 +1,1 @@
+export { ProductChat } from './ProductChat';
