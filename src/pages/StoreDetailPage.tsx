@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useState, useMemo } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   Star,
   ShoppingBag,
@@ -9,56 +9,86 @@ import {
   Share2,
   Phone,
   Mail,
-  Clock,
-  Package,
-  Award,
-} from 'lucide-react';
-import { Button, Badge, Breadcrumb, Alert } from '@/components/ui';
-import { ProductGrid } from '@/components/products';
-import { mockStores, mockProducts } from '@/lib/mockData';
-import { useAuthStore } from '@/stores';
+  ChevronRight,
+  Search,
+} from "lucide-react";
+import { Button, Badge, Alert, Pagination } from "@/components/ui";
+import { ProductGrid } from "@/components/products";
+import { mockStores, mockProducts } from "@/lib/mockData";
+import { useAuthStore } from "@/stores";
+import { cn } from "@/lib/utils";
 
-type SortOption = 'newest' | 'price-low' | 'price-high' | 'popular' | 'rating';
+type SortOption = "newest" | "price-low" | "price-high" | "popular" | "rating";
+
+const ITEMS_PER_PAGE = 24;
 
 export function StoreDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  
-  const [sortBy, setSortBy] = useState<SortOption>('newest');
+
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   // Find store by slug
   const store = mockStores.find((s) => s.storeSlug === slug);
-  
+
   // Get store products
   const storeProducts = useMemo(() => {
     if (!store) return [];
     return mockProducts.filter((p) => p.storeID === store.id);
   }, [store]);
 
+  // Get unique categories from store products
+  const categories = useMemo(() => {
+    const cats = new Set(storeProducts.map((p) => p.category));
+    return Array.from(cats);
+  }, [storeProducts]);
+
+  // Filter products by category
+  const filteredProducts = useMemo(() => {
+    if (selectedCategory === "all") return storeProducts;
+    return storeProducts.filter((p) => p.category === selectedCategory);
+  }, [storeProducts, selectedCategory]);
+
   // Sort products
   const sortedProducts = useMemo(() => {
-    const products = [...storeProducts];
+    const products = [...filteredProducts];
     switch (sortBy) {
-      case 'price-low':
+      case "price-low":
         return products.sort((a, b) => a.price - b.price);
-      case 'price-high':
+      case "price-high":
         return products.sort((a, b) => b.price - a.price);
-      case 'popular':
+      case "popular":
         return products.sort((a, b) => b.soldCount - a.soldCount);
-      case 'rating':
+      case "rating":
         return products.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-      case 'newest':
+      case "newest":
       default:
         return products.sort(
-          (a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime()
+          (a, b) =>
+            new Date(b.dateCreated).getTime() -
+            new Date(a.dateCreated).getTime()
         );
     }
-  }, [storeProducts, sortBy]);
+  }, [filteredProducts, sortBy]);
+
+  // Pagination
+  const totalPages = Math.ceil(sortedProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return sortedProducts.slice(start, start + ITEMS_PER_PAGE);
+  }, [sortedProducts, currentPage]);
+
+  // Reset to page 1 when filters change
+  useMemo(() => {
+    setCurrentPage(1);
+  }, [sortBy, selectedCategory]);
 
   const handleContactSeller = () => {
     if (!isAuthenticated) {
-      navigate('/login', { state: { from: `/stores/${slug}` } });
+      navigate("/login", { state: { from: `/stores/${slug}` } });
       return;
     }
     // Navigate to messages with this store
@@ -69,7 +99,7 @@ export function StoreDetailPage() {
     try {
       await navigator.share({
         title: store?.storeName,
-        text: store?.description || '',
+        text: store?.description || "",
         url: window.location.href,
       });
     } catch {
@@ -91,196 +121,345 @@ export function StoreDetailPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Store Banner */}
-      <div className="relative h-48 md:h-64 bg-gradient-to-br from-primary/20 to-secondary/20 overflow-hidden">
-        {store.banner && (
+    <div className="min-h-screen bg-white">
+      {/* Store Header Banner */}
+      <div className="relative h-48 bg-gradient-to-r from-gray-900 to-gray-800 overflow-hidden">
+        {store.banner ? (
           <img
             src={store.banner}
             alt={`${store.storeName} banner`}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover opacity-80"
           />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center text-white">
+              <ShoppingBag className="h-16 w-16 mx-auto mb-3 opacity-40" />
+            </div>
+          </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+
+        {/* Overlay gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30" />
       </div>
 
-      <div className="container mx-auto px-4">
-        {/* Store Header */}
-        <div className="relative -mt-16 mb-8">
-          <div className="flex flex-col md:flex-row md:items-end gap-4 md:gap-6">
-            {/* Logo */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col md:flex-row md:items-center gap-6">
+            {/* Store Logo */}
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="h-24 w-24 md:h-32 md:w-32 rounded-2xl border-4 border-background bg-muted overflow-hidden shadow-lg"
+              className="relative -mt-20 md:-mt-16"
             >
-              {store.logo ? (
-                <img
-                  src={store.logo}
-                  alt={store.storeName}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="h-full w-full flex items-center justify-center bg-primary/10">
-                  <ShoppingBag className="h-10 w-10 text-primary" />
-                </div>
-              )}
+              <div className="h-32 w-32 rounded-full border-4 border-white bg-white shadow-lg overflow-hidden">
+                {store.logo ? (
+                  <img
+                    src={store.logo}
+                    alt={store.storeName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center bg-gray-100">
+                    <ShoppingBag className="h-12 w-12 text-gray-400" />
+                  </div>
+                )}
+              </div>
             </motion.div>
 
             {/* Store Info */}
-            <div className="flex-1 pb-2">
+            <div className="flex-1">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="text-2xl md:text-3xl font-bold">{store.storeName}</h1>
+                  <div className="flex items-center gap-3 mb-2">
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                      {store.storeName}
+                    </h1>
                     {store.isVerified && (
-                      <Badge variant="secondary" className="gap-1">
-                        <CheckCircle className="h-3 w-3" />
+                      <Badge
+                        variant="secondary"
+                        className="gap-1 bg-blue-50 text-blue-700 border-blue-200"
+                      >
+                        <CheckCircle className="h-3.5 w-3.5" />
                         Verified
                       </Badge>
                     )}
                   </div>
-                  <p className="text-muted-foreground mt-1 max-w-2xl">
-                    {store.description}
+
+                  {/* Welcome Message / Description */}
+                  <p className="text-[15px] text-gray-700 mb-3 max-w-3xl">
+                    Welcome to {store.storeName}! {store.description}
                   </p>
+
+                  {/* Store Stats */}
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                    {store.rating && (
+                      <div className="flex items-center gap-1.5">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="font-semibold text-gray-900">
+                          {store.rating.toFixed(1)}%
+                        </span>
+                        <span>positive feedback</span>
+                      </div>
+                    )}
+                    {store.totalOrders !== undefined && (
+                      <div>
+                        <span className="font-semibold text-gray-900">
+                          {store.totalOrders.toLocaleString()}
+                        </span>
+                        <span className="ml-1">items sold</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Action Buttons - Desktop */}
+                {/* Action Buttons */}
                 <div className="hidden md:flex items-center gap-2">
-                  <Button variant="outline" size="icon" onClick={handleShare}>
-                    <Share2 className="h-4 w-4" />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleShare}
+                    className="border-gray-300 hover:bg-gray-50"
+                  >
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share
                   </Button>
-                  <Button onClick={handleContactSeller} className="gap-2">
-                    <MessageCircle className="h-4 w-4" />
-                    Contact Seller
+                  <Button
+                    size="sm"
+                    onClick={handleContactSeller}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Contact
                   </Button>
-                </div>
-              </div>
-
-              {/* Stats Row */}
-              <div className="flex flex-wrap items-center gap-4 md:gap-6 mt-4">
-                {store.rating && (
-                  <div className="flex items-center gap-1.5">
-                    <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                    <span className="font-semibold">{store.rating.toFixed(1)}</span>
-                    <span className="text-muted-foreground text-sm">rating</span>
-                  </div>
-                )}
-                {store.totalOrders !== undefined && (
-                  <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <Package className="h-5 w-5" />
-                    <span className="font-medium text-foreground">{store.totalOrders.toLocaleString()}</span>
-                    <span className="text-sm">orders</span>
-                  </div>
-                )}
-                {/* Top Seller badge - shown if store has 100+ orders or 5000+ in sales */}
-                {((store.totalOrders && store.totalOrders >= 100) || (store.totalSales && store.totalSales >= 5000)) && (
-                  <Badge variant="secondary" className="gap-1 bg-gradient-to-r from-amber-400 to-orange-400 text-white border-0 shadow-sm dark:from-amber-500 dark:to-orange-500">
-                    <Award className="h-3.5 w-3.5" />
-                    Top Seller
-                  </Badge>
-                )}
-                <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <Clock className="h-5 w-5" />
-                  <span className="text-sm">
-                    Since {new Date(store.dateCreated).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                  </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Action Buttons - Mobile */}
-          <div className="flex md:hidden items-center gap-2 mt-4">
-            <Button variant="outline" size="icon" onClick={handleShare}>
-              <Share2 className="h-4 w-4" />
+          {/* Mobile Action Buttons */}
+          <div className="flex md:hidden gap-2 mt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShare}
+              className="flex-1 border-gray-300"
+            >
+              <Share2 className="h-4 w-4 mr-2" />
+              Share
             </Button>
-            <Button onClick={handleContactSeller} className="flex-1 gap-2">
-              <MessageCircle className="h-4 w-4" />
-              Contact Seller
+            <Button
+              size="sm"
+              onClick={handleContactSeller}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <MessageCircle className="h-4 w-4 mr-2" />
+              Contact
             </Button>
           </div>
         </div>
+      </div>
 
-        {/* Breadcrumb */}
-        <Breadcrumb
-          items={[
-            { label: 'Stores', href: '/stores' },
-            { label: store.storeName },
-          ]}
-          className="mb-6"
-        />
-
-        {/* Contact Info Cards */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          <div className="flex items-center gap-3 p-4 bg-card rounded-xl border border-border">
-            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Mail className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Email</p>
-              <p className="font-medium text-sm">{store.email}</p>
-            </div>
+      {/* Navigation Tabs */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center gap-1 overflow-x-auto">
+            <button className="px-4 py-3 text-sm font-medium text-gray-900 border-b-2 border-blue-600 whitespace-nowrap">
+              Store home
+            </button>
+            <button className="px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 whitespace-nowrap">
+              About
+            </button>
+            <button className="px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 whitespace-nowrap">
+              Feedback
+            </button>
           </div>
-          <div className="flex items-center gap-3 p-4 bg-card rounded-xl border border-border">
-            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Phone className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Phone</p>
-              <p className="font-medium text-sm">{store.phoneNumber}</p>
-            </div>
-          </div>
-          {store.autoResponderEnabled && (
-            <div className="flex items-center gap-3 p-4 bg-card rounded-xl border border-border">
-              <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-                <MessageCircle className="h-5 w-5 text-green-500" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Auto-responder</p>
-                <p className="font-medium text-sm">{store.autoResponderName} is active</p>
-              </div>
-            </div>
-          )}
         </div>
+      </div>
 
-        {/* Products Section */}
-        <div className="pb-8">
-          {/* Section Header */}
+      <div className="container mx-auto px-4 py-8">
+        {/* Featured Categories Section */}
+        {categories.length > 0 && (
+          <section className="mb-12">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900">
+                Featured categories
+              </h2>
+              <button className="text-sm text-blue-700 hover:underline font-medium flex items-center gap-1">
+                See all
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {categories.slice(0, 6).map((category) => {
+                const categoryProducts = storeProducts.filter(
+                  (p) => p.category === category
+                );
+                const featuredProduct = categoryProducts[0];
+
+                return (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={cn(
+                      "group relative aspect-square rounded-lg overflow-hidden border-2 transition-all",
+                      selectedCategory === category
+                        ? "border-blue-600 ring-2 ring-blue-100"
+                        : "border-gray-200 hover:border-gray-300"
+                    )}
+                  >
+                    <img
+                      src={
+                        featuredProduct?.images[0] || "/placeholder-product.jpg"
+                      }
+                      alt={category}
+                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                      <p className="text-white text-sm font-semibold text-center capitalize">
+                        {category.replace("_", " ")}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* All Items Section */}
+        <section>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <h2 className="text-xl font-semibold">
-              Products ({storeProducts.length})
-            </h2>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">
+                All items
+              </h2>
+              <p className="text-sm text-gray-600">
+                {sortedProducts.length}{" "}
+                {sortedProducts.length === 1 ? "result" : "results"}
+                {selectedCategory !== "all" && (
+                  <span>
+                    {" "}
+                    in{" "}
+                    <span className="font-medium capitalize">
+                      {selectedCategory.replace("_", " ")}
+                    </span>
+                  </span>
+                )}
+              </p>
+            </div>
 
-            <div className="flex items-center gap-2">
-              {/* Sort */}
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="h-10 px-3 pr-8 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="newest">Newest</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="popular">Most Popular</option>
-                <option value="rating">Highest Rated</option>
-              </select>
+            <div className="flex items-center gap-3">
+              {/* Category Filter */}
+              {selectedCategory !== "all" && (
+                <button
+                  onClick={() => setSelectedCategory("all")}
+                  className="text-sm text-blue-700 hover:underline font-medium"
+                >
+                  Clear filter
+                </button>
+              )}
+
+              {/* Sort Dropdown */}
+              <div className="relative">
+                <label htmlFor="sort" className="text-sm text-gray-600 mr-2">
+                  Sort by:
+                </label>
+                <select
+                  id="sort"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-md hover:border-gray-400 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600 text-sm bg-white cursor-pointer"
+                >
+                  <option value="newest">Best match</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
+                  <option value="popular">Most Popular</option>
+                  <option value="rating">Highest Rated</option>
+                </select>
+              </div>
             </div>
           </div>
 
           {/* Products Grid */}
-          {sortedProducts.length > 0 ? (
-            <ProductGrid products={sortedProducts} />
+          {paginatedProducts.length > 0 ? (
+            <>
+              <ProductGrid products={paginatedProducts} />
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-12 flex justify-center">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
+              )}
+            </>
           ) : (
-            <div className="text-center py-16 bg-card rounded-xl border border-border">
-              <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No products yet</h3>
-              <p className="text-muted-foreground">
-                This store hasn't listed any products yet.
+            <div className="text-center py-16 bg-gray-50 rounded-lg border border-gray-200">
+              <ShoppingBag className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No products found
+              </h3>
+              <p className="text-gray-600 mb-4">
+                {selectedCategory !== "all"
+                  ? `No products in ${selectedCategory.replace(
+                      "_",
+                      " "
+                    )} category.`
+                  : "This store hasn't listed any products yet."}
               </p>
+              {selectedCategory !== "all" && (
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedCategory("all")}
+                >
+                  View all products
+                </Button>
+              )}
             </div>
           )}
-        </div>
+        </section>
+
+        {/* Store Contact Info Section */}
+        <section className="mt-16 pt-8 border-t border-gray-200">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">
+            Store information
+          </h2>
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <Mail className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900 mb-1">Email</p>
+                <a
+                  href={`mailto:${store.email}`}
+                  className="text-sm text-blue-700 hover:underline"
+                >
+                  {store.email}
+                </a>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <Phone className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900 mb-1">Phone</p>
+                <a
+                  href={`tel:${store.phoneNumber}`}
+                  className="text-sm text-blue-700 hover:underline"
+                >
+                  {store.phoneNumber}
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );
