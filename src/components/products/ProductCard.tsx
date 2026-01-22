@@ -1,24 +1,21 @@
-import { Link } from 'react-router-dom';
-import { Heart, CheckCircle2 } from 'lucide-react';
-import { motion } from 'framer-motion';
-import type { Product, ProductCondition } from '@/types';
-import { cn, formatPrice } from '@/lib/utils';
-import { useAuthStore } from '@/stores';
-import { useAddToWishlist, useRemoveFromWishlist, useIsInWishlist } from '@/hooks';
+import { Link } from "react-router-dom";
+import { Heart, CheckCircle2 } from "lucide-react";
+import { motion } from "framer-motion";
+import type { Product, ProductCondition } from "@/types";
+import { cn, formatPrice } from "@/lib/utils";
+import { useAuthStore } from "@/stores";
+import {
+  useAddToWishlist,
+  useRemoveFromWishlist,
+  useIsInWishlist,
+} from "@/hooks";
+
+type CardVariant = "grid" | "list";
 
 interface ProductCardProps {
   product: Product;
   index?: number;
-  /** Delivery fee to display, optional */
-  deliveryFee?: number;
-  /** Location text, optional */
-  location?: string;
-  /** Show "or Best Offer" option */
-  allowOffers?: boolean;
-  /** Optional badge text to display (e.g., "Authorized Seller") */
-  badge?: string;
-  /** Optional specs to display (e.g., ["2025", "13.6 in", "256 GB"]) */
-  specs?: string[];
+  variant?: CardVariant;
 }
 
 /**
@@ -26,22 +23,18 @@ interface ProductCardProps {
  */
 function getConditionLabel(condition?: ProductCondition): string {
   const labels: Record<ProductCondition, string> = {
-    new: 'Brand New',
-    used_like_new: 'Like New',
-    used_good: 'Pre-Owned',
-    used_fair: 'Used - Fair',
+    new: "Brand New",
+    used_like_new: "Like New",
+    used_good: "Pre-Owned",
+    used_fair: "Used - Fair",
   };
-  return condition ? labels[condition] : 'Brand New';
+  return condition ? labels[condition] : "Brand New";
 }
 
 export function ProductCard({
   product,
   index = 0,
-  deliveryFee,
-  location,
-  allowOffers = false,
-  badge,
-  specs,
+  variant = "grid",
 }: ProductCardProps) {
   const { isAuthenticated } = useAuthStore();
   const { data: isInWishlist } = useIsInWishlist(product.id);
@@ -49,6 +42,11 @@ export function ProductCard({
   const removeFromWishlist = useRemoveFromWishlist();
 
   const isOutOfStock = product.quantity === 0;
+  const hasDiscount =
+    product.comparePrice && product.comparePrice > product.price;
+  const discountPercent = hasDiscount
+    ? Math.round((1 - product.price / product.comparePrice!) * 100)
+    : 0;
 
   const handleWishlistToggle = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -62,47 +60,67 @@ export function ProductCard({
     }
   };
 
-  // Build default specs if not provided
-  const displaySpecs = specs || [];
+  if (variant === "list") {
+    return <ListCard product={product} index={index} />;
+  }
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
+      transition={{
+        duration: 0.3,
+        delay: index * 0.03,
+        ease: [0.22, 1, 0.36, 1],
+      }}
       className="h-full"
     >
       <Link
-        to={`/products/${product.id}`}
-        className="group block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg"
+        to={`/products/${product.slug || product.id}`}
+        className="group block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg"
       >
-        <article className="relative h-full bg-white rounded-lg overflow-hidden transition-all duration-300 hover:shadow-xl border border-gray-200 flex flex-col">
+        <article className="relative h-full bg-white dark:bg-card rounded-lg overflow-hidden transition-all duration-300  border-border hover:border-primary/30 flex flex-col">
           {/* Image Container */}
-          <div className="relative aspect-square overflow-hidden bg-gray-50">
+          <div className="relative aspect-square overflow-hidden bg-gray-50 dark:bg-muted">
             <img
-              src={product.images?.[0] || '/placeholder-product.jpg'}
+              src={
+                product.images?.[0] ||
+                product.thumbnail ||
+                "/placeholder-product.jpg"
+              }
               alt={product.name}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 rounded-b-lg"
               loading="lazy"
             />
 
-            {/* Wishlist Button - Top Right */}
+            {/* Discount Badge */}
+            {hasDiscount && (
+              <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                {discountPercent}% OFF
+              </div>
+            )}
+
+            {/* Wishlist Button */}
             <button
               onClick={handleWishlistToggle}
-              aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+              aria-label={
+                isInWishlist ? "Remove from wishlist" : "Add to wishlist"
+              }
               className={cn(
-                'absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center',
-                'bg-white/95 backdrop-blur-sm shadow-sm border border-gray-200',
-                'transition-all duration-200',
-                'hover:scale-110 hover:shadow-md active:scale-95',
-                'focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
-                isInWishlist ? 'text-red-500' : 'text-gray-600 hover:text-red-500'
+                "absolute top-2 right-2 w-9 h-9 rounded-full flex items-center justify-center",
+                "bg-white/95 dark:bg-background/95 backdrop-blur-sm shadow-sm border border-border",
+                "transition-all duration-200 opacity-0 group-hover:opacity-100",
+                "hover:scale-110 hover:shadow-md active:scale-95",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                isInWishlist
+                  ? "text-red-500 opacity-100"
+                  : "text-muted-foreground hover:text-red-500",
               )}
             >
               <Heart
                 className={cn(
-                  'w-5 h-5 transition-all duration-200',
-                  isInWishlist && 'fill-current'
+                  "w-4 h-4 transition-all duration-200",
+                  isInWishlist && "fill-current",
                 )}
               />
             </button>
@@ -110,93 +128,183 @@ export function ProductCard({
             {/* Out of Stock Overlay */}
             {isOutOfStock && (
               <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-[2px]">
-                <div className="bg-white text-gray-900 px-5 py-2.5 rounded-full text-sm font-semibold shadow-lg">
+                <div className="bg-white text-gray-900 px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
                   Sold Out
                 </div>
               </div>
             )}
           </div>
 
-          {/* Content - Flex grow to push content to edges */}
-          <div className="p-4 flex flex-col flex-1">
-            {/* Title - eBay style, more lines allowed */}
-            <h3 className="font-normal text-gray-900 text-[15px] leading-[1.4] line-clamp-3 mb-2 group-hover:text-blue-700 transition-colors">
+          {/* Content */}
+          <div className="py-3 flex flex-col flex-1">
+            {/* Title */}
+            <h3 className="font-normal text-foreground text-sm leading-snug line-clamp-2 mb-2 group-hover:text-primary transition-colors">
               {product.name}
             </h3>
 
-            {/* Condition + Specs Row */}
-            {(product.condition || displaySpecs.length > 0) && (
-              <div className="flex flex-wrap items-center gap-1 text-[13px] text-gray-600 mb-3">
-                <span className="font-normal">{getConditionLabel(product.condition)}</span>
-                {displaySpecs.length > 0 && (
-                  <>
-                    {displaySpecs.map((spec, i) => (
-                      <span key={i} className="flex items-center gap-1">
-                        <span className="text-gray-400">•</span>
-                        <span className="font-normal">{spec}</span>
-                      </span>
-                    ))}
-                  </>
-                )}
-              </div>
-            )}
+            {/* Condition */}
+            <p className="text-xs text-muted-foreground mb-2">
+              {getConditionLabel(product.condition)}
+            </p>
 
-            {/* Price - Bold and prominent */}
-            <div className="mb-2">
-              <p className="text-[24px] font-bold text-gray-900 leading-none">
+            {/* Price */}
+            <div className="mt-auto">
+              <p className="text-lg font-bold text-foreground leading-none">
                 {formatPrice(product.price)}
               </p>
-              
-              {/* Compare Price - Strikethrough */}
-              {product.comparePrice && product.comparePrice > product.price && (
-                <p className="text-[14px] text-gray-600 line-through mt-1">
-                  {formatPrice(product.comparePrice)}
+              {hasDiscount && (
+                <p className="text-xs text-muted-foreground line-through mt-0.5">
+                  {formatPrice(product.comparePrice!)}
                 </p>
               )}
             </div>
 
-            {/* Buy It Now / Best Offer */}
-            <div className="text-[14px] text-gray-700 mb-1">
-              {allowOffers ? 'or Best Offer' : 'Buy It Now'}
-            </div>
-
-            {/* Delivery Info */}
-            {deliveryFee !== undefined && (
-              <p className="text-[14px] text-gray-600 mb-1">
-                {deliveryFee === 0 ? (
-                  <span className="text-green-700 font-medium">Free delivery</span>
-                ) : (
-                  <span>+{formatPrice(deliveryFee)} delivery</span>
-                )}
+            {/* Sold Count */}
+            {product.soldCount > 0 && !isOutOfStock && (
+              <p className="text-xs text-muted-foreground mt-2">
+                {product.soldCount} sold
               </p>
             )}
+          </div>
+        </article>
+      </Link>
+    </motion.div>
+  );
+}
 
-            {/* Location */}
-            {location && (
-              <p className="text-[14px] text-gray-600 mb-2">
-                Located in {location}
-              </p>
+// List view variant
+function ListCard({ product, index }: { product: Product; index: number }) {
+  const { isAuthenticated } = useAuthStore();
+  const { data: isInWishlist } = useIsInWishlist(product.id);
+  const addToWishlist = useAddToWishlist();
+  const removeFromWishlist = useRemoveFromWishlist();
+
+  const isOutOfStock = product.quantity === 0;
+  const hasDiscount =
+    product.comparePrice && product.comparePrice > product.price;
+  const discountPercent = hasDiscount
+    ? Math.round((1 - product.price / product.comparePrice!) * 100)
+    : 0;
+
+  const handleWishlistToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isAuthenticated) return;
+
+    if (isInWishlist) {
+      removeFromWishlist.mutate(product.id);
+    } else {
+      addToWishlist.mutate(product.id);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: 0.3,
+        delay: index * 0.03,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+    >
+      <Link
+        to={`/products/${product.slug || product.id}`}
+        className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg"
+      >
+        <article className="relative bg-white dark:bg-card rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg border border-border hover:border-primary/30 flex gap-4 p-4">
+          {/* Image */}
+          <div className="relative w-40 h-40 md:w-48 md:h-48 shrink-0 rounded-lg overflow-hidden bg-gray-50 dark:bg-muted">
+            <img
+              src={
+                product.images?.[0] ||
+                product.thumbnail ||
+                "/placeholder-product.jpg"
+              }
+              alt={product.name}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              loading="lazy"
+            />
+
+            {hasDiscount && (
+              <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                {discountPercent}% OFF
+              </div>
             )}
 
-            {/* Spacer to push sold count to bottom */}
+            {isOutOfStock && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <span className="bg-white text-gray-900 px-3 py-1 rounded-full text-xs font-semibold">
+                  Sold Out
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Title */}
+            <h3 className="font-normal text-foreground text-base leading-snug line-clamp-2 mb-1 group-hover:text-primary transition-colors">
+              {product.name}
+            </h3>
+
+            {/* Condition */}
+            <p className="text-sm text-muted-foreground mb-2">
+              {getConditionLabel(product.condition)}
+            </p>
+
+            {/* Store */}
+            {product.store && (
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-2">
+                <CheckCircle2 className="w-4 h-4 text-primary" />
+                <span>{product.store.name}</span>
+              </div>
+            )}
+
+            {/* Spacer */}
             <div className="flex-1" />
 
-            {/* Bottom section */}
-            <div className="flex items-center justify-between pt-2">
-              {/* Sold Count */}
-              {product.soldCount > 0 && !isOutOfStock && (
-                <span className="text-[14px] text-gray-700 font-medium">
-                  {product.soldCount} sold
-                </span>
-              )}
-              
-              {/* Badge (e.g., Authorized Seller) */}
-              {badge && (
-                <div className="flex items-center gap-1.5 text-[13px] text-blue-700 font-medium ml-auto">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>{badge}</span>
-                </div>
-              )}
+            {/* Price and Actions */}
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-2xl font-bold text-foreground leading-none">
+                  {formatPrice(product.price)}
+                </p>
+                {hasDiscount && (
+                  <p className="text-sm text-muted-foreground line-through">
+                    {formatPrice(product.comparePrice!)}
+                  </p>
+                )}
+                {product.soldCount > 0 && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {product.soldCount} sold
+                  </p>
+                )}
+              </div>
+
+              {/* Wishlist Button */}
+              <button
+                onClick={handleWishlistToggle}
+                aria-label={
+                  isInWishlist ? "Remove from wishlist" : "Add to wishlist"
+                }
+                className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center",
+                  "bg-muted border border-border",
+                  "transition-all duration-200",
+                  "hover:scale-110 hover:shadow-md active:scale-95",
+                  isInWishlist
+                    ? "text-red-500"
+                    : "text-muted-foreground hover:text-red-500",
+                )}
+              >
+                <Heart
+                  className={cn(
+                    "w-5 h-5 transition-all duration-200",
+                    isInWishlist && "fill-current",
+                  )}
+                />
+              </button>
             </div>
           </div>
         </article>

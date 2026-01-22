@@ -1,10 +1,10 @@
-import { useState, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { X, SlidersHorizontal } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button, Input, Select, Badge } from '@/components/ui';
-import { CATEGORY_OPTIONS } from '@/lib/utils';
-import type { Category } from '@/types';
+import { useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
+import { X, ChevronDown, ChevronUp, Filter } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button, Input, Badge } from "@/components/ui";
+import { CATEGORY_OPTIONS, cn } from "@/lib/utils";
+import type { Category } from "@/types";
 
 interface ProductFiltersProps {
   onFilterChange: (filters: FilterState) => void;
@@ -14,30 +14,110 @@ interface ProductFiltersProps {
 
 export interface FilterState {
   category?: Category;
+  condition?: string;
   minPrice?: number;
   maxPrice?: number;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }
 
-const sortOptions = [
-  { value: 'date_created:desc', label: 'Newest First' },
-  { value: 'date_created:asc', label: 'Oldest First' },
-  { value: 'price:asc', label: 'Price: Low to High' },
-  { value: 'price:desc', label: 'Price: High to Low' },
-  { value: 'rating:desc', label: 'Highest Rated' },
-  { value: 'sold_count:desc', label: 'Best Selling' },
+const conditionOptions = [
+  { value: "new", label: "Brand New" },
+  { value: "used_like_new", label: "Like New" },
+  { value: "used_good", label: "Pre-Owned" },
+  { value: "used_fair", label: "Used - Fair" },
 ];
 
-// Extracted filter content to avoid creating during render
+// Collapsible filter section component
+interface FilterSectionProps {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}
+
+function FilterSection({
+  title,
+  children,
+  defaultOpen = true,
+}: FilterSectionProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div className="border-b border-border last:border-b-0">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between py-4 text-left"
+      >
+        <span className="text-sm font-semibold text-foreground">{title}</span>
+        {isOpen ? (
+          <ChevronUp className="w-4 h-4 text-muted-foreground" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+        )}
+      </button>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="pb-4">{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// Checkbox filter item
+interface FilterCheckboxProps {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  count?: number;
+}
+
+function FilterCheckbox({
+  label,
+  checked,
+  onChange,
+  count,
+}: FilterCheckboxProps) {
+  return (
+    <label className="flex items-center gap-3 py-1.5 cursor-pointer group">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="w-4 h-4 rounded border-border text-primary focus:ring-primary focus:ring-offset-0"
+      />
+      <span
+        className={cn(
+          "text-sm flex-1 group-hover:text-primary transition-colors",
+          checked ? "text-foreground font-medium" : "text-muted-foreground",
+        )}
+      >
+        {label}
+      </span>
+      {count !== undefined && (
+        <span className="text-xs text-muted-foreground">({count})</span>
+      )}
+    </label>
+  );
+}
+
+// Extracted filter content
 interface FilterContentProps {
   filters: FilterState;
   activeFilterCount: number;
   onClearFilters: () => void;
   onCategoryChange: (value: string) => void;
+  onConditionChange: (value: string) => void;
   onMinPriceChange: (value: string) => void;
   onMaxPriceChange: (value: string) => void;
-  onSortChange: (value: string) => void;
 }
 
 function FilterContent({
@@ -45,70 +125,137 @@ function FilterContent({
   activeFilterCount,
   onClearFilters,
   onCategoryChange,
+  onConditionChange,
   onMinPriceChange,
   onMaxPriceChange,
-  onSortChange,
 }: FilterContentProps) {
   return (
-    <div className="space-y-6">
+    <div>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pb-4 border-b border-border">
         <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-5 w-5" />
-          <h3 className="font-semibold">Filters</h3>
+          <Filter className="w-4 h-4" />
+          <h3 className="font-semibold text-foreground">Filters</h3>
           {activeFilterCount > 0 && (
-            <Badge variant="secondary">{activeFilterCount}</Badge>
+            <Badge variant="secondary" className="text-xs px-2 py-0.5">
+              {activeFilterCount}
+            </Badge>
           )}
         </div>
         {activeFilterCount > 0 && (
-          <Button variant="ghost" size="sm" onClick={onClearFilters}>
-            Clear All
-          </Button>
+          <button
+            onClick={onClearFilters}
+            className="text-sm text-primary hover:underline"
+          >
+            Clear all
+          </button>
         )}
       </div>
 
-      {/* Category */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium">Category</label>
-        <Select
-          options={[{ value: '', label: 'All Categories' }, ...CATEGORY_OPTIONS]}
-          value={filters.category || ''}
-          onChange={(e) => onCategoryChange(e.target.value)}
-          placeholder="Select category"
-        />
-      </div>
-
-      {/* Price Range */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium">Price Range</label>
-        <div className="flex items-center gap-2">
-          <Input
-            type="number"
-            placeholder="Min"
-            value={filters.minPrice || ''}
-            onChange={(e) => onMinPriceChange(e.target.value)}
-            className="w-full"
+      {/* Category Section */}
+      <FilterSection title="Category">
+        <div className="space-y-1">
+          <FilterCheckbox
+            label="All Categories"
+            checked={!filters.category}
+            onChange={() => onCategoryChange("")}
           />
-          <span className="text-muted-foreground">-</span>
-          <Input
-            type="number"
-            placeholder="Max"
-            value={filters.maxPrice || ''}
-            onChange={(e) => onMaxPriceChange(e.target.value)}
-            className="w-full"
-          />
+          {CATEGORY_OPTIONS.map((category) => (
+            <FilterCheckbox
+              key={category.value}
+              label={category.label}
+              checked={filters.category === category.value}
+              onChange={() =>
+                onCategoryChange(
+                  filters.category === category.value ? "" : category.value,
+                )
+              }
+            />
+          ))}
         </div>
-      </div>
+      </FilterSection>
 
-      {/* Sort */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium">Sort By</label>
-        <Select
-          options={sortOptions}
-          value={`${filters.sortBy || 'date_created'}:${filters.sortOrder || 'desc'}`}
-          onChange={(e) => onSortChange(e.target.value)}
-        />
-      </div>
+      {/* Condition Section */}
+      <FilterSection title="Condition">
+        <div className="space-y-1">
+          <FilterCheckbox
+            label="Any Condition"
+            checked={!filters.condition}
+            onChange={() => onConditionChange("")}
+          />
+          {conditionOptions.map((condition) => (
+            <FilterCheckbox
+              key={condition.value}
+              label={condition.label}
+              checked={filters.condition === condition.value}
+              onChange={() =>
+                onConditionChange(
+                  filters.condition === condition.value ? "" : condition.value,
+                )
+              }
+            />
+          ))}
+        </div>
+      </FilterSection>
+
+      {/* Price Range Section */}
+      <FilterSection title="Price">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                GH₵
+              </span>
+              <Input
+                type="number"
+                placeholder="Min"
+                value={filters.minPrice || ""}
+                onChange={(e) => onMinPriceChange(e.target.value)}
+                className="pl-10 h-9 text-sm"
+              />
+            </div>
+            <span className="text-muted-foreground">to</span>
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                GH₵
+              </span>
+              <Input
+                type="number"
+                placeholder="Max"
+                value={filters.maxPrice || ""}
+                onChange={(e) => onMaxPriceChange(e.target.value)}
+                className="pl-10 h-9 text-sm"
+              />
+            </div>
+          </div>
+          {/* Quick price ranges */}
+          <div className="flex flex-wrap gap-2">
+            {[
+              { label: "Under GH₵50", min: 0, max: 50 },
+              { label: "GH₵50-100", min: 50, max: 100 },
+              { label: "GH₵100-500", min: 100, max: 500 },
+              { label: "Over GH₵500", min: 500, max: undefined },
+            ].map((range) => (
+              <button
+                key={range.label}
+                onClick={() => {
+                  onMinPriceChange(range.min.toString());
+                  onMaxPriceChange(range.max?.toString() || "");
+                }}
+                className={cn(
+                  "px-3 py-1 text-xs rounded-full border transition-colors",
+                  filters.minPrice === range.min &&
+                    filters.maxPrice === range.max
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "border-border text-muted-foreground hover:border-primary hover:text-primary",
+                )}
+              >
+                {range.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </FilterSection>
     </div>
   );
 }
@@ -121,51 +268,49 @@ export function ProductFilters({
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [filters, setFilters] = useState<FilterState>({
-    category: (searchParams.get('category') as Category) || undefined,
-    minPrice: searchParams.get('min_price')
-      ? Number(searchParams.get('min_price'))
+    category: (searchParams.get("category") as Category) || undefined,
+    condition: searchParams.get("condition") || undefined,
+    minPrice: searchParams.get("min_price")
+      ? Number(searchParams.get("min_price"))
       : undefined,
-    maxPrice: searchParams.get('max_price')
-      ? Number(searchParams.get('max_price'))
+    maxPrice: searchParams.get("max_price")
+      ? Number(searchParams.get("max_price"))
       : undefined,
-    sortBy: searchParams.get('sort_by') || undefined,
-    sortOrder: (searchParams.get('sort_order') as 'asc' | 'desc') || undefined,
+    sortBy: searchParams.get("sort_by") || undefined,
+    sortOrder: (searchParams.get("sort_order") as "asc" | "desc") || undefined,
   });
 
-  const handleFilterChange = useCallback((key: keyof FilterState, value: unknown) => {
-    setFilters((prev) => {
-      const newFilters = { ...prev, [key]: value || undefined };
-      
-      // Update URL params
-      const params = new URLSearchParams(searchParams);
-      const paramKey = key === 'minPrice' ? 'min_price' : key === 'maxPrice' ? 'max_price' : key === 'sortBy' ? 'sort_by' : key === 'sortOrder' ? 'sort_order' : key;
-      
-      if (value) {
-        params.set(paramKey, String(value));
-      } else {
-        params.delete(paramKey);
-      }
-      setSearchParams(params);
-      onFilterChange(newFilters);
-      
-      return newFilters;
-    });
-  }, [searchParams, setSearchParams, onFilterChange]);
+  const handleFilterChange = useCallback(
+    (key: keyof FilterState, value: unknown) => {
+      setFilters((prev) => {
+        const newFilters = { ...prev, [key]: value || undefined };
 
-  const handleSortChange = useCallback((value: string) => {
-    const [sortBy, sortOrder] = value.split(':');
-    setFilters((prev) => {
-      const newFilters = { ...prev, sortBy, sortOrder: sortOrder as 'asc' | 'desc' };
-      
-      const params = new URLSearchParams(searchParams);
-      params.set('sort_by', sortBy);
-      params.set('sort_order', sortOrder);
-      setSearchParams(params);
-      onFilterChange(newFilters);
-      
-      return newFilters;
-    });
-  }, [searchParams, setSearchParams, onFilterChange]);
+        // Update URL params
+        const params = new URLSearchParams(searchParams);
+        const paramKey =
+          key === "minPrice"
+            ? "min_price"
+            : key === "maxPrice"
+              ? "max_price"
+              : key === "sortBy"
+                ? "sort_by"
+                : key === "sortOrder"
+                  ? "sort_order"
+                  : key;
+
+        if (value) {
+          params.set(paramKey, String(value));
+        } else {
+          params.delete(paramKey);
+        }
+        setSearchParams(params);
+        onFilterChange(newFilters);
+
+        return newFilters;
+      });
+    },
+    [searchParams, setSearchParams, onFilterChange],
+  );
 
   const clearFilters = useCallback(() => {
     setFilters({});
@@ -179,20 +324,23 @@ export function ProductFilters({
     filters,
     activeFilterCount,
     onClearFilters: clearFilters,
-    onCategoryChange: (value) => handleFilterChange('category', value as Category),
-    onMinPriceChange: (value) => handleFilterChange('minPrice', value ? Number(value) : undefined),
-    onMaxPriceChange: (value) => handleFilterChange('maxPrice', value ? Number(value) : undefined),
-    onSortChange: handleSortChange,
+    onCategoryChange: (value) =>
+      handleFilterChange("category", value as Category),
+    onConditionChange: (value) => handleFilterChange("condition", value),
+    onMinPriceChange: (value) =>
+      handleFilterChange("minPrice", value ? Number(value) : undefined),
+    onMaxPriceChange: (value) =>
+      handleFilterChange("maxPrice", value ? Number(value) : undefined),
   };
 
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="hidden lg:block w-64 shrink-0">
-        <div className="sticky top-24 bg-card border border-border rounded-xl p-6">
+      <aside className="hidden lg:block w-60 shrink-0">
+        <div className="sticky top-24 bg-white dark:bg-card border border-border rounded-xl overflow-hidden">
           <FilterContent {...filterContentProps} />
         </div>
-      </div>
+      </aside>
 
       {/* Mobile Filter Sheet */}
       <AnimatePresence>
@@ -206,25 +354,25 @@ export function ProductFilters({
               onClick={onClose}
             />
             <motion.div
-              initial={{ x: '100%' }}
+              initial={{ x: "-100%" }}
               animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed right-0 top-0 bottom-0 w-80 max-w-full bg-background z-50 lg:hidden overflow-y-auto"
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="fixed left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white dark:bg-background z-50 lg:hidden overflow-y-auto"
             >
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-semibold">Filters</h2>
-                  <Button variant="ghost" size="icon" onClick={onClose}>
-                    <X className="h-5 w-5" />
-                  </Button>
-                </div>
+              <div className="sticky top-0 bg-white dark:bg-background z-10 flex items-center justify-between p-4 border-b border-border">
+                <h2 className="text-lg font-semibold">Filters</h2>
+                <Button variant="ghost" size="icon" onClick={onClose}>
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+              <div className="p-4">
                 <FilterContent {...filterContentProps} />
-                <div className="mt-6 pt-6 border-t border-border">
-                  <Button className="w-full" onClick={onClose}>
-                    Apply Filters
-                  </Button>
-                </div>
+              </div>
+              <div className="sticky bottom-0 bg-white dark:bg-background p-4 border-t border-border">
+                <Button className="w-full" onClick={onClose}>
+                  Show Results
+                </Button>
               </div>
             </motion.div>
           </>
