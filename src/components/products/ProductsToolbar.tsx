@@ -1,13 +1,13 @@
-import { Grid3X3, List, ChevronDown } from "lucide-react";
+import { Grid3X3, Menu, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type ViewMode = "grid" | "list";
 type SortOption =
+  | "best_match"
   | "date_created:desc"
   | "date_created:asc"
   | "price:asc"
   | "price:desc"
-  | "rating:desc"
   | "sold_count:desc";
 
 interface ProductsToolbarProps {
@@ -20,11 +20,11 @@ interface ProductsToolbarProps {
 }
 
 const sortOptions: { value: SortOption; label: string }[] = [
+  { value: "best_match", label: "Best Match" },
   { value: "date_created:desc", label: "Newest First" },
   { value: "date_created:asc", label: "Oldest First" },
   { value: "price:asc", label: "Price: Low to High" },
   { value: "price:desc", label: "Price: High to Low" },
-  { value: "rating:desc", label: "Highest Rated" },
   { value: "sold_count:desc", label: "Best Selling" },
 ];
 
@@ -36,72 +36,59 @@ export function ProductsToolbar({
   onSortChange,
   className,
 }: ProductsToolbarProps) {
+  const currentSort =
+    sortOptions.find((opt) => opt.value === sortBy) || sortOptions[0];
+
   return (
-    <div
-      className={cn(
-        "flex items-center justify-between py-3 px-4 bg-muted/50 rounded-lg border border-border",
-        className,
-      )}
-    >
-      {/* Results Count */}
-      <div className="text-sm text-muted-foreground">
-        <span className="font-medium text-foreground">
-          {totalResults.toLocaleString()}
-        </span>{" "}
-        results
+    <div className={cn("flex items-center justify-end gap-4", className)}>
+      {/* Sort Dropdown */}
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">Sort:</span>
+        <div className="relative">
+          <select
+            value={sortBy}
+            onChange={(e) => onSortChange(e.target.value as SortOption)}
+            aria-label="Sort products"
+            className="appearance-none bg-transparent pr-6 text-sm font-medium cursor-pointer focus:outline-none"
+          >
+            {sortOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+        </div>
       </div>
 
-      {/* Controls */}
-      <div className="flex items-center gap-4">
-        {/* Sort Dropdown */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground hidden sm:inline">
-            Sort:
-          </span>
-          <div className="relative">
-            <select
-              value={sortBy}
-              onChange={(e) => onSortChange(e.target.value as SortOption)}
-              aria-label="Sort products"
-              className="appearance-none bg-white border border-border rounded-md px-3 py-1.5 pr-8 text-sm font-medium cursor-pointer hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
-            >
-              {sortOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-          </div>
-        </div>
-
-        {/* View Mode Toggle */}
-        <div className="flex items-center border border-border rounded-md overflow-hidden">
-          <button
-            onClick={() => onViewModeChange("grid")}
-            className={cn(
-              "p-2 transition-colors",
-              viewMode === "grid"
-                ? "bg-primary text-primary-foreground"
-                : "bg-white text-muted-foreground hover:bg-muted",
-            )}
-            aria-label="Grid view"
-          >
-            <Grid3X3 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => onViewModeChange("list")}
-            className={cn(
-              "p-2 transition-colors",
-              viewMode === "list"
-                ? "bg-primary text-primary-foreground"
-                : "bg-white text-muted-foreground hover:bg-muted",
-            )}
-            aria-label="List view"
-          >
-            <List className="w-4 h-4" />
-          </button>
-        </div>
+      {/* View Mode Toggle */}
+      <div className="flex items-center border-l border-border pl-4">
+        <button
+          onClick={() => onViewModeChange("grid")}
+          className={cn(
+            "p-1.5 transition-colors",
+            viewMode === "grid"
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+          aria-label="Grid view"
+          title="Grid view"
+        >
+          <Grid3X3 className="w-5 h-5" />
+        </button>
+        <button
+          onClick={() => onViewModeChange("list")}
+          className={cn(
+            "p-1.5 transition-colors",
+            viewMode === "list"
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+          aria-label="List view"
+          title="List view"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
       </div>
     </div>
   );

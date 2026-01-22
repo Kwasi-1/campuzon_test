@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Filter, Search } from "lucide-react";
-import { Button, Pagination, Breadcrumb, Input } from "@/components/ui";
+import { Heart } from "lucide-react";
+import { Pagination, Breadcrumb } from "@/components/ui";
 import {
   ProductGrid,
   ProductFilters,
   ProductsToolbar,
+  ProductFilterTabs,
   type FilterState,
 } from "@/components/products";
 import { useProducts } from "@/hooks";
@@ -18,9 +19,7 @@ export function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { filtersOpen, setFiltersOpen } = useUIStore();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [searchQuery, setSearchQuery] = useState(
-    searchParams.get("search") || "",
-  );
+  const [activeTab, setActiveTab] = useState("all");
 
   const [filters, setFilters] = useState<FilterState>({
     category: (searchParams.get("category") as Category) || undefined,
@@ -55,47 +54,37 @@ export function ProductsPage() {
   };
 
   const handleSortChange = (value: string) => {
-    const [sortBy, sortOrder] = value.split(":");
-    const params = new URLSearchParams(searchParams);
-    params.set("sort_by", sortBy);
-    params.set("sort_order", sortOrder);
-    setSearchParams(params);
-    setFilters((prev) => ({
-      ...prev,
-      sortBy,
-      sortOrder: sortOrder as "asc" | "desc",
-    }));
-    setPage(1);
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const params = new URLSearchParams(searchParams);
-    if (searchQuery.trim()) {
-      params.set("search", searchQuery.trim());
+    if (value === "best_match") {
+      const params = new URLSearchParams(searchParams);
+      params.delete("sort_by");
+      params.delete("sort_order");
+      setSearchParams(params);
+      setFilters((prev) => ({
+        ...prev,
+        sortBy: undefined,
+        sortOrder: undefined,
+      }));
     } else {
-      params.delete("search");
+      const [sortBy, sortOrder] = value.split(":");
+      const params = new URLSearchParams(searchParams);
+      params.set("sort_by", sortBy);
+      params.set("sort_order", sortOrder);
+      setSearchParams(params);
+      setFilters((prev) => ({
+        ...prev,
+        sortBy,
+        sortOrder: sortOrder as "asc" | "desc",
+      }));
     }
-    setSearchParams(params);
     setPage(1);
   };
 
   const currentSearch = searchParams.get("search");
   const currentCategory = searchParams.get("category");
 
-  // Build page title
-  let pageTitle = "All Products";
-  if (currentCategory) {
-    pageTitle =
-      currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1);
-  }
-  if (currentSearch) {
-    pageTitle = `Search results for "${currentSearch}"`;
-  }
-
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-[1488px] mx-auto px-4 md:px-6 lg:px-8 py-6">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 py-4">
         {/* Breadcrumb */}
         <Breadcrumb
           items={[
@@ -113,76 +102,57 @@ export function ProductsPage() {
               ? [{ label: `"${currentSearch}"` }]
               : [{ label: "Products" }]),
           ]}
-          className="mb-6"
+          className="mb-4"
         />
 
-        {/* Page Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-            {pageTitle}
-          </h1>
-          <p className="text-muted-foreground">
-            {isLoading
-              ? "Loading..."
-              : `${data?.total || 0} products available`}
-          </p>
-        </div>
-
-        {/* Mobile Search & Filter Bar */}
-        <div className="lg:hidden mb-4 space-y-3">
-          {/* Search */}
-          <form onSubmit={handleSearch} className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <Button type="submit" variant="secondary">
-              Search
-            </Button>
-          </form>
-
-          {/* Filter Button */}
-          <Button
-            variant="outline"
-            className="w-full justify-center"
-            onClick={() => setFiltersOpen(true)}
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-            {Object.values(filters).filter(Boolean).length > 0 && (
-              <span className="ml-2 bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full">
-                {Object.values(filters).filter(Boolean).length}
-              </span>
-            )}
-          </Button>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex gap-6">
-          {/* Filters Sidebar */}
+        {/* Main Layout: Sidebar + Content */}
+        <div className="flex gap-8">
+          {/* Left Sidebar - Filters */}
           <ProductFilters
             onFilterChange={handleFilterChange}
             isOpen={filtersOpen}
             onClose={() => setFiltersOpen(false)}
           />
 
-          {/* Products Area */}
+          {/* Main Content Area */}
           <div className="flex-1 min-w-0">
-            {/* Toolbar */}
-            <ProductsToolbar
-              totalResults={data?.total || 0}
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-              sortBy={`${filters.sortBy || "date_created"}:${filters.sortOrder || "desc"}`}
-              onSortChange={handleSortChange}
-              className="mb-6"
-            />
+            {/* Results header with save search */}
+            <div className="flex items-center gap-3 mb-4">
+              <h1 className="text-base text-foreground">
+                <span className="font-semibold">
+                  {data?.total?.toLocaleString() || "0"}+
+                </span>{" "}
+                results
+                {currentSearch && (
+                  <>
+                    {" "}
+                    for <span className="font-semibold">{currentSearch}</span>
+                  </>
+                )}
+              </h1>
+              <button className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+                <Heart className="w-4 h-4" />
+                Save this search
+              </button>
+            </div>
+
+            {/* Filter Tabs + Sort/View Toggle Row */}
+            <div className="flex items-center justify-between gap-4 mb-4 pb-4 borderb border-border">
+              {/* Left: Filter Tabs */}
+              <ProductFilterTabs
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+              />
+
+              {/* Right: Sort and View Toggle */}
+              <ProductsToolbar
+                totalResults={data?.total || 0}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                sortBy={`${filters.sortBy || "date_created"}:${filters.sortOrder || "desc"}`}
+                onSortChange={handleSortChange}
+              />
+            </div>
 
             {/* Product Grid */}
             <ProductGrid
@@ -205,6 +175,15 @@ export function ProductsPage() {
                   onPageChange={setPage}
                 />
               </div>
+            )}
+
+            {/* Results summary */}
+            {data && data.total > 0 && (
+              <p className="text-center text-sm text-muted-foreground mt-4">
+                Showing {(page - 1) * 24 + 1} -{" "}
+                {Math.min(page * 24, data.total)} of{" "}
+                {data.total.toLocaleString()} results
+              </p>
             )}
           </div>
         </div>

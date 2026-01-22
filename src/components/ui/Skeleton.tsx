@@ -1,40 +1,106 @@
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 interface SkeletonProps {
   className?: string;
 }
 
 export function Skeleton({ className }: SkeletonProps) {
-  return (
-    <div
-      className={cn(
-        'animate-pulse rounded-lg bg-muted',
-        className
-      )}
-    />
-  );
+  return <div className={cn("animate-pulse rounded-lg bg-muted", className)} />;
 }
 
-// Pre-built skeleton components for common use cases
+// eBay-style product card skeleton for grid view
 export function ProductCardSkeleton() {
   return (
-    <div className="rounded-xl border border-border bg-card p-4 space-y-4">
-      <Skeleton className="aspect-square w-full rounded-lg" />
-      <div className="space-y-2">
+    <div className="flex flex-col">
+      {/* Image placeholder */}
+      <div className="aspect-square rounded-lg border border-border bg-muted animate-pulse" />
+
+      {/* Content */}
+      <div className="pt-3 space-y-2">
+        {/* Title */}
+        <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-3/4" />
+
+        {/* Specs */}
         <Skeleton className="h-3 w-1/2" />
-      </div>
-      <div className="flex items-center justify-between">
-        <Skeleton className="h-6 w-20" />
-        <Skeleton className="h-8 w-8 rounded-full" />
+
+        {/* Price */}
+        <Skeleton className="h-6 w-20 mt-2" />
+
+        {/* Buy It Now */}
+        <Skeleton className="h-3 w-16" />
+
+        {/* Delivery */}
+        <Skeleton className="h-3 w-24" />
+
+        {/* Location */}
+        <Skeleton className="h-3 w-32" />
       </div>
     </div>
   );
 }
 
-export function ProductGridSkeleton({ count = 8 }: { count?: number }) {
+// eBay-style product card skeleton for list view
+export function ProductCardListSkeleton() {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="flex gap-4 py-4 border-b border-border">
+      {/* Wishlist placeholder */}
+      <Skeleton className="w-7 h-7 rounded-full shrink-0" />
+
+      {/* Image placeholder */}
+      <Skeleton className="w-[120px] h-[120px] md:w-[140px] md:h-[140px] shrink-0 rounded-lg" />
+
+      {/* Content */}
+      <div className="flex-1 space-y-2">
+        {/* Title */}
+        <Skeleton className="h-4 w-3/4" />
+
+        {/* Specs */}
+        <Skeleton className="h-3 w-1/3" />
+
+        {/* Price */}
+        <Skeleton className="h-6 w-24 mt-2" />
+
+        {/* Buy It Now */}
+        <Skeleton className="h-3 w-16" />
+
+        {/* Delivery */}
+        <Skeleton className="h-3 w-32" />
+
+        {/* Location */}
+        <Skeleton className="h-3 w-40" />
+
+        {/* Returns & Sold */}
+        <div className="flex gap-4">
+          <Skeleton className="h-3 w-20" />
+          <Skeleton className="h-3 w-16" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface ProductGridSkeletonProps {
+  count?: number;
+  viewMode?: "grid" | "list";
+}
+
+export function ProductGridSkeleton({
+  count = 8,
+  viewMode = "grid",
+}: ProductGridSkeletonProps) {
+  if (viewMode === "list") {
+    return (
+      <div className="flex flex-col">
+        {Array.from({ length: Math.min(count, 6) }).map((_, i) => (
+          <ProductCardListSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6">
       {Array.from({ length: count }).map((_, i) => (
         <ProductCardSkeleton key={i} />
       ))}
@@ -76,14 +142,14 @@ export function ConversationSkeleton() {
 
 export function MessageSkeleton({ isOwn = false }: { isOwn?: boolean }) {
   return (
-    <div className={cn('flex', isOwn ? 'justify-end' : 'justify-start')}>
+    <div className={cn("flex", isOwn ? "justify-end" : "justify-start")}>
       <div
         className={cn(
-          'max-w-[70%] rounded-2xl p-4',
-          isOwn ? 'bg-primary/20' : 'bg-muted'
+          "max-w-[70%] rounded-2xl p-4",
+          isOwn ? "bg-primary/20" : "bg-muted",
         )}
       >
-        <Skeleton className={cn('h-4', isOwn ? 'w-32' : 'w-48')} />
+        <Skeleton className={cn("h-4", isOwn ? "w-32" : "w-48")} />
       </div>
     </div>
   );

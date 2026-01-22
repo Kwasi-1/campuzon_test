@@ -11,6 +11,7 @@ interface ProductGridProps {
   isLoading?: boolean;
   emptyMessage?: string;
   viewMode?: ViewMode;
+  className?: string;
 }
 
 export function ProductGrid({
@@ -18,9 +19,10 @@ export function ProductGrid({
   isLoading,
   emptyMessage = "No products found",
   viewMode = "grid",
+  className,
 }: ProductGridProps) {
   if (isLoading) {
-    return <ProductGridSkeleton count={12} />;
+    return <ProductGridSkeleton count={12} viewMode={viewMode} />;
   }
 
   if (!products || products.length === 0) {
@@ -37,8 +39,9 @@ export function ProductGrid({
     <div
       className={cn(
         viewMode === "grid"
-          ? "grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"
-          : "flex flex-col gap-4",
+          ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6"
+          : "flex flex-col",
+        className,
       )}
     >
       {products.map((product, index) => (

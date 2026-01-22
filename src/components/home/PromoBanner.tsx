@@ -20,7 +20,7 @@ export function PromoBanner({
   className,
 }: PromoBannerProps) {
   const variantStyles = {
-    primary: "bg-primary text-primary-foreground",
+    primary: "bg-[#F7F7F7] text-primary-foreground",
     secondary: "bg-secondary text-secondary-foreground",
     accent: "bg-gradient-to-r from-yellow-400 to-orange-400 text-foreground",
   };

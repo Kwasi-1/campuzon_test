@@ -1,8 +1,8 @@
 import { useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { X, ChevronDown, ChevronUp, Filter } from "lucide-react";
+import { X, ChevronDown, ChevronUp, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button, Input, Badge } from "@/components/ui";
+import { Button, Input } from "@/components/ui";
 import { CATEGORY_OPTIONS, cn } from "@/lib/utils";
 import type { Category } from "@/types";
 
@@ -28,7 +28,13 @@ const conditionOptions = [
   { value: "used_fair", label: "Used - Fair" },
 ];
 
-// Collapsible filter section component
+const shippingOptions = [
+  { id: "fast_delivery", label: "Arrives in 2-4 days" },
+  { id: "free_shipping", label: "Free International Shipping" },
+  { id: "local_pickup", label: "Local Pickup" },
+];
+
+// Collapsible filter section
 interface FilterSectionProps {
   title: string;
   children: React.ReactNode;
@@ -43,10 +49,10 @@ function FilterSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border-b border-border last:border-b-0">
+    <div className="border-b border-border pb-4 mb-4 last:border-b-0 last:pb-0 last:mb-0">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between py-4 text-left"
+        className="w-full flex items-center justify-between text-left mb-2"
       >
         <span className="text-sm font-semibold text-foreground">{title}</span>
         {isOpen ? (
@@ -61,10 +67,10 @@ function FilterSection({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.15 }}
             className="overflow-hidden"
           >
-            <div className="pb-4">{children}</div>
+            {children}
           </motion.div>
         )}
       </AnimatePresence>
@@ -72,48 +78,62 @@ function FilterSection({
   );
 }
 
-// Checkbox filter item
-interface FilterCheckboxProps {
+// Category link item (eBay style)
+interface CategoryLinkProps {
+  label: string;
+  isActive?: boolean;
+  isChild?: boolean;
+  onClick: () => void;
+}
+
+function CategoryLink({
+  label,
+  isActive,
+  isChild,
+  onClick,
+}: CategoryLinkProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "block w-full text-left text-sm py-1 transition-colors",
+        isChild && "pl-3",
+        isActive
+          ? "text-foreground font-semibold"
+          : "text-primary hover:underline",
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
+// Checkbox filter option
+interface CheckboxOptionProps {
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
-  count?: number;
 }
 
-function FilterCheckbox({
-  label,
-  checked,
-  onChange,
-  count,
-}: FilterCheckboxProps) {
+function CheckboxOption({ label, checked, onChange }: CheckboxOptionProps) {
   return (
-    <label className="flex items-center gap-3 py-1.5 cursor-pointer group">
+    <label className="flex items-center gap-2 py-1 cursor-pointer group">
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="w-4 h-4 rounded border-border text-primary focus:ring-primary focus:ring-offset-0"
+        className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
       />
-      <span
-        className={cn(
-          "text-sm flex-1 group-hover:text-primary transition-colors",
-          checked ? "text-foreground font-medium" : "text-muted-foreground",
-        )}
-      >
+      <span className="text-sm text-muted-foreground group-hover:text-foreground">
         {label}
       </span>
-      {count !== undefined && (
-        <span className="text-xs text-muted-foreground">({count})</span>
-      )}
     </label>
   );
 }
 
-// Extracted filter content
+// Desktop sidebar content
 interface FilterContentProps {
   filters: FilterState;
-  activeFilterCount: number;
-  onClearFilters: () => void;
   onCategoryChange: (value: string) => void;
   onConditionChange: (value: string) => void;
   onMinPriceChange: (value: string) => void;
@@ -122,8 +142,6 @@ interface FilterContentProps {
 
 function FilterContent({
   filters,
-  activeFilterCount,
-  onClearFilters,
   onCategoryChange,
   onConditionChange,
   onMinPriceChange,
@@ -131,67 +149,60 @@ function FilterContent({
 }: FilterContentProps) {
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between pb-4 border-b border-border">
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4" />
-          <h3 className="font-semibold text-foreground">Filters</h3>
-          {activeFilterCount > 0 && (
-            <Badge variant="secondary" className="text-xs px-2 py-0.5">
-              {activeFilterCount}
-            </Badge>
-          )}
-        </div>
-        {activeFilterCount > 0 && (
-          <button
-            onClick={onClearFilters}
-            className="text-sm text-primary hover:underline"
-          >
-            Clear all
-          </button>
-        )}
-      </div>
-
       {/* Category Section */}
       <FilterSection title="Category">
-        <div className="space-y-1">
-          <FilterCheckbox
-            label="All Categories"
-            checked={!filters.category}
-            onChange={() => onCategoryChange("")}
+        <div className="space-y-0.5">
+          <CategoryLink
+            label="All"
+            isActive={!filters.category}
+            onClick={() => onCategoryChange("")}
           />
           {CATEGORY_OPTIONS.map((category) => (
-            <FilterCheckbox
+            <CategoryLink
               key={category.value}
               label={category.label}
-              checked={filters.category === category.value}
-              onChange={() =>
-                onCategoryChange(
-                  filters.category === category.value ? "" : category.value,
-                )
-              }
+              isActive={filters.category === category.value}
+              onClick={() => onCategoryChange(category.value)}
+            />
+          ))}
+          <button className="text-sm text-primary hover:underline mt-1">
+            Show More +
+          </button>
+        </div>
+      </FilterSection>
+
+      {/* Update shipping location */}
+      <div className="border-b border-border pb-4 mb-4">
+        <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+          <MapPin className="w-4 h-4" />
+          <span>Update your shipping location</span>
+        </button>
+      </div>
+
+      {/* Shipping and pickup */}
+      <FilterSection title="Shipping and pickup">
+        <div className="space-y-1">
+          {shippingOptions.map((option) => (
+            <CheckboxOption
+              key={option.id}
+              label={option.label}
+              checked={false}
+              onChange={() => {}}
             />
           ))}
         </div>
       </FilterSection>
 
       {/* Condition Section */}
-      <FilterSection title="Condition">
+      <FilterSection title="Condition" defaultOpen={false}>
         <div className="space-y-1">
-          <FilterCheckbox
-            label="Any Condition"
-            checked={!filters.condition}
-            onChange={() => onConditionChange("")}
-          />
           {conditionOptions.map((condition) => (
-            <FilterCheckbox
+            <CheckboxOption
               key={condition.value}
               label={condition.label}
               checked={filters.condition === condition.value}
-              onChange={() =>
-                onConditionChange(
-                  filters.condition === condition.value ? "" : condition.value,
-                )
+              onChange={(checked) =>
+                onConditionChange(checked ? condition.value : "")
               }
             />
           ))}
@@ -199,60 +210,32 @@ function FilterContent({
       </FilterSection>
 
       {/* Price Range Section */}
-      <FilterSection title="Price">
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                GH₵
-              </span>
-              <Input
-                type="number"
-                placeholder="Min"
-                value={filters.minPrice || ""}
-                onChange={(e) => onMinPriceChange(e.target.value)}
-                className="pl-10 h-9 text-sm"
-              />
-            </div>
-            <span className="text-muted-foreground">to</span>
-            <div className="relative flex-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                GH₵
-              </span>
-              <Input
-                type="number"
-                placeholder="Max"
-                value={filters.maxPrice || ""}
-                onChange={(e) => onMaxPriceChange(e.target.value)}
-                className="pl-10 h-9 text-sm"
-              />
-            </div>
+      <FilterSection title="Price" defaultOpen={false}>
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+              ₵
+            </span>
+            <Input
+              type="number"
+              placeholder="Min"
+              value={filters.minPrice || ""}
+              onChange={(e) => onMinPriceChange(e.target.value)}
+              className="pl-6 h-8 text-sm"
+            />
           </div>
-          {/* Quick price ranges */}
-          <div className="flex flex-wrap gap-2">
-            {[
-              { label: "Under GH₵50", min: 0, max: 50 },
-              { label: "GH₵50-100", min: 50, max: 100 },
-              { label: "GH₵100-500", min: 100, max: 500 },
-              { label: "Over GH₵500", min: 500, max: undefined },
-            ].map((range) => (
-              <button
-                key={range.label}
-                onClick={() => {
-                  onMinPriceChange(range.min.toString());
-                  onMaxPriceChange(range.max?.toString() || "");
-                }}
-                className={cn(
-                  "px-3 py-1 text-xs rounded-full border transition-colors",
-                  filters.minPrice === range.min &&
-                    filters.maxPrice === range.max
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "border-border text-muted-foreground hover:border-primary hover:text-primary",
-                )}
-              >
-                {range.label}
-              </button>
-            ))}
+          <span className="text-muted-foreground text-sm">to</span>
+          <div className="relative flex-1">
+            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+              ₵
+            </span>
+            <Input
+              type="number"
+              placeholder="Max"
+              value={filters.maxPrice || ""}
+              onChange={(e) => onMaxPriceChange(e.target.value)}
+              className="pl-6 h-8 text-sm"
+            />
           </div>
         </div>
       </FilterSection>
@@ -285,7 +268,6 @@ export function ProductFilters({
       setFilters((prev) => {
         const newFilters = { ...prev, [key]: value || undefined };
 
-        // Update URL params
         const params = new URLSearchParams(searchParams);
         const paramKey =
           key === "minPrice"
@@ -312,18 +294,8 @@ export function ProductFilters({
     [searchParams, setSearchParams, onFilterChange],
   );
 
-  const clearFilters = useCallback(() => {
-    setFilters({});
-    setSearchParams({});
-    onFilterChange({});
-  }, [setSearchParams, onFilterChange]);
-
-  const activeFilterCount = Object.values(filters).filter(Boolean).length;
-
   const filterContentProps: FilterContentProps = {
     filters,
-    activeFilterCount,
-    onClearFilters: clearFilters,
     onCategoryChange: (value) =>
       handleFilterChange("category", value as Category),
     onConditionChange: (value) => handleFilterChange("condition", value),
@@ -336,8 +308,8 @@ export function ProductFilters({
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:block w-60 shrink-0">
-        <div className="sticky top-24 bg-white dark:bg-card border border-border rounded-xl overflow-hidden">
+      <aside className="hidden lg:block w-52 shrink-0">
+        <div className="sticky top-20">
           <FilterContent {...filterContentProps} />
         </div>
       </aside>
@@ -346,32 +318,40 @@ export function ProductFilters({
       <AnimatePresence>
         {isOpen && (
           <>
+            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-50 lg:hidden"
+              className="fixed inset-0 bg-black/40 z-50 lg:hidden"
               onClick={onClose}
             />
+
+            {/* Panel */}
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white dark:bg-background z-50 lg:hidden overflow-y-auto"
+              className="fixed left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-background z-50 lg:hidden overflow-y-auto"
             >
-              <div className="sticky top-0 bg-white dark:bg-background z-10 flex items-center justify-between p-4 border-b border-border">
+              {/* Header */}
+              <div className="sticky top-0 bg-background z-10 flex items-center justify-between p-4 border-b border-border">
                 <h2 className="text-lg font-semibold">Filters</h2>
                 <Button variant="ghost" size="icon" onClick={onClose}>
                   <X className="h-5 w-5" />
                 </Button>
               </div>
+
+              {/* Content */}
               <div className="p-4">
                 <FilterContent {...filterContentProps} />
               </div>
-              <div className="sticky bottom-0 bg-white dark:bg-background p-4 border-t border-border">
+
+              {/* Footer */}
+              <div className="sticky bottom-0 bg-background p-4 border-t border-border">
                 <Button className="w-full" onClick={onClose}>
-                  Show Results
+                  Apply Filters
                 </Button>
               </div>
             </motion.div>
