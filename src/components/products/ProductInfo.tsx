@@ -108,7 +108,7 @@ export function ProductInfo({
       <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <Link to={`/stores/${product.store?.id}`}>
+            <Link to={`/stores/${product.store?.slug}`}>
               <Avatar
                 src={product.store?.logo}
                 alt={product.store?.name || "Seller"}
@@ -117,7 +117,7 @@ export function ProductInfo({
             </Link>
             <div>
               <Link
-                to={`/stores/${product.store?.id}`}
+                to={`/stores/${product.store?.slug}`}
                 className="font-semibold text-gray-900 hover:underline block"
               >
                 {product.store?.name}
