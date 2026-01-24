@@ -149,6 +149,7 @@ const createProduct = (
     name: storeName,
     slug: storeSlug,
     logo: storeLogo,
+    totalSales: Math.floor(Math.random() * 50000),
   },
   dateCreated,
 });
@@ -632,9 +633,9 @@ export const mockApi = {
     };
   },
 
-  async getProduct(id: string) {
+  async getProduct(idOrSlug: string) {
     await delay(200);
-    return mockProducts.find((p) => p.id === id) || null;
+    return mockProducts.find((p) => p.id === idOrSlug || p.slug === idOrSlug) || null;
   },
 
   async getFeaturedProducts() {

@@ -110,7 +110,7 @@ export function ProductGridSkeleton({
 
 export function OrderCardSkeleton() {
   return (
-    <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+    <div className="rounded-xl bg-card p-6 space-y-4">
       <div className="flex items-center justify-between">
         <Skeleton className="h-5 w-32" />
         <Skeleton className="h-6 w-20 rounded-full" />

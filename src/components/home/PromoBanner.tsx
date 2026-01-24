@@ -34,13 +34,15 @@ export function PromoBanner({
       )}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-1">
           <h3 className="text-xl md:text-2xl font-bold">{title}</h3>
+          <div>
           {subtitle && (
-            <span className="hidden md:inline text-sm opacity-90">
+            <span className="hidden md:inline text-sm opacity-80 text-foreground">
               {subtitle}
             </span>
           )}
+          </div>
         </div>
         {ctaText && (
           <Link

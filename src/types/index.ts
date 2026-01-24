@@ -155,6 +155,8 @@ export interface Product {
     name: string;
     slug: string;
     logo?: string;
+    location?: string;
+    totalSales?: number;
   };
 }
 

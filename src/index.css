@@ -214,7 +214,7 @@ a {
 
 a:hover {
   color: hsl(var(--link-hover));
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 /* ========================================
