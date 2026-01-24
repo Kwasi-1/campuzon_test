@@ -185,9 +185,9 @@ body {
   flex-direction: column;
 }
 
-.container {
+.container-small {
   width: 100%;
-  max-width: 1488px;
+  max-width: 1288px;
   margin: 0 auto;
 }
 
