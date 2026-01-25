@@ -58,6 +58,8 @@ function App() {
             <Route path="/stores" element={<StoresPage />} />
             <Route path="/stores/:slug" element={<StoreDetailPage />} />
             <Route path="/cart" element={<CartPage />} />
+
+            {/* Auth pages */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/verify-2fa" element={<VerifyTFAPage />} />
