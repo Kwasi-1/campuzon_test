@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Menu,
   Bell,
   ShoppingCart,
   User,
@@ -13,6 +12,7 @@ import {
 import { useCartStore, useAuthStore } from "@/stores";
 import logo from "@/assets/images/CAMPUZONV2LT.png";
 import { MobileMenu } from "./MobileMenu";
+import { Icon } from '@iconify/react';
 
 export function Header() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -68,11 +68,12 @@ export function Header() {
               className="flex items-center justify-center h-10 w-10 rounded-lg hover:bg-muted transition-colors"
               aria-label="Toggle menu"
             >
-              <Menu className="h-6 w-6 text-foreground" />
+              {/* <Menu className="h-6 w-6 text-foreground" /> */}
+              <Icon icon="ri:menu-2-fill" className="h-7 w-7 text-foreground" />
             </button>
 
             {/* Center: Logo */}
-            <Link to="/" className="absolute left-1/2 -translate-x-1/2">
+            <Link to="/" className="hidden lg:block absolute left-1/2 -translate-x-1/2">
               <img src={logo} alt="Campuzon" className="h-12 object-contain" />
             </Link>
 
