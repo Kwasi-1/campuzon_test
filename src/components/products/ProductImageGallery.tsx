@@ -47,7 +47,7 @@ export function ProductImageGallery({
               key={index}
               onClick={() => setSelectedImageIndex(index)}
               className={cn(
-                "relative aspect-square rounded-2xl overflow-hidden border-2 transition-all hover:border-gray-400 flex-shrink-0",
+                "relative aspect-square rounded-2xl overflow-hidden border-2 transition-all bg-[#f2f2f2] flex-shrink-0",
                 selectedImageIndex === index
                   ? "border-gray-900 ring-2 ring-gray-900"
                   : "border-gray-300",
@@ -73,7 +73,7 @@ export function ProductImageGallery({
 
       {/* Main Image Container */}
       <div className="flex-1">
-        <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gray-50 border border-gray-200">
+        <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-[#f2f2f2] border border-gray-200">
           <AnimatePresence mode="wait">
             <motion.img
               key={selectedImageIndex}

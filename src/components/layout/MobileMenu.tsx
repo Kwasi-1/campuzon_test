@@ -39,9 +39,9 @@ export function MobileMenu({
   return (
     <>
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
-      <div className="fixed left-0 top-0 bottom-0 w-72 bg-background z-50 shadow-xl overflow-y-auto">
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <img src={logo} alt="Campuzon" className="h-8 object-contain" />
+      <div className="fixed left-0 top-0 bottom-0 w-full max-w-md lg:max-w-lg bg-background z-50 shadow-xl overflow-y-auto">
+        <div className="p-4 border-b border-border/50 flex items-center justify-between">
+          <img src={logo} alt="Campuzon" className="h-8 md:h-10 object-contain" />
           <button
             onClick={onClose}
             className="p-2 hover:bg-muted rounded-lg"
@@ -80,7 +80,7 @@ export function MobileMenu({
             </Link>
           ))}
 
-          <hr className="my-3 border-border" />
+          <hr className="my-3 borderborder" />
 
           {/* Categories */}
           <p className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">

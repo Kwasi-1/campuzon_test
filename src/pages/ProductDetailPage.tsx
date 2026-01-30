@@ -125,7 +125,7 @@ export function ProductDetailPage() {
     relatedProducts?.filter((p) => p.id !== product.id).slice(0, 4) || [];
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className=" min-h-screen">
       <div className="container mx-auto px-4 py-6 max-w-[1408px]">
         {/* Breadcrumb */}
         <Breadcrumb
@@ -141,7 +141,7 @@ export function ProductDetailPage() {
         />
 
         {/* Main Content */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white overflow-hidden">
           <div className="grid lg:grid-cols-[1fr_auto] gap-8 p-6 lg:p-8">
             {/* Left Section - Image Gallery */}
             <div className="lg:max-w-[884px]">

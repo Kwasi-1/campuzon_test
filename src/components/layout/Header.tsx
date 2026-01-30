@@ -11,7 +11,7 @@ import {
   Settings,
 } from "lucide-react";
 import { useCartStore, useAuthStore } from "@/stores";
-import logo from "@/assets/images/campuzon_logo.png";
+import logo from "@/assets/images/CAMPUZONV2LT.png";
 import { MobileMenu } from "./MobileMenu";
 
 export function Header() {
@@ -61,7 +61,7 @@ export function Header() {
       {/* Top Navigation Bar */}
       <div className="border-b border-border">
         <div className="container mx-auto px-4">
-          <div className="flex h-14 items-center justify-between">
+          <div className="flex h-18 items-center justify-between">
             {/* Left: Hamburger Menu */}
             <button
               onClick={() => setShowMobileMenu(true)}
@@ -73,7 +73,7 @@ export function Header() {
 
             {/* Center: Logo */}
             <Link to="/" className="absolute left-1/2 -translate-x-1/2">
-              <img src={logo} alt="Campuzon" className="h-8 object-contain" />
+              <img src={logo} alt="Campuzon" className="h-12 object-contain" />
             </Link>
 
             {/* Right: Navigation Links & Actions */}
@@ -81,16 +81,16 @@ export function Header() {
               {/* Desktop Links */}
               <nav className="hidden md:flex items-center gap-4 mr-2">
                 <Link
-                  to="/blog"
+                  to="/become-seller"
                   className="text-sm font-medium text-foreground hover:text-primary transition-colors"
                 >
-                  Blogs
+                  Sell
                 </Link>
                 <Link
                   to="/faq"
                   className="text-sm font-medium text-foreground hover:text-primary transition-colors"
                 >
-                  FAQs
+                  Watchlist
                 </Link>
               </nav>
 
