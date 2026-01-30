@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
-import logo from "@/assets/images/campuzon_logo.png";
+import logo from "@/assets/images/CAMPUZONV2LT.png";
 import { CATEGORY_OPTIONS } from "@/lib/utils";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gray-50 mt-auto border-t border-gray-200">
+    <footer className="bg-gray-50 mt-auto border-t border-border">
       {/* Main Footer Content */}
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-12">
@@ -145,7 +145,7 @@ export function Footer() {
               <img
                 src={logo}
                 alt="Campuzon"
-                className="h-10 object-contain"
+                className="h-10 md:h-14 object-contain"
               />
             </Link>
           </div>

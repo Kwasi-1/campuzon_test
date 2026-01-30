@@ -34,7 +34,7 @@ export function StoreHeader({
       {/* Hero Banner Carousel */}
       {hasHeroBanner && (
         <div className="relative bg-gradient-to-r from-gray-900 to-gray-800 overflow-hidden">
-          <div className="relative h-32 sm:h-40 md:h-48">
+          <div className="relative h-32 sm:h-40 md:h-52">
             {store.banner ? (
               <img
                 src={store.banner}
