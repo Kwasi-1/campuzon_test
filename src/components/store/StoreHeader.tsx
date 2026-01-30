@@ -30,7 +30,7 @@ export function StoreHeader({
   const hasHeroBanner = store.banner || store.description;
 
   return (
-    <div className="bg-white">
+    <div className="bg-white rounded-md overflow-hidden mt-6">
       {/* Hero Banner Carousel */}
       {hasHeroBanner && (
         <div className="relative bg-gradient-to-r from-gray-900 to-gray-800 overflow-hidden">
@@ -58,7 +58,7 @@ export function StoreHeader({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="bg-gray-900/80 border-gray-700 text-white hover:bg-gray-900 mt-3"
+                    className="bg-white border-gray-700 text-primary hover:opacity-90 mt-3 rounded-full px-4 py-2"
                   >
                     Learn more
                   </Button>

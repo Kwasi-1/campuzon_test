@@ -146,7 +146,7 @@ export function StoreDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white container-small mx-auto">
+    <div className="min-h-screen bg-white">
       {/* Store Header with Banner */}
       <StoreHeader
         store={store}

@@ -203,7 +203,7 @@ export function Header() {
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="bg-background border-b border-border">
+      <div className="bg-background borderb border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-3 h-14 overflow-x-auto scrollbar-hide">
             {/* Category Dropdown */}

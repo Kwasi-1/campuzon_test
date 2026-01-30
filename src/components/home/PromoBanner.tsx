@@ -20,7 +20,7 @@ export function PromoBanner({
   className,
 }: PromoBannerProps) {
   const variantStyles = {
-    primary: "bg-[#F7F7F7] text-primary-foreground",
+    primary: "bg-[#F7F7F7] text-foreground",
     secondary: "bg-secondary text-secondary-foreground",
     accent: "bg-gradient-to-r from-yellow-400 to-orange-400 text-foreground",
   };
@@ -35,7 +35,7 @@ export function PromoBanner({
     >
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <h3 className="text-xl md:text-2xl font-bold">{title}</h3>
+          <h3 className="text-xl md:text-2xl font-bold text-foreground">{title}</h3>
           <div>
           {subtitle && (
             <span className="hidden md:inline text-sm opacity-80 text-foreground">

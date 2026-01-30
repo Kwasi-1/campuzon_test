@@ -34,6 +34,7 @@ import {
   NotificationsPage,
   SettingsPage,
 } from "@/pages";
+import { StoreLayout } from "./components/layout/StoreLayout";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,8 +61,7 @@ function App() {
 
             {/* Public Routes - Without footer */}
             <Route path="/products/:id" element={<ProductDetailPage />} />
-            <Route path="/stores" element={<StoresPage />} />
-            <Route path="/stores/:slug" element={<StoreDetailPage />} />
+            
             <Route path="/cart" element={<CartPage />} />
 
             {/* Auth pages */}
@@ -100,6 +100,11 @@ function App() {
             <Route path="/messages/:id" element={<ConversationPage />} />
 
             {/* Become a Seller */}
+          </Route>
+
+          <Route path="" element={<StoreLayout />}>
+            <Route path="/stores" element={<StoresPage />} />
+            <Route path="/stores/:slug" element={<StoreDetailPage />} />
             <Route path="/become-seller" element={<BecomeSellerPage />} />
           </Route>
 

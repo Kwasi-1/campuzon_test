@@ -125,7 +125,7 @@ body {
 
 .container-small {
   width: 100%;
-  max-width: 1288px;
+  max-width: 1380px;
   margin: 0 auto;
 }
 
@@ -137,7 +137,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   font-weight: 700;
   line-height: 1.2;
-  color: hsl(var(--foreground));
+  /* color: hsl(var(--foreground)); */
 }
 
 /* ========================================
