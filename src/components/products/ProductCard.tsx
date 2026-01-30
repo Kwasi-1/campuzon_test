@@ -116,7 +116,7 @@ export function ProductCard({
                 "/placeholder-product.jpg"
               }
               alt={product.name}
-              className="h-full w-full object-contain p4 mix-blend-multiply dark:mix-blend-normal"
+              className="h-full w-full object-cover p4 mix-blend-multiply dark:mix-blend-normal"
               loading="lazy"
             />
 
@@ -163,25 +163,22 @@ export function ProductCard({
 
             {/* Metadata lines */}
             <div className="text-[13px] leading-snug space-y-0.5">
-              <p className="text-gray-500">Buy It Now</p>
-
-              {!isOutOfStock && (
-                <p className="text-[#1a8a2a] font-medium">
-                  Free delivery in 4 days
-                </p> // Exact green from image
+              {/* <p className="text-gray-500">Buy It Now</p> */}
+              {isOutOfStock && (
+                <p className="text-danger font-medium">
+                  Out of Stock
+                </p>
               )}
 
               <p className="text-gray-500">
-                Located in {product.store?.location || "United States"}
+                Located in {product.store?.location || "UG"}
               </p>
 
-              <p className="text-gray-500">Free returns</p>
-
-              {product.soldCount > 0 && (
+              {/* {product.soldCount > 0 && (
                 <p className="font-bold text-gray-900 dark:text-gray-100 mt-1">
                   {product.soldCount} sold
                 </p>
-              )}
+              )} */}
             </div>
           </div>
         </article>
@@ -270,16 +267,16 @@ function ListCard({
                   {formatPrice(product.price)}
                 </span>
 
-                <p className="text-[13px] text-gray-500">Buy It Now</p>
+                <p className="text-[13px] text-[#1a8a2a] font-bold">Buy It Now</p>
 
-                {!isOutOfStock && (
-                  <p className="text-[13px] text-[#1a8a2a] font-bold">
-                    Free delivery in 4 days
-                  </p> // Bold green in list view
+                {isOutOfStock && (
+                  <p className="text-danger font-medium">
+                    Out of Stock
+                  </p>
                 )}
 
                 <p className="text-[13px] text-gray-500">
-                  Located in {product.store?.location || "United States"}
+                  Located in {product.store?.location || "UG"}
                 </p>
                 <p className="text-[13px] text-gray-500">Free returns</p>
 

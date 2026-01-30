@@ -11,6 +11,7 @@
   --primary: 212 100% 48%;          /* #0066cc - eBay blue */
   --primary-hover: 212 100% 40%;    /* Darker blue for hover */
   --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 97%;         /* #F7F7F7 - Light gray */
   
   /* Neutral colors */
   --background: 0 0% 100%;
@@ -53,6 +54,7 @@
   --color-primary: hsl(var(--primary));
   --color-primary-hover: hsl(var(--primary-hover));
   --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-muted: hsl(var(--muted));

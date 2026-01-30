@@ -3,6 +3,7 @@ import { ProductCard } from "./ProductCard";
 import { ProductGridSkeleton, EmptyState } from "@/components/ui";
 import { Package } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLocation } from "react-router-dom";
 
 type ViewMode = "grid" | "list";
 
@@ -21,6 +22,9 @@ export function ProductGrid({
   viewMode = "grid",
   className,
 }: ProductGridProps) {
+  const location = useLocation();
+  const isStorePage = location.pathname.startsWith("/stores/");
+
   if (isLoading) {
     return <ProductGridSkeleton count={12} viewMode={viewMode} />;
   }
@@ -39,7 +43,7 @@ export function ProductGrid({
     <div
       className={cn(
         viewMode === "grid"
-          ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6"
+          ? `grid grid-cols-2 sm:grid-cols-3 ${isStorePage ? "lg:grid-cols-5" : "lg:grid-cols-4"} gap-x-4 gap-y-6`
           : "flex flex-col",
         className,
       )}
