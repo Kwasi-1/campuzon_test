@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/shared/Skeleton"
+import { Skeleton } from "@/components/shared/Skeleton";
 import {
   ProductImageGallery,
   ProductInfo,

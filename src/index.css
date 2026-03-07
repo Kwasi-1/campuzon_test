@@ -104,9 +104,10 @@ All colors MUST be HSL.
   body {
     @apply bg-white text-foreground;
     font-family: 'DM Sans', sans-serif;
+    letter-spacing: -0.01rem;
   }
   /* h1, h2, h3, h4, h5, h6 {
-    @apply lg:tracking-wide font-semibold;
+    @apply lg:tracking-tight font-semibold;
   } */
 }
 

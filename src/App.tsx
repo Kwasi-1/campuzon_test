@@ -30,7 +30,6 @@ import PrivacyPolicy from "./pages/client/company_policy/PrivacyPolicy";
 import AboutUs from "./pages/client/about/AboutUs";
 import OrderConfirmation from "./pages/client/orders/OrderConfirmation";
 
-
 // Admin Portal Components
 import AdminPortalLayout from "./pages/admin/AdminPortal";
 import AdminDashboard from "./pages/admin/dashboard/AdminDashboard";
@@ -53,6 +52,8 @@ import AdminLogin from "./pages/admin/AdminLogin";
 import SuperAdminLogin from "./pages/super-admin/SuperAdminLogin";
 import AdminProtectedRoute from "./components/admin/AdminProtectedRoute";
 import { ProductDetailPage } from "./pages/client-new/products/pages/product-details/ProductDetailPage";
+import { StoresPage } from "./pages/client-new/stores";
+import { StoreDetailPage } from "./pages/client-new/stores/store-detail/StoreDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -203,18 +204,10 @@ const App = () => (
                         <Layout>
                           <Routes>
                             <Route path="/" element={<Home />} />
-                            <Route
-                              path="/products"
-                              element={<Products />}
-                            />
+                            <Route path="/products" element={<Products />} />
                             <Route path="/categories" element={<Products />} />
                             <Route
                               path="/categories/:categoryName"
-                              element={<Products />}
-                            />
-                            <Route path="/stores" element={<Products />} />
-                            <Route
-                              path="/stores/:storeName"
                               element={<Products />}
                             />
                             <Route path="/deals" element={<Products />} />
@@ -247,6 +240,43 @@ const App = () => (
                             />
                             <Route path="/about" element={<AboutUs />} />
                             <Route path="*" element={<NotFound />} />
+
+                            <Route path="/stores" element={<StoresPage />} />
+                            <Route
+                              path="/stores/:slug"
+                              element={<StoreDetailPage />}
+                            />
+
+                            {/* <Route path="/profile" element={<ProfilePage />} />
+                            <Route
+                              path="/settings"
+                              element={<SettingsPage />}
+                            />
+                            <Route
+                              path="/settings/security"
+                              element={<TwoFactorSettingsPage />}
+                            />
+                            <Route
+                              path="/notifications"
+                              element={<NotificationsPage />}
+                            />
+                            <Route
+                              path="/wishlist"
+                              element={<WishlistPage />}
+                            />
+                            <Route
+                              path="/addresses"
+                              element={<AddressesPage />}
+                            />
+                            <Route
+                              path="/payments"
+                              element={<PaymentMethodsPage />}
+                            />
+
+                            <Route
+                              path="/checkout"
+                              element={<CheckoutPage />}
+                            /> */}
                           </Routes>
                         </Layout>
                       }
