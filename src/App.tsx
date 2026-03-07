@@ -10,7 +10,7 @@ import { OrderProvider } from "./contexts/OrderContext";
 import { WishlistProvider } from "./contexts/WishlistContext";
 import ScrollToTop from "./components/ScrollToTop";
 import Layout from "./components/Layout";
-import Home from "./pages/client/Home";
+import Home from "./pages/client-new/home-page";
 import Products from "./pages/client/products/Products";
 import ProductDetail from "./pages/client/products/ProductDetail";
 import Cart from "./pages/client/orders/Cart";
@@ -30,16 +30,6 @@ import PrivacyPolicy from "./pages/client/company_policy/PrivacyPolicy";
 import AboutUs from "./pages/client/about/AboutUs";
 import OrderConfirmation from "./pages/client/orders/OrderConfirmation";
 
-// Store Portal Components
-import StorePortalLayout from "./pages/store/StorePortal";
-import StorePortalDashboard from "./pages/store/dashboard/StoreDashboard";
-import StoreProducts from "./pages/store/products/StoreProducts";
-import StoreOrders from "./pages/store/orders/StoreOrders";
-import StoreSettings from "./pages/store/settings/StoreSettings";
-import StoreNotifications from "./pages/store/notifications/StoreNotifications";
-import { StoreAuthProvider } from "./contexts/StoreAuthContext";
-import MultiStepStoreSignup from "./pages/store/auth/MultiStepStoreSignup";
-import StoreLogin from "./pages/store/auth/StoreLogin";
 
 // Admin Portal Components
 import AdminPortalLayout from "./pages/admin/AdminPortal";
