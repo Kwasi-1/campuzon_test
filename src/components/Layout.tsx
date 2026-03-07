@@ -94,7 +94,7 @@ const Layout = ({ children }: LayoutProps) => {
       />
 
       {/* Top Info Bar */}
-      <div className="bg-black text-white py-2 text-sm hidden md:block">
+      <div className="bg-black text-white py-2 text-sm hidden mdblock">
         <div className="container mx-auto px-4 flex justify-between items-center">
           <div className="flex items-center space-x-6">
             <div className="flex items-center space-x-2">

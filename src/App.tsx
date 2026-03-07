@@ -11,7 +11,7 @@ import { WishlistProvider } from "./contexts/WishlistContext";
 import ScrollToTop from "./components/ScrollToTop";
 import Layout from "./components/Layout";
 import Home from "./pages/client-new/home-page";
-import Products from "./pages/client/products/Products";
+import Products from "./pages/client-new/products";
 import ProductDetail from "./pages/client/products/ProductDetail";
 import Cart from "./pages/client/orders/Cart";
 import OrderTracking from "./pages/client/orders/OrderTracking";
@@ -52,6 +52,7 @@ import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import AdminLogin from "./pages/admin/AdminLogin";
 import SuperAdminLogin from "./pages/super-admin/SuperAdminLogin";
 import AdminProtectedRoute from "./components/admin/AdminProtectedRoute";
+import { ProductDetailPage } from "./pages/client-new/products/pages/product-details/ProductDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -204,7 +205,7 @@ const App = () => (
                             <Route path="/" element={<Home />} />
                             <Route
                               path="/products"
-                              element={<ProductSearch />}
+                              element={<Products />}
                             />
                             <Route path="/categories" element={<Products />} />
                             <Route
@@ -219,7 +220,7 @@ const App = () => (
                             <Route path="/deals" element={<Products />} />
                             <Route
                               path="/product/:id"
-                              element={<ProductDetail />}
+                              element={<ProductDetailPage />}
                             />
                             <Route path="/cart" element={<Cart />} />
                             <Route path="/track" element={<OrderTracking />} />
