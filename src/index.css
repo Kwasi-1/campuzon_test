@@ -1,0 +1,170 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Public+Sans:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@font-face {
+  font-family: 'Orpheus Pro';
+  src: url('./assets/fonts/Orpheus Pro.woff2') format('woff2'),
+  url('./assets/fonts/Orpheus Pro.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 215 25% 27%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 27%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 27%;
+
+    /* Burgundy Primary */
+    --primary: 345 100% 25.1%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Fresh Green Secondary */
+    --secondary: 120 38% 42%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Cream Muted */
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 25% 27%;
+
+    /* Light accents */
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 215 25% 27%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 35 25% 93%;
+    --input: 35 25% 87%;
+    --ring: 350 65% 30%;
+
+    --radius: 0.75rem;
+
+    /* Brand specific colors */
+    --success: 120 38% 42%;
+    --success-foreground: 0 0% 100%;
+    --warning: 48 96% 53%;
+    --warning-foreground: 20 14.3% 4.1%;
+    
+    /* Additional brand colors */
+    --cream: 35 25% 87%;
+    --charcoal: 215 25% 27%;
+    --burgundy: 350 65% 30%;
+    --fresh-green: 120 38% 42%;
+  }
+
+  .dark {
+    --background: 215 25% 27%;
+    --foreground: 0 0% 100%;
+
+    --card: 215 25% 27%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 215 25% 27%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 350 65% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 120 38% 45%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 215 20% 35%;
+    --muted-foreground: 35 25% 87%;
+
+    --accent: 215 20% 35%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 20% 35%;
+    --input: 215 20% 35%;
+    --ring: 350 65% 40%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-white text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply lg:tracking-wide font-semibold;
+  }
+}
+
+ html {
+    scroll-behavior: smooth;
+    scroll-padding:  9rem;
+  }
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow-md;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 px-6 py-3 rounded-xl font-medium transition-all duration-200 border border-border;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-foreground px-6 py-3 rounded-xl font-medium transition-all duration-200;
+  }
+  
+  .product-card {
+    @apply bg-card rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 border border-border/50 overflow-hidden hover:border-primary/20;
+  }
+  
+  .product-card:hover {
+    @apply shadow-primary/10;
+  }
+  
+  .grocery-hero {
+    @apply bg-gradient-to-br from-primary via-primary/95 to-primary/90 text-primary-foreground;
+  }
+  
+  .text-brand-primary {
+    @apply text-primary;
+  }
+  
+  .text-brand-secondary {
+    @apply text-secondary;
+  }
+  
+  .bg-brand-primary {
+    @apply bg-primary text-primary-foreground;
+  }
+  
+  .bg-brand-secondary {
+    @apply bg-secondary text-secondary-foreground;
+  }
+  
+  .section-padding {
+    @apply px-[15px] sm:px-6 lg:px-8 2xl:px-0;
+  }
+  .font-dashboard {
+    font-family: 'Public Sans', sans-serif;
+  }
+
+  /* Mobile safe area utilities */
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

@@ -1,0 +1,1866 @@
+import { 
+  Product, 
+  Store, 
+  Category, 
+  AdminUser, 
+  AdminStore, 
+  AdminProduct, 
+  AdminTransaction, 
+  AdminRider,
+  StoreProduct,
+  StoreOrder,
+  StoreTransaction,
+  StoreSettings,
+  Notification,
+  NotificationSettings,
+  AdminManagement,
+  UserActivity,
+  Transaction,
+} from '@/types';
+
+// Products Data
+export const products: Product[] = [
+  // Fresh Produce
+  {
+    id: 1,
+    name: "Fresh Organic Tomatoes",
+    price: 12,
+    originalPrice: 15,
+    discount: 20,
+    rating: 4.5,
+    reviews: "324",
+    image: "https://pngimg.com/uploads/tomato/tomato_PNG12590.png",
+    store: "Shoprite",
+    category: "Fresh Produce",
+    description: "Fresh, locally grown organic tomatoes",
+    inStock: true,
+    unit: "per kg",
+    hasDiscount: true,
+  },
+  {
+    id: 2,
+    name: "Fresh Bananas",
+    price: 8,
+    originalPrice: 10,
+    discount: 20,
+    rating: 4.4,
+    reviews: "543",
+    image: "https://pngimg.com/uploads/banana/banana_PNG835.png",
+    store: "MaxMart",
+    category: "Fresh Produce",
+    description: "Sweet, ripe bananas perfect for snacking",
+    inStock: true,
+    unit: "per bunch",
+    hasDiscount: true,
+  },
+  {
+    id: 3,
+    name: "Fresh Carrots",
+    price: 10,
+    rating: 4.3,
+    reviews: "267",
+    image: "https://pngimg.com/uploads/carrot/carrot_PNG4985.png",
+    store: "Shoprite",
+    category: "Fresh Produce",
+    description: "Crisp, fresh carrots",
+    inStock: true,
+    unit: "per kg",
+    hasDiscount: false,
+  },
+  {
+    id: 4,
+    name: "Fresh Spinach",
+    price: 6,
+    originalPrice: 8,
+    discount: 25,
+    rating: 4.6,
+    reviews: "189",
+    image: "https://pngimg.com/uploads/spinach/spinach_PNG58.png",
+    store: "MaxMart",
+    category: "Fresh Produce",
+    description: "Fresh organic spinach leaves",
+    inStock: true,
+    unit: "per bunch",
+    hasDiscount: true,
+  },
+  {
+    id: 5,
+    name: "Red Onions",
+    price: 9,
+    rating: 4.2,
+    reviews: "298",
+    image: "https://pngimg.com/uploads/onion/onion_PNG99229.png",
+    store: "Shoprite",
+    category: "Fresh Produce",
+    description: "Fresh red onions",
+    inStock: true,
+    unit: "per kg",
+    hasDiscount: false,
+  },
+  {
+    id: 6,
+    name: "Green Bell Peppers",
+    price: 14,
+    originalPrice: 16,
+    discount: 12,
+    rating: 4.4,
+    reviews: "156",
+    image: "https://pngimg.com/uploads/pepper/pepper_PNG3241.png",
+    store: "Palace Mall",
+    category: "Fresh Produce",
+    description: "Crisp green bell peppers",
+    inStock: true,
+    unit: "per kg",
+    hasDiscount: true,
+  },
+  {
+    id: 7,
+    name: "Fresh Apples",
+    price: 16,
+    originalPrice: 18,
+    discount: 11,
+    rating: 4.7,
+    reviews: "445",
+    image: "https://pngimg.com/uploads/apple/apple_PNG12405.png",
+    store: "Melcom",
+    category: "Fresh Produce",
+    description: "Crisp red apples",
+    inStock: true,
+    unit: "per kg",
+    hasDiscount: true,
+  },
+  {
+    id: 8,
+    name: "Fresh Oranges",
+    price: 14,
+    rating: 4.5,
+    reviews: "332",
+    image: "https://pngimg.com/uploads/orange/orange_PNG809.png",
+    store: "MaxMart",
+    category: "Fresh Produce",
+    description: "Sweet, juicy oranges",
+    inStock: true,
+    unit: "per kg",
+    hasDiscount: false,
+  },
+  
+  // Pantry Essentials
+  {
+    id: 9,
+    name: "Premium Jasmine Rice 5kg",
+    price: 35,
+    originalPrice: 42,
+    discount: 17,
+    rating: 4.6,
+    reviews: "1.8k",
+    image: "https://pngimg.com/uploads/rice/rice_PNG25.png",
+    store: "Melcom",
+    category: "Pantry Essentials",
+    description: "Premium quality jasmine rice",
+    inStock: true,
+    unit: "5kg bag",
+    hasDiscount: true,
+  },
+  {
+    id: 10,
+    name: "Cooking Oil 2L",
+    price: 28,
+    originalPrice: 35,
+    discount: 20,
+    rating: 4.5,
+    reviews: "967",
+    image: "https://pngimg.com/uploads/oil/oil_PNG36.png",
+    store: "Palace Mall",
+    category: "Pantry Essentials",
+    description: "Pure vegetable cooking oil",
+    inStock: true,
+    unit: "2L bottle",
+    hasDiscount: true,
+  },
+  {
+    id: 11,
+    name: "Wheat Flour 2kg",
+    price: 18,
+    rating: 4.4,
+    reviews: "445",
+    image: "https://pngimg.com/uploads/flour/flour_PNG11.png",
+    store: "Shoprite",
+    category: "Pantry Essentials",
+    description: "All-purpose wheat flour",
+    inStock: true,
+    unit: "2kg bag",
+    hasDiscount: false,
+  },
+  {
+    id: 12,
+    name: "Sugar 1kg",
+    price: 15,
+    originalPrice: 18,
+    discount: 17,
+    rating: 4.3,
+    reviews: "567",
+    image: "https://pngimg.com/uploads/sugar/sugar_PNG40.png",
+    store: "MaxMart",
+    category: "Pantry Essentials",
+    description: "Pure white sugar",
+    inStock: true,
+    unit: "1kg pack",
+    hasDiscount: true,
+  },
+  {
+    id: 13,
+    name: "Table Salt 500g",
+    price: 5,
+    rating: 4.5,
+    reviews: "234",
+    image: "https://pngimg.com/uploads/salt/salt_PNG31.png",
+    store: "Shoprite",
+    category: "Pantry Essentials",
+    description: "Pure table salt",
+    inStock: true,
+    unit: "500g pack",
+    hasDiscount: false,
+  },
+
+  // Dairy & Eggs
+  {
+    id: 14,
+    name: "Fresh Milk 1L",
+    price: 12,
+    rating: 4.7,
+    reviews: "892",
+    image: "https://pngimg.com/uploads/milk/milk_PNG12736.png",
+    store: "MaxMart",
+    category: "Dairy & Eggs",
+    description: "Fresh whole milk",
+    inStock: true,
+    unit: "1L carton",
+    hasDiscount: false,
+  },
+  {
+    id: 15,
+    name: "Farm Fresh Eggs",
+    price: 25,
+    originalPrice: 30,
+    discount: 17,
+    rating: 4.8,
+    reviews: "1.2k",
+    image: "https://pngimg.com/uploads/egg/egg_PNG40.png",
+    store: "Shoprite",
+    category: "Dairy & Eggs",
+    description: "Fresh farm eggs",
+    inStock: true,
+    unit: "30 pieces",
+    hasDiscount: true,
+  },
+  {
+    id: 16,
+    name: "Cheese Block 250g",
+    price: 22,
+    originalPrice: 25,
+    discount: 12,
+    rating: 4.6,
+    reviews: "389",
+    image: "https://pngimg.com/uploads/cheese/cheese_PNG25251.png",
+    store: "Palace Mall",
+    category: "Dairy & Eggs",
+    description: "Premium cheddar cheese",
+    inStock: true,
+    unit: "250g block",
+    hasDiscount: true,
+  },
+  {
+    id: 17,
+    name: "Butter 200g",
+    price: 18,
+    rating: 4.5,
+    reviews: "267",
+    image: "https://pngimg.com/uploads/butter/butter_PNG61.png",
+    store: "MaxMart",
+    category: "Dairy & Eggs",
+    description: "Fresh salted butter",
+    inStock: true,
+    unit: "200g pack",
+    hasDiscount: false,
+  },
+
+  // Meat & Seafood
+  {
+    id: 18,
+    name: "Fresh Chicken Breast",
+    price: 45,
+    originalPrice: 52,
+    discount: 13,
+    rating: 4.6,
+    reviews: "678",
+    image: "https://pngimg.com/uploads/chicken_meat/chicken_meat_PNG27.png",
+    store: "Palace Mall",
+    category: "Meat & Seafood",
+    description: "Fresh, boneless chicken breast",
+    inStock: true,
+    unit: "per kg",
+    hasDiscount: true,
+  },
+  {
+    id: 19,
+    name: "Fresh Fish Fillet",
+    price: 38,
+    rating: 4.5,
+    reviews: "432",
+    image: "https://pngimg.com/uploads/fish/fish_PNG25082.png",
+    store: "MaxMart",
+    category: "Meat & Seafood",
+    description: "Fresh fish fillet",
+    inStock: true,
+    unit: "per kg",
+    hasDiscount: false,
+  },
+  {
+    id: 20,
+    name: "Beef Steak",
+    price: 65,
+    originalPrice: 75,
+    discount: 13,
+    rating: 4.7,
+    reviews: "523",
+    image: "https://pngimg.com/uploads/meat/meat_PNG3766.png",
+    store: "Shoprite",
+    category: "Meat & Seafood",
+    description: "Premium beef steak",
+    inStock: true,
+    unit: "per kg",
+    hasDiscount: true,
+  },
+
+  // Beverages
+  {
+    id: 21,
+    name: "Natural Spring Water 1.5L",
+    price: 5,
+    rating: 4.3,
+    reviews: "234",
+    image: "https://pngimg.com/uploads/water_bottle/water_bottle_PNG20981.png",
+    store: "Melcom",
+    category: "Beverages",
+    description: "Pure natural spring water",
+    inStock: true,
+    unit: "1.5L bottle",
+    hasDiscount: false,
+  },
+  {
+    id: 22,
+    name: "Fresh Orange Juice 1L",
+    price: 15,
+    originalPrice: 18,
+    discount: 17,
+    rating: 4.6,
+    reviews: "567",
+    image: "https://pngimg.com/uploads/juice/juice_PNG12679.png",
+    store: "Shoprite",
+    category: "Beverages",
+    description: "100% fresh orange juice",
+    inStock: true,
+    unit: "1L carton",
+    hasDiscount: true,
+  },
+  {
+    id: 23,
+    name: "Coca Cola 2L",
+    price: 8,
+    originalPrice: 10,
+    discount: 20,
+    rating: 4.2,
+    reviews: "789",
+    image: "https://pngimg.com/uploads/coca_cola/coca_cola_PNG25.png",
+    store: "MaxMart",
+    category: "Beverages",
+    description: "Classic Coca Cola",
+    inStock: true,
+    unit: "2L bottle",
+    hasDiscount: true,
+  },
+  {
+    id: 24,
+    name: "Green Tea Box",
+    price: 12,
+    rating: 4.5,
+    reviews: "234",
+    image: "https://pngimg.com/uploads/tea/tea_PNG16954.png",
+    store: "Melcom",
+    category: "Beverages",
+    description: "Premium green tea bags",
+    inStock: true,
+    unit: "50 bags",
+    hasDiscount: false,
+  },
+
+  // Bakery
+  {
+    id: 25,
+    name: "Fresh White Bread",
+    price: 8,
+    rating: 4.4,
+    reviews: "789",
+    image: "https://pngimg.com/uploads/bread/bread_PNG2221.png",
+    store: "Palace Mall",
+    category: "Bakery",
+    description: "Soft, fresh white bread",
+    inStock: true,
+    unit: "loaf",
+    hasDiscount: false,
+  },
+  {
+    id: 26,
+    name: "Croissants Pack",
+    price: 22,
+    originalPrice: 26,
+    discount: 15,
+    rating: 4.7,
+    reviews: "345",
+    image: "https://pngimg.com/uploads/croissant/croissant_PNG46.png",
+    store: "MaxMart",
+    category: "Bakery",
+    description: "Buttery, flaky croissants",
+    inStock: true,
+    unit: "pack of 6",
+    hasDiscount: true,
+  },
+  {
+    id: 27,
+    name: "Chocolate Cake",
+    price: 35,
+    originalPrice: 42,
+    discount: 17,
+    rating: 4.8,
+    reviews: "456",
+    image: "https://pngimg.com/uploads/cake/cake_PNG13114.png",
+    store: "Shoprite",
+    category: "Bakery",
+    description: "Rich chocolate cake",
+    inStock: true,
+    unit: "whole cake",
+    hasDiscount: true,
+  },
+  {
+    id: 28,
+    name: "Bagels Pack",
+    price: 16,
+    rating: 4.3,
+    reviews: "234",
+    image: "https://pngimg.com/uploads/bagel/bagel_PNG57.png",
+    store: "Palace Mall",
+    category: "Bakery",
+    description: "Fresh sesame bagels",
+    inStock: true,
+    unit: "pack of 6",
+    hasDiscount: false,
+  },
+
+  // Snacks
+  {
+    id: 29,
+    name: "Mixed Nuts 250g",
+    price: 32,
+    originalPrice: 38,
+    discount: 16,
+    rating: 4.5,
+    reviews: "456",
+    image: "https://pngimg.com/uploads/nuts/nuts_PNG12542.png",
+    store: "Shoprite",
+    category: "Snacks",
+    description: "Premium mixed nuts",
+    inStock: true,
+    unit: "250g pack",
+    hasDiscount: true,
+  },
+  {
+    id: 30,
+    name: "Potato Chips",
+    price: 6,
+    originalPrice: 8,
+    discount: 25,
+    rating: 4.1,
+    reviews: "567",
+    image: "https://pngimg.com/uploads/chips/chips_PNG12.png",
+    store: "MaxMart",
+    category: "Snacks",
+    description: "Crispy potato chips",
+    inStock: true,
+    unit: "150g pack",
+    hasDiscount: true,
+  },
+  {
+    id: 31,
+    name: "Chocolate Bar",
+    price: 4,
+    rating: 4.6,
+    reviews: "789",
+    image: "https://pngimg.com/uploads/chocolate/chocolate_PNG54.png",
+    store: "Melcom",
+    category: "Snacks",
+    description: "Premium milk chocolate",
+    inStock: true,
+    unit: "100g bar",
+    hasDiscount: false,
+  },
+  {
+    id: 32,
+    name: "Popcorn",
+    price: 8,
+    originalPrice: 10,
+    discount: 20,
+    rating: 4.4,
+    reviews: "345",
+    image: "https://pngimg.com/uploads/popcorn/popcorn_PNG31.png",
+    store: "Shoprite",
+    category: "Snacks",
+    description: "Buttered popcorn",
+    inStock: true,
+    unit: "200g bag",
+    hasDiscount: true,
+  },
+
+  // Frozen Foods
+  {
+    id: 33,
+    name: "Frozen Vegetables Mix",
+    price: 16,
+    originalPrice: 19,
+    discount: 16,
+    rating: 4.5,
+    reviews: "234",
+    image: "https://pngimg.com/uploads/broccoli/broccoli_PNG72.png",
+    store: "Palace Mall",
+    category: "Frozen Foods",
+    description: "Mixed frozen vegetables",
+    inStock: true,
+    unit: "500g pack",
+    hasDiscount: true,
+  },
+  {
+    id: 34,
+    name: "Ice Cream Vanilla",
+    price: 24,
+    originalPrice: 28,
+    discount: 14,
+    rating: 4.7,
+    reviews: "567",
+    image: "https://pngimg.com/uploads/ice_cream/ice_cream_PNG21030.png",
+    store: "MaxMart",
+    category: "Frozen Foods",
+    description: "Premium vanilla ice cream",
+    inStock: true,
+    unit: "1L tub",
+    hasDiscount: true,
+  },
+  {
+    id: 35,
+    name: "Frozen Pizza",
+    price: 28,
+    rating: 4.3,
+    reviews: "456",
+    image: "https://pngimg.com/uploads/pizza/pizza_PNG44081.png",
+    store: "Shoprite",
+    category: "Frozen Foods",
+    description: "Margherita frozen pizza",
+    inStock: true,
+    unit: "400g pizza",
+    hasDiscount: false,
+  },
+
+  // Personal Care & Household (grocery-related)
+  {
+    id: 36,
+    name: "Dish Soap",
+    price: 9,
+    originalPrice: 12,
+    discount: 25,
+    rating: 4.4,
+    reviews: "234",
+    image: "https://pngimg.com/uploads/soap/soap_PNG25.png",
+    store: "Palace Mall",
+    category: "Household Items",
+    description: "Grease-cutting dish soap",
+    inStock: true,
+    unit: "750ml bottle",
+    hasDiscount: true,
+  },
+  {
+    id: 37,
+    name: "Paper Towels",
+    price: 15,
+    rating: 4.3,
+    reviews: "345",
+    image: "https://pngimg.com/uploads/tissue/tissue_PNG17.png",
+    store: "Melcom",
+    category: "Household Items",
+    description: "Absorbent paper towels",
+    inStock: true,
+    unit: "6 roll pack",
+    hasDiscount: false,
+  },
+  {
+    id: 38,
+    name: "Laundry Detergent",
+    price: 32,
+    originalPrice: 35,
+    discount: 9,
+    rating: 4.6,
+    reviews: "445",
+    image: "https://pngimg.com/uploads/detergent/detergent_PNG18.png",
+    store: "MaxMart",
+    category: "Household Items",
+    description: "Powerful laundry detergent",
+    inStock: true,
+    unit: "2kg pack",
+    hasDiscount: true,
+  },
+  {
+    id: 39,
+    name: "Aluminum Foil",
+    price: 12,
+    rating: 4.2,
+    reviews: "223",
+    image: "https://pngimg.com/uploads/aluminum_foil/aluminum_foil_PNG21.png",
+    store: "Shoprite",
+    category: "Household Items",
+    description: "Heavy duty aluminum foil",
+    inStock: true,
+    unit: "25m roll",
+    hasDiscount: false,
+  },
+  {
+    id: 40,
+    name: "Trash Bags",
+    price: 18,
+    originalPrice: 22,
+    discount: 18,
+    rating: 4.4,
+    reviews: "334",
+    image: "https://pngimg.com/uploads/garbage_bag/garbage_bag_PNG23.png",
+    store: "Palace Mall",
+    category: "Household Items",
+    description: "Strong trash bags",
+    inStock: true,
+    unit: "50 count box",
+    hasDiscount: true,
+  },
+];
+
+// Stores Data
+export const stores: Store[] = [
+  {
+    name: "Shoprite",
+    logo: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&h=600&fit=crop&q=80",
+    fallbackIcon: "mdi:store",
+    products: 2500,
+    description: "Ghana's leading supermarket chain",
+    rating: 4.5,
+    deliveryTime: "30-45 mins"
+  },
+  {
+    name: "Palace Mall",
+    logo: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=600&fit=crop&q=80",
+    fallbackIcon: "mdi:shopping",
+    products: 1800,
+    description: "Premium shopping destination",
+    rating: 4.3,
+    deliveryTime: "25-40 mins"
+  },
+  {
+    name: "Melcom",
+    logo: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=600&fit=crop&q=80",
+    fallbackIcon: "mdi:storefront",
+    products: 3200,
+    description: "Everything you need under one roof",
+    rating: 4.2,
+    deliveryTime: "35-50 mins"
+  },
+  {
+    name: "Game Stores",
+    logo: "https://images.unsplash.com/photo-1540553016722-983e48a2cd10?w=800&h=600&fit=crop&q=80",
+    fallbackIcon: "mdi:gamepad-variant",
+    products: 1200,
+    description: "Electronics and gaming paradise",
+    rating: 4.4,
+    deliveryTime: "20-35 mins"
+  },
+  {
+    name: "MaxMart",
+    logo: "https://images.unsplash.com/photo-1555529902-5261145633bf?w=800&h=600&fit=crop&q=80",
+    fallbackIcon: "mdi:cart",
+    products: 2100,
+    description: "Your neighborhood grocery store",
+    rating: 4.1,
+    deliveryTime: "25-40 mins"
+  },
+  {
+    name: "John Holt",
+    logo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop&q=80",
+    fallbackIcon: "mdi:store-outline",
+    products: 1600,
+    description: "Quality goods since 1899",
+    rating: 4.0,
+    deliveryTime: "40-55 mins"
+  },
+  {
+    name: "A&C Mall",
+    logo: "https://images.unsplash.com/photo-1519567241046-7ad31adc0c57?w=800&h=600&fit=crop&q=80",
+    fallbackIcon: "mdi:shopping-outline",
+    products: 2800,
+    description: "Modern shopping experience",
+    rating: 4.6,
+    deliveryTime: "15-30 mins"
+  },
+  {
+    name: "Marina Mall",
+    logo: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=600&fit=crop&q=80",
+    fallbackIcon: "mdi:store-24-hour",
+    products: 2200,
+    description: "Waterfront shopping destination",
+    rating: 4.3,
+    deliveryTime: "30-45 mins"
+  }
+];
+
+// Categories Data
+export const categories: Category[] = [
+  {
+    name: "Fresh Produce",
+    icon: "si:apple-line",
+    count: 120,
+    image: "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&h=300&fit=crop&q=80",
+    isLarge: false,
+  },
+  {
+    name: "Meat & Seafood",
+    icon: "hugeicons:restaurant-03",
+    count: 85,
+    image: "https://images.unsplash.com/photo-1551782450-17144efb9c50?w=400&h=300&fit=crop&q=80",
+    isLarge: false,
+  },
+  {
+    name: "Dairy & Eggs",
+    icon: "ph:cow-light",
+    count: 95,
+    image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&h=300&fit=crop&q=80",
+    isLarge: false,
+  },
+  {
+    name: "Bakery",
+    icon: "emojione-monotone:bread",
+    count: 67,
+    image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=300&fit=crop&q=80",
+    isLarge: false,
+  },
+  {
+    name: "Pantry Essentials",
+    icon: "material-symbols-light:kitchen-outline-rounded",
+    count: 200,
+  },
+  {
+    name: "Beverages",
+    icon: "ph:beer-bottle-light",
+    count: 110,
+  },
+  {
+    name: "Snacks",
+    icon: "material-symbols-light:cookie-outline",
+    count: 78,
+  },
+  {
+    name: "Frozen Foods",
+    icon: "ph:snowflake-light",
+    count: 65,
+  },
+];
+
+// Admin Mock Data
+export const mockAdminUsers: AdminUser[] = [
+  {
+    id: "1",
+    name: "John Doe",
+    email: "john@example.com",
+    role: "Customer",
+    status: "active",
+    joinedAt: "2024-01-15",
+    avatar: "https://ui-avatars.com/api/?name=John+Doe&background=random"
+  },
+  {
+    id: "2",
+    name: "Jane Smith",
+    email: "jane@example.com",
+    role: "Store Owner",
+    status: "active",
+    joinedAt: "2024-01-20",
+    avatar: "https://ui-avatars.com/api/?name=Jane+Smith&background=random"
+  },
+  // Add more mock users as needed
+];
+
+export const mockAdminStores: AdminStore[] = [
+  {
+    id: "1",
+    name: "Shoprite",
+    owner: "Jane Smith",
+    email: "shoprite@example.com",
+    phone: "+233123456789",
+    status: "active",
+    joinedAt: "2024-01-15",
+    products: 450,
+    revenue: 25000
+  },
+  // Add more mock stores as needed
+];
+
+export const mockAdminProducts: AdminProduct[] = [
+  {
+    id: "1",
+    name: "Fresh Organic Tomatoes",
+    store: "Shoprite",
+    category: "Fresh Produce",
+    price: 12,
+    stock: 150,
+    status: "active",
+    createdAt: "2024-01-15"
+  },
+  // Add more mock products as needed
+];
+
+export const mockAdminTransactions: AdminTransaction[] = [
+  {
+    id: "TXN-001",
+    orderId: "ORD-001",
+    customer: "John Doe",
+    store: "SuperMart Accra",
+    amount: 45.50,
+    commission: 4.55,
+    status: "completed",
+    paymentMethod: "Mobile Money",
+    date: "2024-01-15T10:30:00Z",
+    deliveryStatus: "Delivered",
+    items: 3
+  },
+  {
+    id: "TXN-002",
+    orderId: "ORD-002",
+    customer: "Jane Smith",
+    store: "Fresh Foods Ltd",
+    amount: 78.50,
+    commission: 7.85,
+    status: "pending",
+    paymentMethod: "Card",
+    date: "2024-01-14T11:15:00Z",
+    deliveryStatus: "In Transit",
+    items: 5
+  },
+  {
+    id: "TXN-003",
+    orderId: "ORD-003",
+    customer: "Mike Johnson",
+    store: "QuickShop Express",
+    amount: 32.00,
+    commission: 3.20,
+    status: "failed",
+    paymentMethod: "Mobile Money",
+    date: "2024-01-13T09:45:00Z",
+    deliveryStatus: "Cancelled",
+    items: 2
+  },
+  {
+    id: "TXN-004",
+    orderId: "ORD-004",
+    customer: "Sarah Wilson",
+    store: "City Grocers",
+    amount: 95.25,
+    commission: 9.53,
+    status: "completed",
+    paymentMethod: "Cash on Delivery",
+    date: "2024-01-12T14:20:00Z",
+    deliveryStatus: "Delivered",
+    items: 7
+  }
+];
+
+export const mockAdminRiders: AdminRider[] = [
+  {
+    id: "1",
+    name: "Michael Johnson",
+    email: "michael@example.com",
+    phone: "+233987654321",
+    status: "active",
+    rating: 4.8,
+    totalDeliveries: 245,
+    earnings: 3500,
+    joinedAt: "2024-01-10",
+    avatar: "https://ui-avatars.com/api/?name=Michael+Johnson&background=random",
+    vehicleType: "motorcycle",
+    location: "Accra Central"
+  },
+  // Add more mock riders as needed
+];
+
+// Store Portal Mock Data
+export const mockStoreProducts: StoreProduct[] = [
+  {
+    id: 1,
+    name: "Fresh Organic Tomatoes",
+    sku: "TOM-001",
+    category: "Fresh Produce",
+    supplier: "Local Farm",
+    price: 12,
+    stock: 150,
+    status: "Active",
+    image: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=300&h=300&fit=crop&q=80",
+    description: "Fresh, locally grown organic tomatoes"
+  },
+  {
+    id: 2,
+    name: "Fresh Bananas",
+    sku: "BAN-001",
+    category: "Fruits",
+    supplier: "Local Farm",
+    price: 15.00,
+    stock: 50,
+    status: "Active",
+    image: "/placeholder.svg",
+    description: "Fresh, ripe bananas sourced locally. Perfect for smoothies and snacking."
+  },
+  {
+    id: 3,
+    name: "White Rice 5kg",
+    sku: "RIC-005",
+    category: "Grains",
+    supplier: "Urban Deals",
+    price: 45.00,
+    stock: 0,
+    status: "Out of Stock",
+    image: "/placeholder.svg",
+    description: "Premium quality white rice, 5kg pack. Great for family meals."
+  },
+];
+
+export const mockStoreOrders: StoreOrder[] = [
+  {
+    id: 'ORD-001',
+    customer: 'John Doe',
+    amount: 45.00,
+    status: 'Preparing',
+    items: 3,
+    date: '2024-01-05T10:30:00',
+    phone: '+233 20 123 4567',
+    address: '123 Main St, Accra',
+    paymentMethod: 'Mobile Money',
+    priority: 'high'
+  },
+  {
+    id: 'ORD-002',
+    customer: 'Jane Smith',
+    amount: 78.50,
+    status: 'Ready',
+    items: 5,
+    date: '2024-01-05T11:15:00',
+    phone: '+233 24 567 8910',
+    address: '456 Oak Ave, Kumasi',
+    paymentMethod: 'Card',
+    priority: 'medium'
+  },
+  {
+    id: 'ORD-003',
+    customer: 'Mike Johnson',
+    amount: 123.75,
+    status: 'Delivered',
+    items: 8,
+    date: '2024-01-04T09:20:00',
+    phone: '+233 26 789 0123',
+    address: '789 Pine St, Tamale',
+    paymentMethod: 'Cash',
+    priority: 'low'
+  },
+];
+
+export const mockStoreTransactions: StoreTransaction[] = [
+  {
+    id: 'TXN-001',
+    orderId: 'ORD-001',
+    customer: 'John Doe',
+    amount: 45.00,
+    type: 'sale',
+    status: 'completed',
+    date: '2024-01-05T10:30:00',
+    paymentMethod: 'Mobile Money',
+    category: 'Groceries',
+    description: 'Fresh fruits and vegetables'
+  },
+  {
+    id: 'TXN-002',
+    orderId: 'ORD-002',
+    customer: 'Jane Smith',
+    amount: 78.50,
+    type: 'sale',
+    status: 'completed',
+    date: '2024-01-05T11:15:00',
+    paymentMethod: 'Card',
+    category: 'Electronics',
+    description: 'Phone accessories'
+  },
+  {
+    id: 'TXN-003',
+    orderId: 'ORD-003',
+    customer: 'Mike Johnson',
+    amount: 25.00,
+    type: 'refund',
+    status: 'completed',
+    date: '2024-01-04T14:20:00',
+    paymentMethod: 'Cash',
+    category: 'Groceries',
+    description: 'Damaged goods refund'
+  },
+  {
+    id: 'TXN-004',
+    orderId: 'ORD-004',
+    customer: 'Sarah Wilson',
+    amount: 156.75,
+    type: 'sale',
+    status: 'pending',
+    date: '2024-01-06T09:45:00',
+    paymentMethod: 'Mobile Money',
+    category: 'Home & Garden',
+    description: 'Garden tools and supplies'
+  },
+];
+
+// Store Settings Mock Data
+export const mockStoreSettings: StoreSettings = {
+  id: "store-001",
+  storeName: "Shoprite Express",
+  ownerName: "Jane Smith",
+  email: "jane@shoprite.com",
+  phone: "+233 20 123 4567",
+  address: "123 Main Street, Accra, Ghana",
+  description: "Fresh groceries and household items delivered to your doorstep",
+  logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8gJLBzBjE3QoFHN_r1sW_c5v7VH3hCVOF2w&s",
+  openingHours: {
+    monday: { open: "08:00", close: "20:00", closed: false },
+    tuesday: { open: "08:00", close: "20:00", closed: false },
+    wednesday: { open: "08:00", close: "20:00", closed: false },
+    thursday: { open: "08:00", close: "20:00", closed: false },
+    friday: { open: "08:00", close: "20:00", closed: false },
+    saturday: { open: "09:00", close: "18:00", closed: false },
+    sunday: { open: "10:00", close: "16:00", closed: false },
+  },
+  deliveryRadius: 10,
+  minimumOrder: 20,
+  deliveryFee: 5,
+  taxRate: 12.5,
+  currency: "GHS",
+  notifications: {
+    newOrders: true,
+    lowStock: true,
+    promotions: false,
+  },
+};
+
+// Notification Mock Data
+export const mockStoreNotifications: Notification[] = [
+  {
+    id: "1",
+    title: "New Order Received",
+    message: "You have received a new order #ORD-001 from John Doe worth ₵45.00",
+    type: "success",
+    timestamp: "2024-01-15T10:30:00Z",
+    read: false,
+    actionUrl: "/store-portal/orders",
+    actionLabel: "View Order",
+    priority: "high",
+    category: "order"
+  },
+  {
+    id: "2",
+    title: "Low Stock Alert",
+    message: "Fresh Organic Tomatoes is running low in stock (5 items remaining)",
+    type: "warning",
+    timestamp: "2024-01-15T09:15:00Z",
+    read: false,
+    actionUrl: "/store-portal/products",
+    actionLabel: "Update Stock",
+    priority: "medium",
+    category: "product"
+  },
+  {
+    id: "3",
+    title: "Payment Received",
+    message: "Payment of ₵78.50 has been processed for order #ORD-002",
+    type: "success",
+    timestamp: "2024-01-14T16:20:00Z",
+    read: true,
+    priority: "low",
+    category: "payment"
+  },
+  {
+    id: "4",
+    title: "System Update",
+    message: "Your store portal has been updated with new features. Check them out!",
+    type: "info",
+    timestamp: "2024-01-14T08:00:00Z",
+    read: true,
+    priority: "low",
+    category: "system"
+  },
+  {
+    id: "5",
+    title: "Order Cancelled",
+    message: "Order #ORD-005 has been cancelled by the customer",
+    type: "error",
+    timestamp: "2024-01-13T14:30:00Z",
+    read: true,
+    actionUrl: "/store-portal/orders",
+    actionLabel: "View Details",
+    priority: "medium",
+    category: "order"
+  }
+];
+
+export const mockAdminNotifications: Notification[] = [
+  {
+    id: "1",
+    title: "New Store Registration",
+    message: "A new store 'QuickMart' has registered and is pending approval",
+    type: "info",
+    timestamp: "2024-01-15T11:30:00Z",
+    read: false,
+    actionUrl: "/admin/stores",
+    actionLabel: "Review Store",
+    priority: "high",
+    category: "user"
+  },
+  {
+    id: "2",
+    title: "System Alert",
+    message: "High server load detected. Performance monitoring recommended",
+    type: "warning",
+    timestamp: "2024-01-15T10:45:00Z",
+    read: false,
+    priority: "high",
+    category: "system"
+  },
+  {
+    id: "3",
+    title: "Payment Issue",
+    message: "Payment gateway experiencing intermittent issues",
+    type: "error",
+    timestamp: "2024-01-15T09:20:00Z",
+    read: false,
+    actionUrl: "/admin/transactions",
+    actionLabel: "View Transactions",
+    priority: "high",
+    category: "payment"
+  },
+  {
+    id: "4",
+    title: "New User Milestone",
+    message: "Platform has reached 1,000 registered users!",
+    type: "success",
+    timestamp: "2024-01-14T18:00:00Z",
+    read: true,
+    priority: "low",
+    category: "user"
+  },
+  {
+    id: "5",
+    title: "Daily Report",
+    message: "Daily analytics report is ready for review",
+    type: "info",
+    timestamp: "2024-01-14T07:00:00Z",
+    read: true,
+    actionUrl: "/admin/dashboard",
+    actionLabel: "View Report",
+    priority: "low",
+    category: "system"
+  }
+];
+
+export const mockNotificationSettings: NotificationSettings = {
+  emailNotifications: true,
+  pushNotifications: true,
+  smsNotifications: false,
+  orderUpdates: true,
+  promotions: false,
+  systemAlerts: true,
+  lowStockAlerts: true,
+  newUserRegistrations: true
+};
+
+// Helper functions
+export const getTrendingProducts = () => products.filter(p => p.hasDiscount).slice(0, 4);
+export const getPopularStores = () => stores.slice(0, 6);
+export const getFeaturedCategories = () => categories.slice(0, 4);
+export const getProductsByStore = (storeName: string) => products.filter(p => p.store === storeName);
+export const getProductsByCategory = (categoryName: string) => products.filter(p => p.category === categoryName);
+export const getProductById = (id: number) => products.find(p => p.id === id);
+export const getDealsProducts = () => products.filter(p => p.hasDiscount);
+export const searchProducts = (query: string) => products.filter(p => 
+  p.name.toLowerCase().includes(query.toLowerCase()) ||
+  p.category.toLowerCase().includes(query.toLowerCase()) ||
+  p.store.toLowerCase().includes(query.toLowerCase())
+);
+
+// Enhanced Mock Data for Admin Transactions (moved from inline definitions)
+export const mockEnhancedAdminTransactions = [
+  {
+    id: 'TXN-001',
+    orderId: 'ORD-001',
+    store: 'SuperMart Accra',
+    customer: 'John Doe',
+    amount: 45.00,
+    commission: 4.50,
+    status: 'completed' as const,
+    paymentMethod: 'Mobile Money' as const,
+    date: '2024-01-15T10:30:00Z',
+    deliveryStatus: 'Delivered' as const,
+    items: 3
+  },
+  {
+    id: 'TXN-002',
+    orderId: 'ORD-002',
+    store: 'Fresh Foods Ltd',
+    customer: 'Jane Smith',
+    amount: 78.50,
+    commission: 7.85,
+    status: 'pending' as const,
+    paymentMethod: 'Card' as const,
+    date: '2024-01-14T11:15:00Z',
+    deliveryStatus: 'In Transit' as const,
+    items: 5
+  },
+  {
+    id: 'TXN-003',
+    orderId: 'ORD-003',
+    store: 'QuickShop Express',
+    customer: 'Mike Johnson',
+    amount: 32.00,
+    commission: 3.20,
+    status: 'failed' as const,
+    paymentMethod: 'Mobile Money' as const,
+    date: '2024-01-13T09:45:00Z',
+    deliveryStatus: 'Cancelled' as const,
+    items: 2
+  },
+  {
+    id: 'TXN-004',
+    orderId: 'ORD-004',
+    store: 'City Grocers',
+    customer: 'Sarah Wilson',
+    amount: 95.25,
+    commission: 9.53,
+    status: 'completed' as const,
+    paymentMethod: 'Cash on Delivery' as const,
+    date: '2024-01-12T14:20:00Z',
+    deliveryStatus: 'Delivered' as const,
+    items: 7
+  }
+];
+
+// Disbursements Mock Data
+export const generateMockDisbursements = () => {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  return [
+    {
+      id: 'DISB-001',
+      storeName: 'SuperMart Accra',
+      grossSales: 1250.00,
+      platformFee: 125.00, // 10%
+      netPayout: 1125.00,
+      status: 'Pending' as const,
+      storeId: 'STORE-001',
+    },
+    {
+      id: 'DISB-002',
+      storeName: 'Fresh Foods Ltd',
+      grossSales: 890.50,
+      platformFee: 89.05,
+      netPayout: 801.45,
+      status: 'Pending' as const,
+      storeId: 'STORE-002',
+    },
+    {
+      id: 'DISB-003',
+      storeName: 'QuickShop Express',
+      grossSales: 675.25,
+      platformFee: 67.53,
+      netPayout: 607.72,
+      status: 'Pending' as const,
+      storeId: 'STORE-003',
+    },
+    {
+      id: 'DISB-004',
+      storeName: 'City Grocers',
+      grossSales: 420.00,
+      platformFee: 42.00,
+      netPayout: 378.00,
+      status: 'Disbursed' as const,
+      disbursedAt: yesterday.toISOString(),
+      storeId: 'STORE-004',
+    },
+  ];
+};
+
+// Promotable Users Mock Data
+export const mockPromotableUsers = [
+  { id: '1', name: 'John Doe', email: 'john@example.com', role: 'client' as const },
+  { id: '2', name: 'Jane Smith', email: 'jane@example.com', role: 'store' as const },
+  { id: '3', name: 'Robert Wilson', email: 'robert@example.com', role: 'client' as const },
+  { id: '4', name: 'Emily Davis', email: 'emily@example.com', role: 'client' as const },
+  { id: '5', name: 'Michael Johnson', email: 'michael@example.com', role: 'store' as const },
+];
+
+// Available Permissions
+export const availablePermissions = [
+  { id: 'user_management', name: 'User Management', description: 'Manage user accounts and profiles', category: 'user' as const },
+  { id: 'store_management', name: 'Store Management', description: 'Manage store operations and settings', category: 'store' as const },
+  { id: 'product_management', name: 'Product Management', description: 'Manage product listings and inventory', category: 'product' as const },
+  { id: 'transaction_monitoring', name: 'Transaction Monitoring', description: 'Monitor and manage transactions', category: 'transaction' as const },
+  { id: 'rider_management', name: 'Rider Management', description: 'Manage delivery riders and assignments', category: 'rider' as const },
+  { id: 'system_settings', name: 'System Settings', description: 'Configure system-wide settings', category: 'system' as const },
+  { id: 'notification_management', name: 'Notification Management', description: 'Manage notifications and alerts', category: 'notification' as const },
+  { id: 'report_generation', name: 'Report Generation', description: 'Generate and export reports', category: 'report' as const },
+];
+
+// Dashboard Mock Data
+export const getDashboardStats = (multiplier: number = 1) => [
+  { title: 'Total Users', value: Math.round(1247 * multiplier).toString(), icon: 'Users', change: '+5.2%', color: 'text-blue-600' },
+  { title: 'Active Stores', value: Math.round(89 * multiplier).toString(), icon: 'Store', change: '+12%', color: 'text-green-600' },
+  { title: 'Total Orders', value: Math.round(2847 * multiplier).toString(), icon: 'ShoppingBag', change: '+8.1%', color: 'text-purple-600' },
+  { title: 'Revenue', value: `₵${Math.round(45230 * multiplier).toLocaleString()}`, icon: 'TrendingUp', change: '+15.3%', color: 'text-emerald-600' },
+];
+
+export const mockRevenueData = [
+  { name: 'Jan', revenue: 4000, orders: 240 },
+  { name: 'Feb', revenue: 3000, orders: 220 },
+  { name: 'Mar', revenue: 2000, orders: 180 },
+  { name: 'Apr', revenue: 2780, orders: 200 },
+  { name: 'May', revenue: 1890, orders: 150 },
+  { name: 'Jun', revenue: 2390, orders: 190 },
+];
+
+export const mockCategoryData = [
+  { name: 'Groceries', value: 45, color: '#8884d8' },
+  { name: 'Beverages', value: 25, color: '#82ca9d' },
+  { name: 'Household', value: 20, color: '#ffc658' },
+  { name: 'Others', value: 10, color: '#ff7300' },
+];
+
+export const mockTopStores = [
+  { name: 'SuperMart Accra', revenue: '₵12,450', orders: 89 },
+  { name: 'Fresh Foods Ltd', revenue: '₵9,230', orders: 67 },
+  { name: 'QuickShop Express', revenue: '₵8,120', orders: 54 },
+  { name: 'City Grocers', revenue: '₵7,890', orders: 43 },
+];
+
+// Admin Management Data
+export const adminManagementData: AdminManagement[] = [
+  {
+    id: '1',
+    name: 'Mike Johnson',
+    email: 'mike.admin@tobra.com',
+    role: 'admin',
+    status: 'active',
+    lastLogin: '2024-01-15T10:30:00Z',
+    permissions: ['user_management', 'store_management', 'product_management'],
+    createdAt: '2024-01-01T00:00:00Z',
+    createdBy: 'Super Admin',
+    avatar: '/placeholder.svg'
+  },
+  {
+    id: '2',
+    name: 'Sarah Wilson',
+    email: 'sarah.admin@tobra.com',
+    role: 'admin',
+    status: 'active',
+    lastLogin: '2024-01-14T16:45:00Z',
+    permissions: ['user_management', 'transaction_monitoring'],
+    createdAt: '2024-01-05T00:00:00Z',
+    createdBy: 'Super Admin',
+    avatar: '/placeholder.svg'
+  },
+  {
+    id: '3',
+    name: 'David Lee',
+    email: 'david.admin@tobra.com',
+    role: 'admin',
+    status: 'inactive',
+    lastLogin: '2024-01-10T09:20:00Z',
+    permissions: ['product_management', 'store_management'],
+    createdAt: '2023-12-15T00:00:00Z',
+    createdBy: 'Super Admin',
+    avatar: '/placeholder.svg'
+  },
+];
+
+// User Activity Data
+export const userActivityData: UserActivity[] = [
+  {
+    id: '1',
+    userId: '1',
+    userName: 'John Doe',
+    userEmail: 'john@example.com',
+    userRole: 'client',
+    action: 'login',
+    description: 'User logged in successfully',
+    timestamp: '2024-01-15T10:30:00Z',
+    ipAddress: '192.168.1.1',
+    location: 'Accra, Ghana',
+    device: 'Chrome/Windows',
+    status: 'success'
+  },
+  {
+    id: '2',
+    userId: '2',
+    userName: 'Jane Smith',
+    userEmail: 'jane@example.com',
+    userRole: 'store',
+    action: 'product_added',
+    description: 'Added new product to store inventory',
+    timestamp: '2024-01-15T09:15:00Z',
+    ipAddress: '192.168.1.2',
+    location: 'Kumasi, Ghana',
+    device: 'Safari/Mac',
+    status: 'success'
+  },
+  {
+    id: '3',
+    userId: '3',
+    userName: 'Mike Admin',
+    userEmail: 'mike@example.com',
+    userRole: 'admin',
+    action: 'user_suspended',
+    description: 'Suspended user account for policy violation',
+    timestamp: '2024-01-15T08:45:00Z',
+    ipAddress: '192.168.1.3',
+    location: 'Takoradi, Ghana',
+    device: 'Chrome/Windows',
+    status: 'success'
+  },
+  {
+    id: '4',
+    userId: '4',
+    userName: 'Sarah Wilson',
+    userEmail: 'sarah@example.com',
+    userRole: 'client',
+    action: 'failed_login',
+    description: 'Failed login attempt - incorrect password',
+    timestamp: '2024-01-15T07:20:00Z',
+    ipAddress: '192.168.1.4',
+    location: 'Accra, Ghana',
+    device: 'Chrome/Android',
+    status: 'failed'
+  },
+  {
+    id: '5',
+    userId: '5',
+    userName: 'Store Owner',
+    userEmail: 'owner@store.com',
+    userRole: 'store',
+    action: 'role_changed',
+    description: 'Role changed from client to store owner',
+    timestamp: '2024-01-14T16:30:00Z',
+    ipAddress: '192.168.1.5',
+    location: 'Kumasi, Ghana',
+    device: 'Firefox/Windows',
+    status: 'success'
+  },
+];
+
+export const productData = [
+  {
+    id: 1,
+    name: 'Fresh Tomatoes',
+    description: 'Locally grown fresh tomatoes',
+    category: 'Vegetables',
+    store: 'SuperMart Accra',
+    price: 5.50,
+    stock: 45,
+    status: 'Active',
+    views: 234,
+    sales: 89,
+    image: '/placeholder.svg',
+    dateAdded: '2024-01-15'
+  },
+  {
+    id: 2,
+    name: 'Organic Bananas',
+    description: 'Premium organic bananas',
+    category: 'Fruits',
+    store: 'Fresh Foods Ltd',
+    price: 8.00,
+    stock: 0,
+    status: 'Out of Stock',
+    views: 156,
+    sales: 67,
+    image: '/placeholder.svg',
+    dateAdded: '2024-01-12'
+  },
+  {
+    id: 3,
+    name: 'Bread Loaf',
+    description: 'Fresh baked bread loaf',
+    category: 'Bakery',
+    store: 'QuickShop Express',
+    price: 3.25,
+    stock: 23,
+    status: 'Active',
+    views: 89,
+    sales: 45,
+    image: '/placeholder.svg',
+    dateAdded: '2024-01-10'
+  },
+  {
+    id: 4,
+    name: 'Rice (5kg)',
+    description: 'Premium jasmine rice',
+    category: 'Grains',
+    store: 'City Grocers',
+    price: 25.00,
+    stock: 12,
+    status: 'Under Review',
+    views: 67,
+    sales: 23,
+    image: '/placeholder.svg',
+    dateAdded: '2024-01-08'
+  },
+];
+
+export const riderData = [
+  {
+    id: 'RDR-001',
+    name: 'Kwame Asante',
+    email: 'kwame.asante@email.com',
+    phone: '+233 24 123 4567',
+    avatar: '/placeholder.svg',
+    status: 'Active',
+    location: 'Accra',
+    rating: 4.8,
+    totalDeliveries: 247,
+    completedDeliveries: 238,
+    cancelledDeliveries: 9,
+    earnings: 1850.50,
+    joinDate: '2023-08-15',
+    vehicleType: 'Motorbike',
+    licenseNumber: 'GH-12345',
+    lastDelivery: '2024-01-05',
+    currentOrders: 3,
+    reviews: [
+      { customer: 'John Doe', rating: 5, comment: 'Very fast delivery!' },
+      { customer: 'Sarah Wilson', rating: 4, comment: 'Professional service' }
+    ]
+  },
+  {
+    id: 'RDR-002',
+    name: 'Ama Osei',
+    email: 'ama.osei@email.com',
+    phone: '+233 20 987 6543',
+    avatar: '/placeholder.svg',
+    status: 'Active',
+    location: 'Kumasi',
+    rating: 4.9,
+    totalDeliveries: 189,
+    completedDeliveries: 185,
+    cancelledDeliveries: 4,
+    earnings: 1420.75,
+    joinDate: '2023-09-22',
+    vehicleType: 'Bicycle',
+    licenseNumber: 'GH-67890',
+    lastDelivery: '2024-01-05',
+    currentOrders: 1,
+    reviews: [
+      { customer: 'Mike Johnson', rating: 5, comment: 'Always on time!' },
+      { customer: 'Lisa Brown', rating: 5, comment: 'Excellent service' }
+    ]
+  },
+  {
+    id: 'RDR-003',
+    name: 'Kojo Mensah',
+    email: 'kojo.mensah@email.com',
+    phone: '+233 26 555 7777',
+    avatar: '/placeholder.svg',
+    status: 'Inactive',
+    location: 'Takoradi',
+    rating: 4.5,
+    totalDeliveries: 92,
+    completedDeliveries: 87,
+    cancelledDeliveries: 5,
+    earnings: 690.25,
+    joinDate: '2023-11-10',
+    vehicleType: 'Motorbike',
+    licenseNumber: 'GH-11111',
+    lastDelivery: '2023-12-20',
+    currentOrders: 0,
+    reviews: [
+      { customer: 'Grace Kwame', rating: 4, comment: 'Good service' },
+      { customer: 'Peter Adjei', rating: 5, comment: 'Reliable rider' }
+    ]
+  },
+  {
+    id: 'RDR-004',
+    name: 'Akosua Boateng',
+    email: 'akosua.boateng@email.com',
+    phone: '+233 23 444 8888',
+    avatar: '/placeholder.svg',
+    status: 'Active',
+    location: 'Accra',
+    rating: 4.7,
+    totalDeliveries: 156,
+    completedDeliveries: 148,
+    cancelledDeliveries: 8,
+    earnings: 1180.00,
+    joinDate: '2023-10-05',
+    vehicleType: 'Car',
+    licenseNumber: 'GH-22222',
+    lastDelivery: '2024-01-04',
+    currentOrders: 2,
+    reviews: [
+      { customer: 'Daniel Asante', rating: 5, comment: 'Professional and fast' },
+      { customer: 'Mary Adjei', rating: 4, comment: 'Good communication' }
+    ]
+  },
+];
+
+export const storeData = [
+  {
+    id: 1,
+    name: 'SuperMart Accra',
+    owner: 'John Doe',
+    email: 'john@supermart.com',
+    phone: '+233 24 123 4567',
+    category: 'Grocery',
+    location: 'Accra, Greater Accra',
+    status: 'Active',
+    rating: 4.8,
+    totalProducts: 245,
+    monthlyRevenue: 12450,
+    joinDate: '2024-01-15',
+    logo: '/placeholder.svg'
+  },
+  {
+    id: 2,
+    name: 'Fresh Foods Ltd',
+    owner: 'Jane Smith',
+    email: 'jane@freshfoods.com',
+    phone: '+233 24 987 6543',
+    category: 'Organic',
+    location: 'Kumasi, Ashanti',
+    status: 'Active',
+    rating: 4.6,
+    totalProducts: 189,
+    monthlyRevenue: 9230,
+    joinDate: '2024-01-10',
+    logo: '/placeholder.svg'
+  },
+  {
+    id: 3,
+    name: 'QuickShop Express',
+    owner: 'Mike Johnson',
+    email: 'mike@quickshop.com',
+    phone: '+233 24 555 0123',
+    category: 'Convenience',
+    location: 'Tema, Greater Accra',
+    status: 'Pending',
+    rating: 4.2,
+    totalProducts: 156,
+    monthlyRevenue: 7890,
+    joinDate: '2024-01-08',
+    logo: '/placeholder.svg'
+  },
+  {
+    id: 4,
+    name: 'City Grocers',
+    owner: 'Sarah Wilson',
+    email: 'sarah@citygrocers.com',
+    phone: '+233 24 444 5678',
+    category: 'Grocery',
+    location: 'Takoradi, Western',
+    status: 'Suspended',
+    rating: 3.9,
+    totalProducts: 198,
+    monthlyRevenue: 6750,
+    joinDate: '2024-01-12',
+    logo: '/placeholder.svg'
+  },
+];
+
+
+export const transactionData: Transaction[] = [
+  {
+    id: 'TXN-001',
+    orderId: 'ORD-001',
+    store: 'SuperMart Accra',
+    customer: 'John Doe',
+    amount: 45.00,
+    commission: 4.50,
+    status: 'Completed',
+    paymentMethod: 'Mobile Money',
+    date: '2024-01-15T10:30:00Z',
+    deliveryStatus: 'Delivered'
+  },
+  {
+    id: 'TXN-002',
+    orderId: 'ORD-002',
+    store: 'Fresh Foods Ltd',
+    customer: 'Jane Smith',
+    amount: 78.50,
+    commission: 7.85,
+    status: 'Pending',
+    paymentMethod: 'Card',
+    date: '2024-01-14T11:15:00Z',
+    deliveryStatus: 'In Transit'
+  },
+  {
+    id: 'TXN-003',
+    orderId: 'ORD-003',
+    store: 'QuickShop Express',
+    customer: 'Mike Johnson',
+    amount: 32.00,
+    commission: 3.20,
+    status: 'Failed',
+    paymentMethod: 'Mobile Money',
+    date: '2024-01-13T09:45:00Z',
+    deliveryStatus: 'Cancelled'
+  },
+  {
+    id: 'TXN-004',
+    orderId: 'ORD-004',
+    store: 'City Grocers',
+    customer: 'Sarah Wilson',
+    amount: 95.25,
+    commission: 9.53,
+    status: 'Completed',
+    paymentMethod: 'Cash on Delivery',
+    date: '2024-01-12T14:20:00Z',
+    deliveryStatus: 'Delivered'
+  },
+  {
+    id: 'TXN-005',
+    orderId: 'ORD-005',
+    store: 'SuperMart Accra',
+    customer: 'Alex Brown',
+    amount: 67.80,
+    commission: 6.78,
+    status: 'Completed',
+    paymentMethod: 'Mobile Money',
+    date: '2024-01-11T16:45:00Z',
+    deliveryStatus: 'Delivered'
+  },
+];
+
+export  const userData = [
+  {
+    id: 1,
+    name: 'John Doe',
+    email: 'john@example.com',
+    phone: '+233 24 123 4567',
+    location: 'Accra',
+    joinDate: '2024-01-15',
+    status: 'Active',
+    orders: 23,
+    totalSpent: 450.75,
+    avatar: '/placeholder.svg'
+  },
+  {
+    id: 2,
+    name: 'Jane Smith',
+    email: 'jane@example.com',
+    phone: '+233 20 987 6543',
+    location: 'Kumasi',
+    joinDate: '2024-01-10',
+    status: 'Active',
+    orders: 15,
+    totalSpent: 320.50,
+    avatar: '/placeholder.svg'
+  },
+  {
+    id: 3,
+    name: 'Mike Johnson',
+    email: 'mike@example.com',
+    phone: '+233 26 555 7777',
+    location: 'Takoradi',
+    joinDate: '2024-01-08',
+    status: 'Suspended',
+    orders: 8,
+    totalSpent: 150.25,
+    avatar: '/placeholder.svg'
+  },
+  {
+    id: 4,
+    name: 'Sarah Wilson',
+    email: 'sarah@example.com',
+    phone: '+233 23 444 8888',
+    location: 'Accra',
+    joinDate: '2024-01-12',
+    status: 'Inactive',
+    orders: 5,
+    totalSpent: 89.00,
+    avatar: '/placeholder.svg'
+  },
+];
+
+// Grocery-focused categories
+export const groceryCategories = [
+  {
+    name: "All Categories",
+    icon: "ph:list",
+    count: 1250,
+  },
+  {
+    name: "Fresh Produce",
+    icon: "ph:plant",
+    count: 350,
+  },
+  {
+    name: "Meat & Seafood",
+    icon: "ph:fish",
+    count: 120,
+  },
+  {
+    name: "Dairy & Eggs",
+    icon: "ph:egg",
+    count: 85,
+  },
+  {
+    name: "Bakery",
+    icon: "ph:bread",
+    count: 95,
+  },
+  {
+    name: "Beverages",
+    icon: "ph:coffee",
+    count: 180,
+  },
+  {
+    name: "Frozen Foods",
+    icon: "ph:snowflake",
+    count: 75,
+  },
+  {
+    name: "Snacks",
+    icon: "ph:cookie",
+    count: 200,
+  },
+  {
+    name: "Pantry Essentials",
+    icon: "ph:jar",
+    count: 140,
+  },
+  {
+    name: "Health & Beauty",
+    icon: "ph:heart",
+    count: 110,
+  },
+  {
+    name: "Household",
+    icon: "ph:house",
+    count: 90,
+  },
+];
