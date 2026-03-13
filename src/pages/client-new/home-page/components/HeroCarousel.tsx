@@ -76,7 +76,7 @@ export default function HeroCarousel({
   const currentSlide = slides[currentIndex];
 
   return (
-    <div className="relative w-full h-[360px] rounded-2xl overflow-hidden">
+    <div className="relative w-full h-[320px] md:h-[360px] rounded-2xl overflow-hidden">
       {/* Slide Content */}
       <div
         className={cn(
@@ -114,7 +114,7 @@ export default function HeroCarousel({
       </div>
 
       {/* Navigation Controls */}
-      <div className="absolute bottom-6 right-6 flex items-center gap-2">
+      <div className="hidden absolute bottom-6 right-6 md:flex items-center gap-2">
         <button
           onClick={goToPrevious}
           className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"

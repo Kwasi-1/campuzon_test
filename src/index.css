@@ -27,13 +27,13 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 27%;
 
-    /* Burgundy Primary */
-    --primary: 345 100% 25.1%;
+    /* Neutral Primary (#18181b) */
+    --primary: 240 10% 9%;
     --primary-foreground: 0 0% 100%;
 
-    /* Fresh Green Secondary */
-    --secondary: 120 38% 42%;
-    --secondary-foreground: 0 0% 100%;
+    /* Neutral Secondary (#f4f4f5) */
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 10% 9%;
 
     /* Cream Muted */
     --muted: 210 40% 96.1%;
@@ -48,12 +48,12 @@ All colors MUST be HSL.
 
     --border: 35 25% 93%;
     --input: 35 25% 87%;
-    --ring: 350 65% 30%;
+    --ring: 240 10% 9%;
 
     --radius: 0.75rem;
 
     /* Brand specific colors */
-    --success: 120 38% 42%;
+    --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
     --warning: 48 96% 53%;
     --warning-foreground: 20 14.3% 4.1%;
@@ -61,8 +61,8 @@ All colors MUST be HSL.
     /* Additional brand colors */
     --cream: 35 25% 87%;
     --charcoal: 215 25% 27%;
-    --burgundy: 350 65% 30%;
-    --fresh-green: 120 38% 42%;
+    --burgundy: 240 10% 9%;
+    --fresh-green: 142 71% 45%;
   }
 
   .dark {
@@ -75,11 +75,11 @@ All colors MUST be HSL.
     --popover: 215 25% 27%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 350 65% 40%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 240 5% 96%;
+    --primary-foreground: 240 10% 9%;
 
-    --secondary: 120 38% 45%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 240 5% 96%;
 
     --muted: 215 20% 35%;
     --muted-foreground: 35 25% 87%;
@@ -92,7 +92,7 @@ All colors MUST be HSL.
 
     --border: 215 20% 35%;
     --input: 215 20% 35%;
-    --ring: 350 65% 40%;
+    --ring: 240 5% 96%;
   }
 }
 

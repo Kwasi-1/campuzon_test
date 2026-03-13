@@ -57,7 +57,7 @@ import { StoreDetailPage } from "./pages/client-new/stores/store-detail/StoreDet
 import Login from "./pages/auth-new/Login";
 import { ProfilePage } from "./pages/client-new/profile";
 import { NextUIProvider } from "@nextui-org/react";
-
+import { RegisterPage } from "./pages/auth-new/RegisterPage";
 
 const queryClient = new QueryClient();
 
@@ -72,21 +72,20 @@ const App = () => (
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
-                          <NextUIProvider>
-
-                  <ScrollToTop />
-                  <Routes>
-                    {/* Updated Auth pages without layout */}
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/2fa-verify" element={<TwoFactorAuth />} />
-                    <Route path="/signup" element={<MultiStepSignup />} />
-                    {/* <Route
+                  <NextUIProvider>
+                    <ScrollToTop />
+                    <Routes>
+                      {/* Updated Auth pages without layout */}
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/2fa-verify" element={<TwoFactorAuth />} />
+                      <Route path="/register" element={<RegisterPage />} />
+                      {/* <Route
                       path="/store-signup"
                       element={<MultiStepStoreSignup />}
                     /> */}
 
-                    {/* Store Portal login outside protected area to avoid full-screen spinner */}
-                    {/* <Route
+                      {/* Store Portal login outside protected area to avoid full-screen spinner */}
+                      {/* <Route
                       path="/store-portal/login"
                       element={
                         <StoreAuthProvider skipBootstrap>
@@ -95,8 +94,8 @@ const App = () => (
                       }
                     /> */}
 
-                    {/* Store Portal protected routes with full bootstrap and layout */}
-                    {/* <Route
+                      {/* Store Portal protected routes with full bootstrap and layout */}
+                      {/* <Route
                       path="/store-portal/*"
                       element={
                         <StoreAuthProvider>
@@ -118,143 +117,158 @@ const App = () => (
                       />
                     </Route> */}
 
-                    {/* Admin and Super Admin login routes (wrapped with AdminAuthProvider) */}
-                    <Route
-                      path="/admin/login"
-                      element={
-                        <AdminAuthProvider>
-                          <AdminLogin />
-                        </AdminAuthProvider>
-                      }
-                    />
-                    <Route
-                      path="/super-admin/login"
-                      element={
-                        <AdminAuthProvider>
-                          <SuperAdminLogin />
-                        </AdminAuthProvider>
-                      }
-                    />
+                      {/* Admin and Super Admin login routes (wrapped with AdminAuthProvider) */}
+                      <Route
+                        path="/admin/login"
+                        element={
+                          <AdminAuthProvider>
+                            <AdminLogin />
+                          </AdminAuthProvider>
+                        }
+                      />
+                      <Route
+                        path="/super-admin/login"
+                        element={
+                          <AdminAuthProvider>
+                            <SuperAdminLogin />
+                          </AdminAuthProvider>
+                        }
+                      />
 
-                    {/* Super Admin Portal routes - wrapped with AdminAuthProvider */}
-                    <Route
-                      path="/super-admin-portal"
-                      element={
-                        <AdminAuthProvider>
-                          <AdminProtectedRoute requireSuper>
-                            <SuperAdminPortalLayout />
-                          </AdminProtectedRoute>
-                        </AdminAuthProvider>
-                      }
-                    >
-                      <Route index element={<AdminDashboard />} />
-                      <Route path="users" element={<AdminUsers />} />
-                      <Route path="stores" element={<AdminStores />} />
-                      <Route path="products" element={<AdminProducts />} />
+                      {/* Super Admin Portal routes - wrapped with AdminAuthProvider */}
                       <Route
-                        path="transactions"
-                        element={<AdminTransactions />}
-                      />
-                      <Route path="user-activity" element={<UserActivity />} />
-                      <Route
-                        path="admin-management"
-                        element={<AdminManagement />}
-                      />
-                      <Route path="settings" element={<AdminSettings />} />
-                      <Route
-                        path="notifications"
-                        element={<AdminNotifications />}
-                      />
-                    </Route>
+                        path="/super-admin-portal"
+                        element={
+                          <AdminAuthProvider>
+                            <AdminProtectedRoute requireSuper>
+                              <SuperAdminPortalLayout />
+                            </AdminProtectedRoute>
+                          </AdminAuthProvider>
+                        }
+                      >
+                        <Route index element={<AdminDashboard />} />
+                        <Route path="users" element={<AdminUsers />} />
+                        <Route path="stores" element={<AdminStores />} />
+                        <Route path="products" element={<AdminProducts />} />
+                        <Route
+                          path="transactions"
+                          element={<AdminTransactions />}
+                        />
+                        <Route
+                          path="user-activity"
+                          element={<UserActivity />}
+                        />
+                        <Route
+                          path="admin-management"
+                          element={<AdminManagement />}
+                        />
+                        <Route path="settings" element={<AdminSettings />} />
+                        <Route
+                          path="notifications"
+                          element={<AdminNotifications />}
+                        />
+                      </Route>
 
-                    {/* Admin Portal routes - wrapped with AdminAuthProvider */}
-                    <Route
-                      path="/admin-portal"
-                      element={
-                        <AdminAuthProvider>
-                          <AdminProtectedRoute>
-                            <AdminPortalLayout />
-                          </AdminProtectedRoute>
-                        </AdminAuthProvider>
-                      }
-                    >
-                      <Route index element={<AdminDashboard />} />
-                      <Route path="users" element={<AdminUsers />} />
-                      <Route path="stores" element={<AdminStores />} />
-                      <Route path="products" element={<AdminProducts />} />
+                      {/* Admin Portal routes - wrapped with AdminAuthProvider */}
                       <Route
-                        path="transactions"
-                        element={<AdminTransactions />}
-                      />
+                        path="/admin-portal"
+                        element={
+                          <AdminAuthProvider>
+                            <AdminProtectedRoute>
+                              <AdminPortalLayout />
+                            </AdminProtectedRoute>
+                          </AdminAuthProvider>
+                        }
+                      >
+                        <Route index element={<AdminDashboard />} />
+                        <Route path="users" element={<AdminUsers />} />
+                        <Route path="stores" element={<AdminStores />} />
+                        <Route path="products" element={<AdminProducts />} />
+                        <Route
+                          path="transactions"
+                          element={<AdminTransactions />}
+                        />
+                        <Route
+                          path="disbursements"
+                          element={<AdminDisbursements />}
+                        />
+                        <Route path="settings" element={<AdminSettings />} />
+                        <Route path="riders" element={<AdminRiders />} />
+                        <Route
+                          path="notifications"
+                          element={<AdminNotifications />}
+                        />
+                      </Route>
+                      {/* Legacy admin auth routes - redirect to unified */}
                       <Route
-                        path="disbursements"
-                        element={<AdminDisbursements />}
+                        path="/admin-portal/login"
+                        element={<Navigate to="/login" replace />}
                       />
-                      <Route path="settings" element={<AdminSettings />} />
-                      <Route path="riders" element={<AdminRiders />} />
+
+                      {/* Pages with main layout */}
                       <Route
-                        path="notifications"
-                        element={<AdminNotifications />}
-                      />
-                    </Route>
-                    {/* Legacy admin auth routes - redirect to unified */}
-                    <Route
-                      path="/admin-portal/login"
-                      element={<Navigate to="/login" replace />}
-                    />
+                        path="/*"
+                        element={
+                          <Layout>
+                            <Routes>
+                              <Route path="/" element={<Home />} />
+                              <Route path="/products" element={<Products />} />
+                              <Route
+                                path="/categories"
+                                element={<Products />}
+                              />
+                              <Route
+                                path="/categories/:categoryName"
+                                element={<Products />}
+                              />
+                              <Route path="/deals" element={<Products />} />
+                              <Route
+                                path="/product/:id"
+                                element={<ProductDetailPage />}
+                              />
+                              <Route path="/cart" element={<Cart />} />
+                              <Route
+                                path="/track"
+                                element={<OrderTracking />}
+                              />
+                              <Route
+                                path="/track/:orderId"
+                                element={<OrderConfirmation />}
+                              />
+                              <Route
+                                path="/order-confirmation"
+                                element={<OrderConfirmation />}
+                              />
+                              <Route
+                                path="/orders"
+                                element={<OrderHistory />}
+                              />
+                              <Route path="/wishlist" element={<Wishlist />} />
+                              <Route path="/account" element={<Account />} />
+                              <Route path="/contact" element={<ContactUs />} />
+                              <Route path="/faqs" element={<FAQs />} />
+                              <Route
+                                path="/terms"
+                                element={<TermsConditions />}
+                              />
+                              <Route
+                                path="/privacy"
+                                element={<PrivacyPolicy />}
+                              />
+                              <Route path="/about" element={<AboutUs />} />
+                              <Route path="*" element={<NotFound />} />
 
-                    {/* Pages with main layout */}
-                    <Route
-                      path="/*"
-                      element={
-                        <Layout>
-                          <Routes>
-                            <Route path="/" element={<Home />} />
-                            <Route path="/products" element={<Products />} />
-                            <Route path="/categories" element={<Products />} />
-                            <Route
-                              path="/categories/:categoryName"
-                              element={<Products />}
-                            />
-                            <Route path="/deals" element={<Products />} />
-                            <Route
-                              path="/product/:id"
-                              element={<ProductDetailPage />}
-                            />
-                            <Route path="/cart" element={<Cart />} />
-                            <Route path="/track" element={<OrderTracking />} />
-                            <Route
-                              path="/track/:orderId"
-                              element={<OrderConfirmation />}
-                            />
-                            <Route
-                              path="/order-confirmation"
-                              element={<OrderConfirmation />}
-                            />
-                            <Route path="/orders" element={<OrderHistory />} />
-                            <Route path="/wishlist" element={<Wishlist />} />
-                            <Route path="/account" element={<Account />} />
-                            <Route path="/contact" element={<ContactUs />} />
-                            <Route path="/faqs" element={<FAQs />} />
-                            <Route
-                              path="/terms"
-                              element={<TermsConditions />}
-                            />
-                            <Route
-                              path="/privacy"
-                              element={<PrivacyPolicy />}
-                            />
-                            <Route path="/about" element={<AboutUs />} />
-                            <Route path="*" element={<NotFound />} />
+                              <Route path="/stores" element={<StoresPage />} />
+                              <Route
+                                path="/stores/:slug"
+                                element={<StoreDetailPage />}
+                              />
 
-                            <Route path="/stores" element={<StoresPage />} />
-                            <Route
-                              path="/stores/:slug"
-                              element={<StoreDetailPage />}
-                            />
-
-                             <Route path="/profile" element={<ProfilePage />} />
-                            {/*<Route
+                              <Route
+                                path="/profile"
+                                element={<ProfilePage />}
+                              />
+                              {/*<Route
                               path="/settings"
                               element={<SettingsPage />}
                             />
@@ -283,13 +297,12 @@ const App = () => (
                               path="/checkout"
                               element={<CheckoutPage />}
                             /> */}
-                          </Routes>
-                        </Layout>
-                      }
-                    />
-                  </Routes>
-                            </NextUIProvider>
-
+                            </Routes>
+                          </Layout>
+                        }
+                      />
+                    </Routes>
+                  </NextUIProvider>
                 </BrowserRouter>
               </WishlistProvider>
             </OrderProvider>
