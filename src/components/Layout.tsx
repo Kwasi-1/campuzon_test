@@ -221,7 +221,7 @@ const Layout = ({ children }: LayoutProps) => {
 
                   <div className="mt-6 space-y-6">
                     {/* Account Links */}
-                    {user ? (
+                    {!user ? (
                       <div>
                         <h3 className="font-semibold text-sm text-gray-900 mb-3">
                           Account
@@ -327,7 +327,7 @@ const Layout = ({ children }: LayoutProps) => {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
-                  <Link to="/login">
+                  <Link to="/profile">
                     <Button
                       variant="ghost"
                       className="flex items-center space-x-2"

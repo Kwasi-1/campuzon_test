@@ -54,6 +54,10 @@ import AdminProtectedRoute from "./components/admin/AdminProtectedRoute";
 import { ProductDetailPage } from "./pages/client-new/products/pages/product-details/ProductDetailPage";
 import { StoresPage } from "./pages/client-new/stores";
 import { StoreDetailPage } from "./pages/client-new/stores/store-detail/StoreDetailPage";
+import Login from "./pages/auth-new/Login";
+import { ProfilePage } from "./pages/client-new/profile";
+import { NextUIProvider } from "@nextui-org/react";
+
 
 const queryClient = new QueryClient();
 
@@ -68,10 +72,12 @@ const App = () => (
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
+                          <NextUIProvider>
+
                   <ScrollToTop />
                   <Routes>
                     {/* Updated Auth pages without layout */}
-                    <Route path="/login" element={<UnifiedLogin />} />
+                    <Route path="/login" element={<Login />} />
                     <Route path="/2fa-verify" element={<TwoFactorAuth />} />
                     <Route path="/signup" element={<MultiStepSignup />} />
                     {/* <Route
@@ -247,8 +253,8 @@ const App = () => (
                               element={<StoreDetailPage />}
                             />
 
-                            {/* <Route path="/profile" element={<ProfilePage />} />
-                            <Route
+                             <Route path="/profile" element={<ProfilePage />} />
+                            {/*<Route
                               path="/settings"
                               element={<SettingsPage />}
                             />
@@ -282,6 +288,8 @@ const App = () => (
                       }
                     />
                   </Routes>
+                            </NextUIProvider>
+
                 </BrowserRouter>
               </WishlistProvider>
             </OrderProvider>
