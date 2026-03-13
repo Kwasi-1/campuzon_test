@@ -450,7 +450,6 @@ interface CustomTextareaFieldProps {
   disabled?: boolean;
   inputProps?: {
     onChange?: (e: any) => unknown;
-    onFocus?: (e: any) => unknown;
     onBlur?: (e: any) => unknown;
     ref?: RefCallback<HTMLTextAreaElement>;
     name?: string;
@@ -487,8 +486,8 @@ export const CustomTextareaField = ({
 
   const handleFocus = (e: any) => {
     setIsFocused(true);
-    if (inputProps?.onFocus) {
-      inputProps.onFocus(e);
+    if (inputProps?.onBlur) {
+      inputProps.onBlur(e);
     }
   };
 
@@ -668,6 +667,14 @@ export const AutoCompleteSelectComponent: React.FunctionComponent<
   const [inputValue, setValue] = useState("");
   const [selected, setSelected] = useState("");
   const [menu, setMenu] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0, set: false });
+
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
+
+  const currentInputDimensions = {
+    width: wrapperRef?.current?.offsetWidth,
+    height: wrapperRef?.current?.offsetHeight,
+  };
 
   const TypeMap: any = {
     item: {
@@ -694,7 +701,7 @@ export const AutoCompleteSelectComponent: React.FunctionComponent<
     },
   };
 
-  const { data, isFetching, isLoading } = useQuery<{ data?: any[] } | any[]>({
+  const { data, isFetching, isLoading } = useQuery({
     queryKey: [type, inputValue],
     queryFn: async () => {
       const response = await apiClient.post(TypeMap[type].url, {
@@ -727,10 +734,21 @@ export const AutoCompleteSelectComponent: React.FunctionComponent<
       <div
         onMouseLeave={() => {
           setMenu(false);
+          setPosition({ top: 0, left: 0, set: false });
         }}
         className="flex flex-col w-full relative group"
       >
         <div
+          ref={wrapperRef}
+          onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+
+            setPosition({
+              top: rect.top + window.scrollY,
+              left: rect.left + window.scrollX,
+              set: true,
+            });
+          }}
           className={` w-full flex flex-row relative border rounded-md border-collapse overflow-x-clip ${classNames?.inputWrapper}`}
         >
           {labelPlacement === "inside" && (
@@ -747,6 +765,15 @@ export const AutoCompleteSelectComponent: React.FunctionComponent<
               setValue(e.target.value);
               handleChange(e);
               setMenu(true);
+              setPosition({
+                top:
+                  (wrapperRef.current?.getBoundingClientRect()?.top as any) +
+                  window.scrollY,
+                left:
+                  (wrapperRef.current?.getBoundingClientRect()?.left as any) +
+                  window.scrollX,
+                set: true,
+              });
             }}
             value={inputValue}
             placeholder={placeholder}
@@ -779,13 +806,18 @@ export const AutoCompleteSelectComponent: React.FunctionComponent<
         </div>
 
         {/* menu */}
-        {menu && (
+        {menu && position.set && (
           <div
+            style={{
+              top: position.top + Number(currentInputDimensions.height) - 5.5,
+              left: position.left,
+              width: currentInputDimensions.width,
+            }}
             className={cn(
               `${
                 (menuItems.length > 0 || isLoading) &&
                 "p-1 pt-2 rounded-t-none border border-collapse"
-              } w-full dark:bg-secondary-black bg-white shadow-lg border-t-0 rounded-b-md border-collapse absolute left-0 top-full z-50 max-h-[15rem] overflow-y-auto transition-all`,
+              } w-full dark:bg-secondary-black bg-white shadow-lg border-t-0 rounded-b-md border-collapse fixed z-50 max-h-[15rem] overflow-y-auto transition-all`,
               classNames?.menu,
             )}
           >
@@ -811,6 +843,7 @@ export const AutoCompleteSelectComponent: React.FunctionComponent<
                   } as any);
                   returnItem?.(item);
                   setMenu(false);
+                  setPosition({ top: 0, left: 0, set: false });
                 }}
                 className="p-2 rounded-md text-left hover:bg-gray-300 dark:hover:bg-white hover:text-primary-black w-full flex flex-col transition-all"
               >
@@ -829,8 +862,6 @@ export const AutoCompleteSelectComponent: React.FunctionComponent<
     </div>
   );
 };
-
-// SEARCHABLE SELECT FIELD
 interface SearchableSelectFieldProps {
   label?: string;
   placeholder?: string;
