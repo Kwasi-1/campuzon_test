@@ -1,21 +1,23 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, Phone, Loader2, Building } from "lucide-react";
-import {  
-  Alert,
-} from "@/components/ui/alert";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import Input from "@/components/shared/InputField";
-import { Card,
+import {
+  CustomInputTextField,
+  SearchableSelectField,
+} from "@/components/shared/text-field";
+import {
+  Card,
   CardHeader,
   CardTitle,
   CardDescription,
-  CardContent } from "@/components/ui/card";
-import { Select } from "@/components/ui/select";
+  CardContent,
+} from "@/components/ui/card";
 import { useAuthStore } from "@/stores";
 import { mockInstitutions } from "@/lib/mockData";
 
@@ -61,6 +63,7 @@ export function RegisterPage() {
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<RegisterFormData>({
@@ -108,69 +111,84 @@ export function RegisterPage() {
               {error && <Alert variant="destructive">{error}</Alert>}
 
               <div className="grid grid-cols-2 gap-4">
-                <Input
+                <CustomInputTextField
                   label="First Name"
                   placeholder="John"
-                  leftIcon={<User className="h-4 w-4" />}
+                  startContent={<User className="h-4 w-4" />}
                   error={errors.firstName?.message}
-                  {...register("firstName")}
+                  labelPlacement="outside"
+                  inputProps={register("firstName")}
                 />
-                <Input
+                <CustomInputTextField
                   label="Last Name"
                   placeholder="Doe"
                   error={errors.lastName?.message}
-                  {...register("lastName")}
+                  labelPlacement="outside"
+                  inputProps={register("lastName")}
                 />
               </div>
 
-              <Input
+              <CustomInputTextField
                 label="University Email"
                 type="email"
                 placeholder="you@university.edu"
-                leftIcon={<Mail className="h-4 w-4" />}
+                startContent={<Mail className="h-4 w-4" />}
                 error={errors.email?.message}
-                hint="Use your .edu email for verification"
-                {...register("email")}
+                labelPlacement="outside"
+                inputProps={register("email")}
               />
 
-              <Input
+              <CustomInputTextField
                 label="Phone Number"
                 type="tel"
                 placeholder="+1 (555) 123-4567"
-                leftIcon={<Phone className="h-4 w-4" />}
+                startContent={<Phone className="h-4 w-4" />}
                 error={errors.phoneNumber?.message}
-                hint="Required for order notifications"
-                {...register("phoneNumber")}
+                labelPlacement="outside"
+                inputProps={register("phoneNumber")}
               />
 
-              <Select
-                label="Institution"
-                placeholder="Select your institution"
-                leftIcon={<Building className="h-4 w-4" />}
-                error={errors.institutionID?.message}
-                options={mockInstitutions.map((institution) => ({
-                  value: institution.id,
-                  label: `${institution.name} (${institution.shortName})`,
-                }))}
-                {...register("institutionID")}
+              <Controller
+                name="institutionID"
+                control={control}
+                render={({ field }) => (
+                  <SearchableSelectField
+                    label="Institution"
+                    placeholder="Select your institution"
+                    labelPlacement="outside"
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    options={mockInstitutions.map((institution) => ({
+                      value: institution.id,
+                      label: `${institution.name} (${institution.shortName})`,
+                      description: institution.shortName,
+                    }))}
+                    error={errors.institutionID?.message}
+                    selectProps={{
+                      startContent: <Building className="h-4 w-4" />,
+                    }}
+                  />
+                )}
               />
 
-              <Input
+              <CustomInputTextField
                 label="Password"
                 type="password"
                 placeholder="••••••••"
-                leftIcon={<Lock className="h-4 w-4" />}
+                startContent={<Lock className="h-4 w-4" />}
                 error={errors.password?.message}
-                {...register("password")}
+                labelPlacement="outside"
+                inputProps={register("password")}
               />
 
-              <Input
+              <CustomInputTextField
                 label="Confirm Password"
                 type="password"
                 placeholder="••••••••"
-                leftIcon={<Lock className="h-4 w-4" />}
+                startContent={<Lock className="h-4 w-4" />}
                 error={errors.confirmPassword?.message}
-                {...register("confirmPassword")}
+                labelPlacement="outside"
+                inputProps={register("confirmPassword")}
               />
 
               <div className="flex items-start gap-2 text-sm">

@@ -1,13 +1,11 @@
 ﻿import { cn } from "@/lib/utils";
-import { apiClient } from "@/lib/api";
-import { variables } from "@/utils/env";
+import apiClient from "@/services/apiClient";
 import { Icon } from "@iconify/react";
-import { Input } from "@nextui-org/input";
-import { Spinner, Textarea } from "@nextui-org/react";
+import { Spinner } from "@nextui-org/react";
 import { Select, SelectItem } from "@nextui-org/select";
 import { Autocomplete, AutocompleteItem } from "@nextui-org/autocomplete";
 import { format } from "date-fns";
-import _, { isEmpty } from "lodash";
+import  _, { isEmpty } from "lodash";
 import { CalendarIcon } from "lucide-react";
 import React, {
   FC,
@@ -136,7 +134,7 @@ export const CustomSelectField: FC<CustomSelectFieldProps> = ({
 
 // CUSTOM INPUT
 interface CustomInputTextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
-  type?: "text" | "number" | "date";
+  type?: "text" | "number" | "date" | "email" | "password" | "tel";
   onChange?: (e: any) => unknown;
   placeholder?: string;
   required?: boolean;
@@ -452,6 +450,7 @@ interface CustomTextareaFieldProps {
   disabled?: boolean;
   inputProps?: {
     onChange?: (e: any) => unknown;
+    onFocus?: (e: any) => unknown;
     onBlur?: (e: any) => unknown;
     ref?: RefCallback<HTMLTextAreaElement>;
     name?: string;
@@ -488,8 +487,8 @@ export const CustomTextareaField = ({
 
   const handleFocus = (e: any) => {
     setIsFocused(true);
-    if (inputProps?.onBlur) {
-      inputProps.onBlur(e);
+    if (inputProps?.onFocus) {
+      inputProps.onFocus(e);
     }
   };
 
@@ -669,14 +668,6 @@ export const AutoCompleteSelectComponent: React.FunctionComponent<
   const [inputValue, setValue] = useState("");
   const [selected, setSelected] = useState("");
   const [menu, setMenu] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0, set: false });
-
-  const wrapperRef = React.useRef<HTMLDivElement>(null);
-
-  const currentInputDimensions = {
-    width: wrapperRef?.current?.offsetWidth,
-    height: wrapperRef?.current?.offsetHeight,
-  };
 
   const TypeMap: any = {
     item: {
@@ -703,22 +694,18 @@ export const AutoCompleteSelectComponent: React.FunctionComponent<
     },
   };
 
-  const { data, isFetching, isLoading } = useQuery({
+  const { data, isFetching, isLoading } = useQuery<{ data?: any[] } | any[]>({
     queryKey: [type, inputValue],
     queryFn: async () => {
-      const response = await apiClient({
-        url: variables().BUSINESS_API + TypeMap[type].url,
-        method: "POST",
-        data: {
-          fields: ["*"],
-          limit_start: 0,
-          limit_page_length: 20,
-          order_by: TypeMap[type].order,
-          filters: [
-            [...TypeMap[type].filters, `%${inputValue.split(", ")[0]}%`],
-            ...[TypeMap[type].otherFilters],
-          ].filter((item) => !isEmpty(item)),
-        },
+      const response = await apiClient.post(TypeMap[type].url, {
+        fields: ["*"],
+        limit_start: 0,
+        limit_page_length: 20,
+        order_by: TypeMap[type].order,
+        filters: [
+          [...TypeMap[type].filters, `%${inputValue.split(", ")[0]}%`],
+          ...[TypeMap[type].otherFilters],
+        ].filter((item) => !isEmpty(item)),
       });
 
       return response?.data;
@@ -726,6 +713,11 @@ export const AutoCompleteSelectComponent: React.FunctionComponent<
     enabled: isEmpty(selected),
     refetchOnWindowFocus: false,
   });
+
+  const normalizedData = data as { data?: any[] } | any[] | undefined;
+  const menuItems = Array.isArray(normalizedData)
+    ? normalizedData
+    : normalizedData?.data || [];
 
   return (
     <div className="flex flex-col">
@@ -735,21 +727,10 @@ export const AutoCompleteSelectComponent: React.FunctionComponent<
       <div
         onMouseLeave={() => {
           setMenu(false);
-          setPosition({ top: 0, left: 0, set: false });
         }}
         className="flex flex-col w-full relative group"
       >
         <div
-          ref={wrapperRef}
-          onClick={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-
-            setPosition({
-              top: rect.top + window.scrollY,
-              left: rect.left + window.scrollX,
-              set: true,
-            });
-          }}
           className={` w-full flex flex-row relative border rounded-md border-collapse overflow-x-clip ${classNames?.inputWrapper}`}
         >
           {labelPlacement === "inside" && (
@@ -766,15 +747,6 @@ export const AutoCompleteSelectComponent: React.FunctionComponent<
               setValue(e.target.value);
               handleChange(e);
               setMenu(true);
-              setPosition({
-                top:
-                  (wrapperRef.current?.getBoundingClientRect()?.top as any) +
-                  window.scrollY,
-                left:
-                  (wrapperRef.current?.getBoundingClientRect()?.left as any) +
-                  window.scrollX,
-                set: true,
-              });
             }}
             value={inputValue}
             placeholder={placeholder}
@@ -807,18 +779,13 @@ export const AutoCompleteSelectComponent: React.FunctionComponent<
         </div>
 
         {/* menu */}
-        {menu && position.set && (
+        {menu && (
           <div
-            style={{
-              top: position.top + Number(currentInputDimensions.height) - 5.5,
-              left: position.left,
-              width: currentInputDimensions.width,
-            }}
             className={cn(
               `${
-                (_.size(data?.data || data) > 0 || isLoading) &&
+                (menuItems.length > 0 || isLoading) &&
                 "p-1 pt-2 rounded-t-none border border-collapse"
-              } w-full dark:bg-secondary-black bg-white shadow-lg border-t-0 rounded-b-md border-collapse fixed z-50 max-h-[15rem] overflow-y-auto transition-all`,
+              } w-full dark:bg-secondary-black bg-white shadow-lg border-t-0 rounded-b-md border-collapse absolute left-0 top-full z-50 max-h-[15rem] overflow-y-auto transition-all`,
               classNames?.menu,
             )}
           >
@@ -828,7 +795,7 @@ export const AutoCompleteSelectComponent: React.FunctionComponent<
               </p>
             )}
 
-            {(data?.data || data)?.map((item: any, index: number) => (
+            {menuItems.map((item: any, index: number) => (
               <button
                 key={index}
                 type="button"
@@ -844,7 +811,6 @@ export const AutoCompleteSelectComponent: React.FunctionComponent<
                   } as any);
                   returnItem?.(item);
                   setMenu(false);
-                  setPosition({ top: 0, left: 0, set: false });
                 }}
                 className="p-2 rounded-md text-left hover:bg-gray-300 dark:hover:bg-white hover:text-primary-black w-full flex flex-col transition-all"
               >

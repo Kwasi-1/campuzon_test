@@ -5,16 +5,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import { Mail, Lock, Loader2 } from "lucide-react";
-import {  
-  Alert,
-} from "@/components/ui/alert";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import Input from "@/components/shared/InputField";
-import { Card,
+import { CustomInputTextField } from "@/components/shared/text-field";
+import {
+  Card,
   CardHeader,
   CardTitle,
   CardDescription,
-  CardContent } from "@/components/ui/card";
+  CardContent,
+} from "@/components/ui/card";
 import { useAuthStore } from "@/stores";
 
 const loginSchema = z.object({
@@ -85,22 +85,24 @@ const Login = () => {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {error && <Alert variant="destructive">{error}</Alert>}
 
-              <Input
+              <CustomInputTextField
                 label="Email"
                 type="email"
                 placeholder="you@university.edu"
-                leftIcon={<Mail className="h-4 w-4" />}
+                startContent={<Mail className="h-4 w-4" />}
                 error={errors.email?.message}
-                {...register("email")}
+                labelPlacement="inside"
+                inputProps={register("email")}
               />
 
-              <Input
+              <CustomInputTextField
                 label="Password"
                 type="password"
                 placeholder="••••••••"
-                leftIcon={<Lock className="h-4 w-4" />}
+                startContent={<Lock className="h-4 w-4" />}
                 error={errors.password?.message}
-                {...register("password")}
+                labelPlacement="inside"
+                inputProps={register("password")}
               />
 
               <div className="flex items-center justify-between text-sm">
@@ -187,6 +189,6 @@ const Login = () => {
       </motion.div>
     </div>
   );
-}
+};
 
 export default Login;
