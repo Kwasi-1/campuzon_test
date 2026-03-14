@@ -66,6 +66,9 @@ export function RegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     setError(null);
     try {
+      const selectedInstitution = mockInstitutions.find(i => i.id === data.institutionID);
+      const institutionName = selectedInstitution?.name || "Unknown Institution";
+      
       await registerUser({
         firstName: data.firstName,
         lastName: data.lastName,
@@ -73,6 +76,7 @@ export function RegisterPage() {
         phoneNumber: data.phoneNumber,
         password: data.password,
         institutionID: data.institutionID,
+        institutionName: institutionName,
       });
       navigate("/");
     } catch (err: unknown) {

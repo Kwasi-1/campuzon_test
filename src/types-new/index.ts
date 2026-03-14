@@ -391,6 +391,7 @@ export interface RegisterRequest {
   phoneNumber: string;
   password: string;
   institutionID: string;
+  institutionName: string;
   hallID?: string;
   displayName?: string;
 }

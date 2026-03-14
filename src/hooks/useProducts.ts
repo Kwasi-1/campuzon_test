@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, extractData, extractError } from '@/lib/api';
 import { mockApi } from '@/lib/mockData';
-import type { Product, Store, PaginatedResponse, ProductFilters } from '@/types-new';
+import type { Product, Store, PaginatedResponse, ProductFilters, Pagination } from '@/types-new';
 import toast from 'react-hot-toast';
 
 // Use mock data in development when API is unavailable
@@ -38,9 +38,18 @@ export function useProducts(filters: ProductFilters = {}) {
       if (filters.storeId) params.set('store_id', filters.storeId);
 
       const response = await api.get(`/products?${params.toString()}`);
-      return extractData<PaginatedResponse<Product>>(response);
+      const data = extractData<{ pagination: Pagination; products: Product[] }>(response);
+      return {
+        items: data.products,
+        pagination: data.pagination,
+        total: data.pagination.total,
+        pages: data.pagination.pages,
+        page: data.pagination.page,
+        hasNext: data.pagination.hasNext,
+        hasPrev: data.pagination.hasPrev,
+      };
     },
-  });////
+  });
 }
 
 // Get single product
@@ -79,7 +88,8 @@ export function useSearchProducts(query: string) {
     queryKey: productKeys.search(query),
     queryFn: async (): Promise<Product[]> => {
       const response = await api.get(`/products?search=${encodeURIComponent(query)}`);
-      return extractData<Product[]>(response);
+      const data = extractData<{ pagination: Pagination; products: Product[] }>(response);
+      return data.products;
     },
     enabled: query.length >= 2,
   });
