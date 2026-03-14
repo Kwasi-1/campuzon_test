@@ -16,12 +16,13 @@ import {
   Zap,
   Star,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CustomInputTextField, CustomTextareaField, CustomSelectField } from "@/components/shared/text-field";
+import {
+  CustomInputTextField,
+  CustomTextareaField,
+  CustomSelectField,
+} from "@/components/shared/text-field";
 import { useAuthStore } from "@/stores";
 
 const INSTITUTION_OPTIONS = [
@@ -344,6 +345,7 @@ export function BecomeSellerPage() {
                       </label>
                       <CustomInputTextField
                         value={formData.storeName}
+                        // label="Store Namer"
                         onChange={(e) =>
                           handleChange("storeName", e.target.value)
                         }
@@ -366,7 +368,7 @@ export function BecomeSellerPage() {
                         value={formData.category}
                         inputProps={{
                           onChange: (e) =>
-                            handleChange("category", e.target.value)
+                            handleChange("category", e.target.value),
                         }}
                         options={CATEGORY_OPTIONS}
                         className={errors.category ? "border-red-500" : ""}
@@ -386,7 +388,7 @@ export function BecomeSellerPage() {
                         value={formData.institution}
                         inputProps={{
                           onChange: (e) =>
-                            handleChange("institution", e.target.value)
+                            handleChange("institution", e.target.value),
                         }}
                         options={INSTITUTION_OPTIONS}
                         className={errors.institution ? "border-red-500" : ""}

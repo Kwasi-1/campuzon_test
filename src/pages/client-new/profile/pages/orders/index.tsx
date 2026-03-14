@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Package,
@@ -6,82 +6,91 @@ import {
   MapPin,
   Clock,
   Search,
+  ShoppingBag,
+  Truck,
+  MoreVertical,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/shared/Skeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { Icon } from "@iconify/react/dist/iconify.js";
-
 import { useMyOrders } from "@/hooks";
-import { useAuthStore, useCartStore } from "@/stores";
+import { useAuthStore } from "@/stores";
 import { formatPrice } from "@/lib/utils";
 import type { Order, OrderStatus } from "@/types-new";
-import toast from "react-hot-toast";
 
-const STATUS_OPTIONS = [
-  { value: "all", label: "All" },
-  { value: "pending", label: "Pending" },
-  { value: "paid", label: "Paid" },
-  { value: "processing", label: "Processing" },
-  { value: "shipped", label: "Shipped" },
-  { value: "delivered", label: "Delivered" },
-  { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
-];
+// We map our backend statuses to simpler display categories for the sidebar
+type DisplayCategory = "on_shipping" | "arrived" | "canceled" | "all";
 
-const getStatusColor = (status: OrderStatus) => {
-  switch (status) {
-    case "delivered":
-    case "completed":
-      return "bg-green-100 text-green-800";
-    case "shipped":
-      return "bg-blue-100 text-blue-800";
-    case "processing":
-    case "paid":
-      return "bg-yellow-100 text-yellow-800";
-    case "cancelled":
-    case "refunded":
-      return "bg-red-100 text-red-800";
+const CATEGORY_MAP: Record<DisplayCategory, OrderStatus[]> = {
+  all: [],
+  on_shipping: ["pending", "paid", "processing", "shipped"],
+  arrived: ["delivered", "completed"],
+  canceled: ["cancelled", "refunded", "disputed"],
+};
+
+const getCategory = (status: OrderStatus): DisplayCategory => {
+  if (CATEGORY_MAP.on_shipping.includes(status)) return "on_shipping";
+  if (CATEGORY_MAP.arrived.includes(status)) return "arrived";
+  if (CATEGORY_MAP.canceled.includes(status)) return "canceled";
+  return "all";
+};
+
+const getStatusBadge = (status: OrderStatus) => {
+  const cat = getCategory(status);
+  switch (cat) {
+    case "on_shipping":
+      return (
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-600 text-xs font-medium">
+          <div className="w-1.5 h-1.5 rounded-full bg-red-600"></div>
+          On Deliver
+        </div>
+      );
+    case "arrived":
+      return (
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-600 text-xs font-medium">
+          <div className="w-1.5 h-1.5 rounded-full bg-green-600"></div>
+          Arrived
+        </div>
+      );
+    case "canceled":
+      return (
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">
+          <div className="w-1.5 h-1.5 rounded-full bg-gray-600"></div>
+          Canceled
+        </div>
+      );
     default:
-      return "bg-gray-100 text-gray-800";
+      return (
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">
+          {status}
+        </div>
+      );
   }
 };
 
 export function OrdersPage() {
   const navigate = useNavigate();
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState<DisplayCategory>("all");
   const { isAuthenticated } = useAuthStore();
-  const addItem = useCartStore((state) => state.addItem);
 
-  const { data: orders, isLoading } = useMyOrders(
-    statusFilter !== "all" ? { status: statusFilter } : undefined,
-  );
+  const { data: rawOrders, isLoading } = useMyOrders();
+  const displayOrders = useMemo(() => rawOrders || [], [rawOrders]);
 
-  const displayOrders = orders || [];
+  // Calculate counts
+  const counts = useMemo(() => {
+    return {
+      all: displayOrders.length,
+      on_shipping: displayOrders.filter((o) => getCategory(o.status) === "on_shipping").length,
+      arrived: displayOrders.filter((o) => getCategory(o.status) === "arrived").length,
+      canceled: displayOrders.filter((o) => getCategory(o.status) === "canceled").length,
+    };
+  }, [displayOrders]);
 
   // Filter orders
-  const filteredOrders = displayOrders.filter((order) => {
-    const matchesStatus =
-      statusFilter === "all" || order.status === statusFilter;
-    const matchesSearch =
-      searchQuery === "" ||
-      order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.items?.some((item) =>
-        item.productName.toLowerCase().includes(searchQuery.toLowerCase()),
-      );
-    return matchesStatus && matchesSearch;
-  });
+  const filteredOrders = useMemo(() => {
+    if (activeCategory === "all") return displayOrders;
+    return displayOrders.filter((o) => getCategory(o.status) === activeCategory);
+  }, [displayOrders, activeCategory]);
 
   if (!isAuthenticated) {
     navigate("/login?redirect=/orders");
@@ -92,209 +101,222 @@ export function OrdersPage() {
     navigate(`/orders/${orderId}`);
   };
 
-  const handleBuyAgain = async (order: Order) => {
-    try {
-      if (order.store && order.items) {
-        for (const item of order.items) {
-           // We might not have the full Product object in OrderItem,
-           // but keeping the logic flowing gracefully assuming typical reorder flow
-           // In this implementation, normally we redirect to product or use actual product details
-           navigate(`/products/${item.productID}`);
-           break; // Let's just navigate to the first product to allow adding to cart
-        }
-      }
-    } catch (error) {
-      toast.error("Failed to add items to cart");
-    }
-  };
+  const categories: { key: DisplayCategory; label: string; count: number }[] = [
+    { key: "all", label: "All Orders", count: counts.all },
+    { key: "on_shipping", label: "On Shipping", count: counts.on_shipping },
+    { key: "arrived", label: "Arrived", count: counts.arrived },
+    { key: "canceled", label: "Canceled", count: counts.canceled },
+  ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-display tracking-wide font-[700] text-gray-900 mb-2">
-          Order History
-        </h1>
-        <p className="text-gray-600">Track and view all your previous orders</p>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search by order number or product name"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-600">Status</span>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="All" />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+    <div className="mx-auto flex flex-col lg:flex-row gap-8 pb-12">
+      {/* Sidebar Filters */}
+      <div className="lg:w-64 shrink-0">
+        <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-hide">
+          {categories.map((cat) => {
+            const isActive = activeCategory === cat.key;
+            return (
+              <button
+                key={cat.key}
+                onClick={() => setActiveCategory(cat.key)}
+                className={`flex items-center justify-between pl-5 pr-1 py-1 rounded-full transition-all shrink-0 lg:shrink-auto whitespace-nowrap lg:whitespace-normal border shadowsm ${
+                  isActive
+                    ? "bg-[#1C1C1E] text-white border-[#1C1C1E]"
+                    : "bg-white text-gray-700 bordergray-200 hover:border-gray-300 hover:bg-gray-50"
+                }`}
+              >
+                <span className="font-medium text-[15px]">{cat.label}</span>
+                <span
+                  className={`w-12 h-12 flex items-center justify-center rounded-full text-xs font-bold ${
+                    isActive ? "bg-white text-black" : "bg-secondary text-gray-600"
+                  }`}
+                >
+                  {cat.count}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Orders List */}
-      {isLoading ? (
-        <div className="space-y-6">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <Card key={index}>
-              <CardHeader className="pb-4">
-                <div className="flex justify-between items-start">
+      <div className="flex-1 space-y-6">
+        {isLoading ? (
+          <div className="space-y-6">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="border border-gray-100 rounded-[28px] p-6 bg-white overflow-hidden shadow-sm">
+                <div className="flex justify-between mb-4">
                   <div className="space-y-2">
-                    <Skeleton className="h-5 w-32 rounded" />
                     <Skeleton className="h-4 w-24 rounded" />
+                    <Skeleton className="h-6 w-32 rounded" />
                   </div>
-                  <Skeleton className="h-6 w-20 rounded" />
+                  <Skeleton className="h-6 w-24 rounded-full" />
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="space-y-1">
-                    <Skeleton className="h-4 w-20 rounded" />
-                    <Skeleton className="h-5 w-16 rounded" />
-                  </div>
-                  <div className="space-y-1">
-                    <Skeleton className="h-4 w-12 rounded" />
-                    <Skeleton className="h-5 w-14 rounded" />
-                  </div>
-                  <div className="space-y-1">
-                    <Skeleton className="h-4 w-16 rounded" />
-                    <Skeleton className="h-4 w-32 rounded" />
-                  </div>
+                <div className="space-y-4">
+                  <Skeleton className="h-20 w-full rounded-2xl" />
+                  <Skeleton className="h-20 w-full rounded-2xl" />
                 </div>
-                <div className="pt-4 border-t border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <Skeleton className="h-4 w-24 rounded" />
-                    <div className="flex gap-2">
-                      <Skeleton className="h-8 w-24 rounded-md" />
-                      <Skeleton className="h-8 w-24 rounded-md" />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : filteredOrders.length === 0 ? (
-        <Card className="min-h-[calc(100vh-310px)]">
-          <CardContent className="text-center py-12 flex flex-col justify-center h-full">
-            <EmptyState
-              icon={<Package className="h-16 w-16 text-gray-400 mb-4" />}
-              title={
-                searchQuery || statusFilter !== "all"
-                  ? "No matching orders"
-                  : "No orders yet"
-              }
-              description={
-                searchQuery || statusFilter !== "all"
-                  ? "Try adjusting your search or filters"
-                  : "Start shopping to see your orders here"
-              }
-              action={
-                <Button onClick={() => navigate("/products")} className="mt-4">
-                  Start Shopping
-                </Button>
-              }
-            />
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-6">
-          {filteredOrders.map((order) => {
-            const itemCount =
-              order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
-            const primaryItem = order.items?.[0];
+              </div>
+            ))}
+          </div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="border border-gray-100 bg-white rounded-[28px] overflow-hidden shadow-sm">
+            <div className="text-center py-16 flex flex-col justify-center h-full items-center">
+              <EmptyState
+                icon={<ShoppingBag className="h-16 w-16 text-gray-300" />}
+                title="No orders found"
+                description={`You don't have any orders in the "${
+                  categories.find((c) => c.key === activeCategory)?.label
+                }" category yet.`}
+                action={
+                  <Button onClick={() => navigate("/products")} className="mt-6 rounded-full px-8 h-12">
+                    Start Shopping
+                  </Button>
+                }
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {filteredOrders.map((order) => {
+              const itemCount = order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+              const deliveryLocation = order.deliveryAddress || "Not Provided";
+              // If there's no store location in the data, we mock an origin for the UI effect
+              const originLocation = order.store?.storeName ? `${order.store.storeName}, Campus` : "Warehouse, Campus";
 
-            return (
-              <Card key={order.id}>
-                <CardHeader className="pb-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg">
-                        {order.orderNumber}
-                      </CardTitle>
-                      <div className="flex items-center text-sm text-gray-600 mt-1">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        {new Date(order.dateCreated).toLocaleDateString()}
-                      </div>
-                    </div>
-                    <Badge
-                      variant="secondary"
-                      className={`${getStatusColor(order.status)} capitalize`}
-                    >
-                      {order.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-600">Total Amount</p>
-                      <p className="font-semibold">{formatPrice(order.totalAmount)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Items</p>
-                      <p className="font-semibold">{itemCount} items</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Delivery</p>
-                      <div className="flex items-center font-medium">
-                        <MapPin className="w-3.5 h-3.5 mr-1 text-gray-500" />
-                        <p className="text-sm">
-                          {order.deliveryAddress || "Not Provided"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-gray-200">
+              return (
+                <div
+                  key={order.id}
+                  className="bg-white border border-gray-100 rounded-[28px] overflow-hidden shadow-sm flex flex-col"
+                >
+                  {/* Top Header */}
+                  <div className="p-6 md:p-8 flex flex-col gap-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex items-center text-sm text-gray-600 font-medium">
-                        <Clock className="w-4 h-4 mr-1" />
-                        <span className="capitalize">{order.deliveryMethod} Delivery</span>
-                        {primaryItem?.productName && (
-                          <span className="block ml-4 text-xs font-normal text-muted-foreground line-clamp-1 max-w-[200px]">
-                            Includes {primaryItem.productName}
-                          </span>
-                        )}
+                      <div>
+                        <p className="text-xs text-gray-400 font-medium mb-1 uppercase tracking-wider">
+                          Order ID
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <ShoppingBag className="w-5 h-5 text-gray-800" />
+                          <h3 className="text-xl font-bold text-gray-900">{order.orderNumber}</h3>
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-2 justify-end">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewDetails(order.id)}
-                        >
-                          <Icon icon="octicon:eye-24" className="w-4 h-4 mr-1" />
-                          <span>View Details</span>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleBuyAgain(order)}
-                        >
-                          <Icon icon="pajamas:retry" className="w-4 h-4 mr-1" />
-                          <span>Buy Again</span>
-                        </Button>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm border border-gray-100 px-3 py-1 rounded-full text-gray-400 font-medium shadow-sm">
+                          Estimated arrival:{" "}
+                          {new Date(
+                            new Date(order.dateCreated).getTime() + 3 * 24 * 60 * 60 * 1000
+                          ).toLocaleDateString("en-GB", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </span>
+                        {getStatusBadge(order.status)}
                       </div>
                     </div>
+
+                    {/* Location Route */}
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between text-sm font-medium gap-4">
+                      <div className="flex items-center gap-2 text-gray-800 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
+                        <Truck className="w-4 h-4 text-gray-500" />
+                        <span>{originLocation}</span>
+                      </div>
+                      
+                      {/* Dotted Line Graphic */}
+                      <div className="hidden md:flex flex-1 items-center justify-center opacity-30">
+                         <div className="w-full max-w-[120px] flex items-center justify-between gap-1">
+                           <div className="w-1.5 h-1.5 rounded-full bg-gray-900"></div>
+                           <div className="w-1 h-1 rounded-full bg-gray-500"></div>
+                           <div className="w-1 h-1 rounded-full bg-gray-400"></div>
+                           <div className="w-1 h-1 rounded-full bg-gray-300"></div>
+                           <div className="flex-[1] h-[1px] border-b border-dashed border-gray-400 mx-1"></div>
+                           <ChevronRight className="w-3 h-3 text-gray-500" />
+                         </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-gray-800 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
+                        <MapPin className="w-4 h-4 text-gray-500" />
+                        <span className="line-clamp-1 max-w-[200px]">{deliveryLocation}</span>
+                      </div>
+                    </div>
+
+                    {/* Items List */}
+                    <div className="grid grid-cols-1 gap-4 mt-2">
+                      {order.items?.map((item, idx) => (
+                        <div
+                          key={item.id || idx}
+                          className="flex items-center gap-4 bg-gray-50/50 p-3 rounded-2xl border border-gray-100/60"
+                        >
+                          <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 shrink-0 shadow-sm border border-gray-100">
+                            <img
+                              src={item.productImage || "/placeholder-product.jpg"}
+                              alt={item.productName}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-gray-900 text-base mb-1 truncate">
+                              {item.productName}
+                            </h4>
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="font-bold text-gray-900">
+                                {formatPrice(item.unitPrice)}
+                              </span>
+                              <span className="text-gray-400 font-medium">
+                                x{item.quantity}
+                              </span>
+                            </div>
+                            <p className="text-gray-400 text-sm mt-0.5 font-medium">Qty: {item.quantity}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+
+                  {/* Bottom Summary Bar */}
+                  <div className="bg-[#F3F3F3] p-6 md:px-8 md:py-5 flex flex-col md:flex-row md:items-center justify-between gap-4 mt-auto">
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-base font-bold text-gray-900">
+                        Total: {formatPrice(order.totalAmount)}
+                      </p>
+                      <p className="text-sm font-medium text-gray-400">
+                        ({itemCount} item{itemCount !== 1 && "s"})
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => handleViewDetails(order.id)}
+                      className="rounded-full bg-[#1C1C1E] text-white hover:bg-black px-8 h-11 shadow-sm"
+                    >
+                      Details
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
+  );
+}
+
+// Minimal internal component for the little right arrow
+function ChevronRight(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="m9 18 6-6-6-6" />
+    </svg>
   );
 }
