@@ -40,15 +40,16 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { AdminStoreData, Product, StoreData } from "@/types";
+import { AdminStoreData } from "@/pages/admin/stores/AdminStores";
+import { Product } from "@/types-new";
 
 interface StoreModalProps {
   isOpen: boolean;
   onClose: () => void;
-  store: StoreData | null;
+  store: AdminStoreData | null;
   mode: "view" | "suspend" | "reject";
-  onSuspend: (storeId: number, reason: string, duration: string) => void;
-  onReject?: (storeId: number, reason: string) => void;
+  onSuspend: (storeId: any, reason: string, duration: string) => void;
+  onReject?: (storeId: any, reason: string) => void;
 }
 
 const StoreModal: React.FC<StoreModalProps> = ({
@@ -114,11 +115,11 @@ const StoreModal: React.FC<StoreModalProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Active":
+      case "active":
         return "bg-green-100 text-green-800";
-      case "Suspended":
+      case "suspended":
         return "bg-red-100 text-red-800";
-      case "Pending":
+      case "pending":
         return "bg-yellow-100 text-yellow-800";
       default:
         return "bg-gray-100 text-gray-800";

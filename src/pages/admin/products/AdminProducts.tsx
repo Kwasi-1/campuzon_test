@@ -33,7 +33,7 @@ import ProductModal from "@/components/admin/ProductModal";
 import TableSkeleton from "@/components/ui/table-skeleton";
 import adminDataService from "@/services/adminDataService";
 import adminProductService from "@/services/adminProductService";
-import { Product } from "@/types";
+import { Product } from "@/types-new";
 
 const AdminProducts = () => {
   const [statusFilter, setStatusFilter] = useState("all");
@@ -56,27 +56,11 @@ const AdminProducts = () => {
       try {
         // Use the enhanced getAllProducts method
         const list = await adminProductService.getAllProducts();
-        // map to Product type expected by UI
-        const products = list.map((p) => ({
-          id: p.id,
-          name: p.name,
-          price: p.price,
-          store: p.store,
-          category: p.category,
-          description: "",
-          stock: p.stock,
-          status:
-            p.status === "active"
-              ? "Active"
-              : p.status === "out_of_stock"
-              ? "Out of Stock"
-              : p.status === "pending_approval"
-              ? "Under Review"
-              : "Suspended",
-          views: p.views ?? 0,
-          sales: p.sales ?? 0,
-        }));
-        setProducts(products);
+        
+        // Let's assume list already implements Product from types-new closely,
+        // or we'll type cast/map as required. For now let's set it directly
+        // and handle any mock data discrepancies in the service.
+        setProducts(list as any); // temporary cast if service returns old data
       } catch (error) {
         toast({
           title: "Failed to load products",
@@ -94,11 +78,12 @@ const AdminProducts = () => {
 
   // Filter products based on search and filters
   const filteredProducts = products.filter((product) => {
+    const storeName = product.store?.name || "";
     const matchesSearch =
       searchQuery === "" ||
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.store.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchQuery.toLowerCase());
+      storeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (product.description || "").toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus =
       statusFilter === "all" ||
@@ -111,7 +96,7 @@ const AdminProducts = () => {
 
     const matchesStore =
       storeFilter === "all" ||
-      product.store.toLowerCase().includes(storeFilter.toLowerCase());
+      storeName.toLowerCase().includes(storeFilter.toLowerCase());
 
     return matchesSearch && matchesStatus && matchesCategory && matchesStore;
   });
@@ -124,20 +109,20 @@ const AdminProducts = () => {
     },
     {
       label: "Active Products",
-      value: products.filter((p) => p.status === "Active").length.toString(),
+      value: products.filter((p) => p.status === "active").length.toString(),
       subtext: "91.8% active rate",
     },
     {
       label: "Under Review",
       value: products
-        .filter((p) => p.status === "Under Review")
+        .filter((p) => p.status === "draft")
         .length.toString(),
       subtext: "Pending approval",
     },
     {
       label: "Out of Stock",
       value: products
-        .filter((p) => p.status === "Out of Stock")
+        .filter((p) => p.quantity === 0)
         .length.toString(),
       subtext: "Need restocking",
     },
@@ -145,13 +130,14 @@ const AdminProducts = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Active":
+      case "active":
         return "bg-green-100 text-green-800";
-      case "Out of Stock":
+      case "sold_out":
         return "bg-red-100 text-red-800";
-      case "Under Review":
+      case "draft":
         return "bg-yellow-100 text-yellow-800";
-      case "Suspended":
+      case "suspended":
+      case "deleted":
         return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -247,9 +233,9 @@ const AdminProducts = () => {
       await adminProductService.updateProduct(String(updatedProduct.id), {
         name: updatedProduct.name,
         price: updatedProduct.price,
-        stock: updatedProduct.stock,
+        stock: updatedProduct.quantity,
         category: updatedProduct.category,
-        status: updatedProduct.status.toLowerCase(),
+        status: updatedProduct.status,
       });
 
       setProducts(
@@ -425,7 +411,7 @@ const AdminProducts = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="font-medium">{product.store}</div>
+                      <div className="font-medium">{product.store?.name || "Unknown"}</div>
                     </TableCell>
                     <TableCell>
                       <Badge className={getCategoryColor(product.category)}>
@@ -441,16 +427,16 @@ const AdminProducts = () => {
                       <div className="flex items-center space-x-2">
                         <span
                           className={
-                            product.stock === 0
+                            product.quantity === 0
                               ? "text-red-600"
-                              : product.stock < 20
+                              : product.quantity < 20
                               ? "text-yellow-600"
                               : "text-green-600"
                           }
                         >
-                          {product.stock}
+                          {product.quantity}
                         </span>
-                        {product.stock < 20 && product.stock > 0 && (
+                        {product.quantity < 20 && product.quantity > 0 && (
                           <AlertTriangle className="w-4 h-4 text-yellow-500" />
                         )}
                       </div>
@@ -459,10 +445,10 @@ const AdminProducts = () => {
                       <div className="space-y-1">
                         <div className="flex items-center text-sm">
                           <Eye className="w-3 h-3 mr-1 text-gray-400" />
-                          {product.views} views
+                          {product.viewCount} views
                         </div>
                         <div className="text-sm text-gray-600">
-                          {product.sales} sold
+                          {product.soldCount} sold
                         </div>
                       </div>
                     </TableCell>

@@ -9,15 +9,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Package, TrendingUp, TrendingDown, Eye, AlertTriangle, BarChart3 } from 'lucide-react';
-import { Product } from '@/types';
+import { Product, ProductStatus } from '@/types-new';
 
 interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   product: Product | null;
   mode: 'view' | 'edit' | 'suspend';
-  onSave: (product: Product) => void;
-  onSuspend: (productId: number, reason: string, duration: string) => void;
+  onSave: (product: any) => void;
+  onSuspend: (productId: any, reason: string, duration: string) => void;
 }
 
 const ProductModal: React.FC<ProductModalProps> = ({
@@ -33,8 +33,8 @@ const ProductModal: React.FC<ProductModalProps> = ({
     description: product?.description || '',
     category: product?.category || '',
     price: product?.price || 0,
-    stock: product?.stock || 0,
-    status: product?.status || 'Active'
+    quantity: product?.quantity || 0,
+    status: product?.status || 'active'
   });
 
   const [suspendData, setSuspendData] = useState({
@@ -54,10 +54,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Active': return 'bg-green-100 text-green-800';
-      case 'Out of Stock': return 'bg-red-100 text-red-800';
-      case 'Under Review': return 'bg-yellow-100 text-yellow-800';
-      case 'Suspended': return 'bg-gray-100 text-gray-800';
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'sold_out': return 'bg-red-100 text-red-800';
+      case 'draft': return 'bg-yellow-100 text-yellow-800';
+      case 'suspended': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -73,10 +73,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
   // Mock analytics data
   const analyticsData = {
-    totalViews: product?.views || 0,
-    totalSales: product?.sales || 0,
-    conversionRate: product ? ((product.sales / product.views) * 100).toFixed(1) : '0',
-    revenue: product ? (product.price * product.sales).toFixed(2) : '0',
+    totalViews: product?.viewCount || 0,
+    totalSales: product?.soldCount || 0,
+    conversionRate: product ? ((product.soldCount! / Math.max(product.viewCount!, 1)) * 100).toFixed(1) : '0',
+    revenue: product ? (product.price * product.soldCount!).toFixed(2) : '0',
     weeklyViews: [45, 52, 38, 61, 42, 55, 48],
     weeklySales: [12, 18, 8, 22, 15, 19, 14]
   };
@@ -120,7 +120,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   <div className="space-y-4">
                     <div>
                       <Label className="text-sm text-gray-600">Store</Label>
-                      <p className="font-medium">{product.store}</p>
+                      <p className="font-medium">{product.store?.name || "Unknown"}</p>
                     </div>
                     <div>
                       <Label className="text-sm text-gray-600">Price</Label>
@@ -128,26 +128,26 @@ const ProductModal: React.FC<ProductModalProps> = ({
                     </div>
                     <div>
                       <Label className="text-sm text-gray-600">Stock</Label>
-                      <p className={`font-medium ${product.stock < 20 ? 'text-red-600' : 'text-green-600'}`}>
-                        {product.stock} units
+                      <p className={`font-medium ${product.quantity === 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {product.quantity} units
                       </p>
                     </div>
                   </div>
                   <div className="space-y-4">
                     <div>
                       <Label className="text-sm text-gray-600">Date Added</Label>
-                      <p className="font-medium">{new Date(product.dateAdded).toLocaleDateString()}</p>
+                      <p className="font-medium">{new Date(product.dateCreated || new Date()).toLocaleDateString()}</p>
                     </div>
                     <div>
                       <Label className="text-sm text-gray-600">Views</Label>
                       <p className="font-medium flex items-center gap-1">
                         <Eye className="w-4 h-4" />
-                        {product.views}
+                        {product.viewCount}
                       </p>
                     </div>
                     <div>
                       <Label className="text-sm text-gray-600">Sales</Label>
-                      <p className="font-medium">{product.sales} sold</p>
+                      <p className="font-medium">{product.soldCount} sold</p>
                     </div>
                   </div>
                 </div>
@@ -318,22 +318,22 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   <Input
                     id="stock"
                     type="number"
-                    value={formData.stock}
-                    onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) })}
+                    value={formData.quantity}
+                    onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
                     required
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
-                  <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                  <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value as ProductStatus })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Out of Stock">Out of Stock</SelectItem>
-                      <SelectItem value="Under Review">Under Review</SelectItem>
-                      <SelectItem value="Suspended">Suspended</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="sold_out">Out of Stock</SelectItem>
+                      <SelectItem value="draft">Under Review</SelectItem>
+                      <SelectItem value="suspended">Suspended</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

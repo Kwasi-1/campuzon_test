@@ -22,7 +22,17 @@ import { useDateFilter } from "@/contexts/DateFilterContext";
 import AdminDisbursements from "./AdminDisbursements";
 import { isWithinInterval, parseISO } from "date-fns";
 import adminTransactionsService from "@/services/adminTransactionsService";
-import { Transaction } from "@/types";
+import { Transaction } from "@/types-new";
+
+export interface AdminTransaction extends Transaction {
+  orderId: string;
+  store: string;
+  customer: string;
+  commission: number;
+  paymentMethod: string;
+  date: string;
+  deliveryStatus: string;
+}
 
 const AdminTransactions = () => {
   const [statusFilter, setStatusFilter] = useState("all");
@@ -30,7 +40,7 @@ const AdminTransactions = () => {
   const [storeFilter, setStoreFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTransaction, setSelectedTransaction] =
-    useState<Transaction | null>(null);
+    useState<AdminTransaction | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -41,14 +51,14 @@ const AdminTransactions = () => {
     isLoading: dateLoading,
   } = useDateFilter();
 
-  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+  const [allTransactions, setAllTransactions] = useState<AdminTransaction[]>([]);
 
   useEffect(() => {
     const fetchTransactions = async () => {
       setLoading(true);
       try {
         const list = await adminTransactionsService.getAllTransactions();
-        setAllTransactions(list);
+        setAllTransactions(list as any);
       } catch (e) {
         setAllTransactions([]);
         toast({
@@ -96,7 +106,7 @@ const AdminTransactions = () => {
 
   // Calculate dashboard stats based on filtered data
   const completedTransactions = filteredTransactions.filter(
-    (t) => t.status === "Completed"
+    (t) => t.status === "success"
   );
   const totalRevenue = completedTransactions.reduce(
     (sum, t) => sum + t.amount,
@@ -136,12 +146,14 @@ const AdminTransactions = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Completed":
+      case "success":
         return "bg-green-100 text-green-800";
-      case "Pending":
+      case "pending":
         return "bg-yellow-100 text-yellow-800";
-      case "Failed":
+      case "failed":
         return "bg-red-100 text-red-800";
+      case "reversed":
+        return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -160,7 +172,7 @@ const AdminTransactions = () => {
     }
   };
 
-  const handleViewTransaction = (transaction: Transaction) => {
+  const handleViewTransaction = (transaction: AdminTransaction) => {
     setSelectedTransaction(transaction);
     setModalOpen(true);
   };
@@ -202,7 +214,7 @@ const AdminTransactions = () => {
       label: "Status",
       options: [
         { value: "all", label: "All Status" },
-        { value: "completed", label: "Completed" },
+        { value: "success", label: "Success" },
         { value: "pending", label: "Pending" },
         { value: "failed", label: "Failed" },
       ],

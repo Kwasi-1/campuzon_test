@@ -12,7 +12,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   MoreHorizontal,
-  Store,
+  Store as StoreIcon,
   MapPin,
   Star,
   Eye,
@@ -38,14 +38,32 @@ import AdminTable from "@/components/admin/AdminTable";
 import StoreModal from "@/components/admin/StoreModal";
 import TableSkeleton from "@/components/ui/table-skeleton";
 import adminDataService from "@/services/adminDataService";
-import { StoreData } from "@/types";
+import { Store as StoreType, StoreStatus } from "@/types-new";
+
+export interface AdminStoreData extends StoreType {
+  id: any;
+  stallId?: string;
+  name: string;
+  owner: string;
+  category: string;
+  location: string;
+  totalProducts: number;
+  monthlyRevenue: number;
+  joinDate: string;
+  // redefine some missing or conflicting properties
+  email: string;
+  phone: string;
+  status: StoreStatus;
+  rating: number;
+  logo: string;
+}
 
 const AdminStores = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStore, setSelectedStore] = useState<StoreData | null>(null);
+  const [selectedStore, setSelectedStore] = useState<AdminStoreData | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"view" | "suspend" | "reject">(
     "view"
@@ -53,14 +71,14 @@ const AdminStores = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const [stores, setStores] = useState<StoreData[]>([]);
+  const [stores, setStores] = useState<AdminStoreData[]>([]);
 
   useEffect(() => {
     const fetchStores = async () => {
       setLoading(true);
       try {
         const list = await adminDataService.getStalls();
-        setStores(list);
+        setStores(list as any);
       } catch (e) {
         toast({
           title: "Failed to load stores",
@@ -98,9 +116,9 @@ const AdminStores = () => {
     return matchesSearch && matchesStatus && matchesCategory && matchesLocation;
   });
 
-  const activeStores = stores.filter((s) => s.status === "Active").length;
+  const activeStores = stores.filter((s) => s.status === "active").length;
   const totalRevenue = stores.reduce((sum, s) => sum + s.monthlyRevenue, 0);
-  const pendingStores = stores.filter((s) => s.status === "Pending").length;
+  const pendingStores = stores.filter((s) => s.status === "pending").length;
 
   const dashboardStats = [
     {
@@ -127,13 +145,13 @@ const AdminStores = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Active":
+      case "active":
         return "bg-green-100 text-green-800";
-      case "Suspended":
+      case "suspended":
         return "bg-red-100 text-red-800";
-      case "Pending":
+      case "pending":
         return "bg-yellow-100 text-yellow-800";
-      case "Rejected":
+      case "closed":
         return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -153,19 +171,19 @@ const AdminStores = () => {
     }
   };
 
-  const handleViewStore = (store: StoreData) => {
+  const handleViewStore = (store: AdminStoreData) => {
     setSelectedStore(store);
     setModalMode("view");
     setModalOpen(true);
   };
 
-  const handleSuspendStore = (store: StoreData) => {
+  const handleSuspendStore = (store: AdminStoreData) => {
     setSelectedStore(store);
     setModalMode("suspend");
     setModalOpen(true);
   };
 
-  const handleRejectStore = (store: StoreData) => {
+  const handleRejectStore = (store: AdminStoreData) => {
     setSelectedStore(store);
     setModalMode("reject");
     setModalOpen(true);
@@ -190,7 +208,7 @@ const AdminStores = () => {
       await adminDataService.suspendStall(stallId, reason, duration);
       setStores(
         stores.map((s) =>
-          s.id === storeId ? { ...s, status: "Suspended" } : s
+          s.id === storeId ? { ...s, status: "suspended" } : s
         )
       );
       toast({
@@ -220,7 +238,7 @@ const AdminStores = () => {
     try {
       await adminDataService.rejectStall(stallId, reason);
       setStores(
-        stores.map((s) => (s.id === storeId ? { ...s, status: "Rejected" } : s))
+        stores.map((s) => (s.id === storeId ? { ...s, status: "closed" } : s))
       );
       toast({
         title: "Store Rejected",
@@ -264,7 +282,7 @@ const AdminStores = () => {
           await adminDataService.approveStall(stallId);
           setStores(
             stores.map((s) =>
-              s.id === storeId ? { ...s, status: "Active" } : s
+              s.id === storeId ? { ...s, status: "active" } : s
             )
           );
           toast({
@@ -292,7 +310,7 @@ const AdminStores = () => {
           await adminDataService.activateStall(stallId);
           setStores(
             stores.map((s) =>
-              s.id === storeId ? { ...s, status: "Active" } : s
+              s.id === storeId ? { ...s, status: "active" } : s
             )
           );
           toast({
@@ -428,7 +446,7 @@ const AdminStores = () => {
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={store.logo} alt={store.name} />
                           <AvatarFallback>
-                            <Store className="h-4 w-4" />
+                            <StoreIcon className="h-4 w-4" />
                           </AvatarFallback>
                         </Avatar>
                         <div>
@@ -479,7 +497,7 @@ const AdminStores = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {store.status === "Pending" && (
+                        {store.status === "pending" && (
                           <>
                             <Button
                               variant="outline"
@@ -538,7 +556,7 @@ const AdminStores = () => {
                               View Analytics
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            {store.status === "Pending" && (
+                            {store.status === "pending" && (
                               <>
                                 <DropdownMenuItem
                                   onClick={() =>
@@ -560,11 +578,11 @@ const AdminStores = () => {
                                 </DropdownMenuItem>
                               </>
                             )}
-                            {store.status !== "Pending" && (
+                            {store.status !== "pending" && (
                               <DropdownMenuItem
                                 onClick={() =>
                                   handleStoreAction(
-                                    store.status === "Suspended"
+                                    store.status === "suspended"
                                       ? "activate"
                                       : "suspend",
                                     store.id
@@ -573,7 +591,7 @@ const AdminStores = () => {
                                 className="text-red-600"
                               >
                                 <Shield className="w-4 h-4 mr-2" />
-                                {store.status === "Suspended"
+                                {store.status === "suspended"
                                   ? "Activate"
                                   : "Suspend"}{" "}
                                 Store

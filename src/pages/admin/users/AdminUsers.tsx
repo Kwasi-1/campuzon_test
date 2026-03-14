@@ -18,13 +18,20 @@ import AdminTable from "@/components/admin/AdminTable";
 import UserModal from "@/components/admin/UserModal";
 import TableSkeleton from "@/components/ui/table-skeleton";
 import adminDataService from "@/services/adminDataService";
-import { User } from "@/types";
+import { User } from "@/types-new";
+
+// Extended interface for Admin UI since it needs aggregating fields
+export interface AdminUser extends User {
+  orders: number;
+  totalSpent: number;
+  location: string;
+}
 
 const AdminUsers = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<
     "view" | "edit" | "add" | "suspend"
@@ -32,7 +39,7 @@ const AdminUsers = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -56,15 +63,18 @@ const AdminUsers = () => {
 
   // Filter users based on search and filters
   const filteredUsers = users.filter((user) => {
+    const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+    const userStatus = user.isActive ? "active" : "inactive";
+    
     const matchesSearch =
       searchQuery === "" ||
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      fullName.includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.phone.includes(searchQuery);
+      user.phoneNumber.includes(searchQuery);
 
     const matchesStatus =
       statusFilter === "all" ||
-      user.status.toLowerCase() === statusFilter.toLowerCase();
+      userStatus === statusFilter.toLowerCase();
 
     const matchesLocation =
       locationFilter === "all" ||
@@ -73,9 +83,9 @@ const AdminUsers = () => {
     return matchesSearch && matchesStatus && matchesLocation;
   });
 
-  const activeUsers = users.filter((u) => u.status === "Active").length;
-  const totalRevenue = users.reduce((sum, u) => sum + u.totalSpent, 0);
-  const totalOrders = users.reduce((sum, u) => sum + u.orders, 0);
+  const activeUsers = users.filter((u) => u.isActive).length;
+  const totalRevenue = users.reduce((sum, u) => sum + (u.totalSpent || 0), 0);
+  const totalOrders = users.reduce((sum, u) => sum + (u.orders || 0), 0);
 
   const dashboardStats = [
     {
@@ -100,32 +110,23 @@ const AdminUsers = () => {
     },
   ];
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Active":
-        return "bg-green-100 text-green-800";
-      case "Suspended":
-        return "bg-red-100 text-red-800";
-      case "Inactive":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+  const getStatusColor = (isActive: boolean) => {
+    return isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
   };
 
-  const handleViewUser = (user: User) => {
+  const handleViewUser = (user: AdminUser) => {
     setSelectedUser(user);
     setModalMode("view");
     setModalOpen(true);
   };
 
-  const handleEditUser = (user: User) => {
+  const handleEditUser = (user: AdminUser) => {
     setSelectedUser(user);
     setModalMode("edit");
     setModalOpen(true);
   };
 
-  const handleSuspendUser = (user: User) => {
+  const handleSuspendUser = (user: AdminUser) => {
     setSelectedUser(user);
     setModalMode("suspend");
     setModalOpen(true);
@@ -137,7 +138,7 @@ const AdminUsers = () => {
     setModalOpen(true);
   };
 
-  const handleSaveUser = async (updatedUser: User) => {
+  const handleSaveUser = async (updatedUser: AdminUser) => {
     try {
       await adminDataService.updateUser(updatedUser.id, updatedUser);
       setUsers(users.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
@@ -154,7 +155,7 @@ const AdminUsers = () => {
     }
   };
 
-  const handleAddNewUser = async (newUserData: Omit<User, "id">) => {
+  const handleAddNewUser = async (newUserData: Omit<AdminUser, "id">) => {
     try {
       const newUser = await adminDataService.createUser(newUserData);
       setUsers([...users, newUser]);
@@ -179,7 +180,7 @@ const AdminUsers = () => {
     try {
       await adminDataService.suspendUser(userId, reason, duration);
       setUsers(
-        users.map((u) => (u.id === userId ? { ...u, status: "Suspended" } : u))
+        users.map((u) => (u.id === userId ? { ...u, isActive: false } : u))
       );
       toast({
         title: "User Suspended",
@@ -299,11 +300,11 @@ const AdminUsers = () => {
                     <TableCell>
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-10 w-10">
-                          <AvatarImage src={user.avatar} alt={user.name} />
-                          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                          <AvatarImage src={user.profileImage || undefined} alt={`${user.firstName} ${user.lastName}`} />
+                          <AvatarFallback>{user.firstName.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-medium">{user.name}</div>
+                          <div className="font-medium">{user.firstName} {user.lastName}</div>
                           <div className="text-sm text-gray-500">
                             {user.email}
                           </div>
@@ -313,20 +314,20 @@ const AdminUsers = () => {
                     <TableCell>
                       <div className="text-sm">
                         <div>{user.email}</div>
-                        <div className="text-gray-500">{user.phone}</div>
+                        <div className="text-gray-500">{user.phoneNumber}</div>
                       </div>
                     </TableCell>
                     <TableCell>{user.location}</TableCell>
                     <TableCell>
-                      {new Date(user.joinDate).toLocaleDateString()}
+                      {new Date(user.dateCreated).toLocaleDateString()}
                     </TableCell>
                     <TableCell>{user.orders}</TableCell>
                     <TableCell className="font-medium">
                       ₵{user.totalSpent.toFixed(2)}
                     </TableCell>
                     <TableCell>
-                      <Badge className={getStatusColor(user.status)}>
-                        {user.status}
+                      <Badge className={getStatusColor(user.isActive)}>
+                        {user.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
                     <TableCell>

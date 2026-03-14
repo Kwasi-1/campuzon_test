@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Bell, Check, Trash2, ExternalLink, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Notification, NotificationSettings } from '@/types';
+import { Notification, NotificationSettings } from '@/types-new';
 import { formatDistanceToNow } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
@@ -59,11 +59,11 @@ const NotificationComponent = ({
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => !n.isRead).length;
   
   const filterByType = (type?: string) => {
     if (!type) return notifications;
-    return notifications.filter(n => n.category === type);
+    return notifications.filter(n => n.type === type);
   };
 
   const NotificationSkeleton = () => (
@@ -90,24 +90,26 @@ const NotificationComponent = ({
   );
 
   const NotificationCard = ({ notification }: { notification: Notification }) => (
-    <Card className={`${!notification.read ? 'border-2 border-primary/5 bg-accent/40' : ''} shadow-none`}>
+    <Card className={`${!notification.isRead ? 'border-2 border-primary/5 bg-accent/40' : ''} shadow-none`}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between space-x-4">
           <div className="flex-1 space-y-2">
             <div className="flex items-center space-x-2">
-              <Bell className={`w-4 h-4 ${!notification.read ? 'text-primary' : 'text-gray-400'}`} />
-              <Badge className={getPriorityColor(notification.priority)}>
-                {notification.priority}
-              </Badge>
+              <Bell className={`w-4 h-4 ${!notification.isRead ? 'text-primary' : 'text-gray-400'}`} />
+              {notification.priority && (
+                <Badge className={getPriorityColor(notification.priority)}>
+                  {notification.priority}
+                </Badge>
+              )}
               <Badge className={getTypeColor(notification.type)}>
                 {notification.type}
               </Badge>
               <span className="text-xs text-gray-500">
-                {formatDistanceToNow(new Date(notification.timestamp), { addSuffix: true })}
+                {formatDistanceToNow(new Date(notification.dateCreated), { addSuffix: true })}
               </span>
             </div>
             
-            <h3 className={`font-semibold ${!notification.read ? 'text-gray-900' : 'text-gray-600'}`}>
+            <h3 className={`font-semibold ${!notification.isRead ? 'text-gray-900' : 'text-gray-600'}`}>
               {notification.title}
             </h3>
             
@@ -122,7 +124,7 @@ const NotificationComponent = ({
           </div>
           
           <div className="flex space-x-2">
-            {!notification.read && (
+            {!notification.isRead && (
               <Button
                 variant="ghost"
                 size="icon"

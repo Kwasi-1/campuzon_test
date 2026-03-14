@@ -331,6 +331,20 @@ export interface Notification {
   referenceID: string | null;
   isRead: boolean;
   dateCreated: string;
+  actionUrl?: string;
+  actionLabel?: string;
+  priority?: "low" | "medium" | "high";
+}
+
+export interface NotificationSettings {
+  emailNotifications: boolean;
+  pushNotifications: boolean;
+  smsNotifications: boolean;
+  orderUpdates: boolean;
+  promotions: boolean;
+  systemAlerts: boolean;
+  lowStockAlerts: boolean;
+  newUserRegistrations: boolean;
 }
 
 export interface WishlistItem extends Product {

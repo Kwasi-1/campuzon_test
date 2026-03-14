@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar, MapPin, Phone, Mail, User, Shield, ShieldAlert } from 'lucide-react';
-import { User as UserType } from '@/types';
+import { AdminUser as UserType } from '@/pages/admin/users/AdminUsers';
 
 interface UserModalProps {
   isOpen: boolean;
@@ -30,11 +30,12 @@ const UserModal: React.FC<UserModalProps> = ({
   onSuspend
 }) => {
   const [formData, setFormData] = useState({
-    name: user?.name || '',
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
     email: user?.email || '',
-    phone: user?.phone || '',
+    phone: user?.phoneNumber || '',
     location: user?.location || '',
-    status: user?.status || 'Active'
+    status: user?.isActive ? 'Active' : 'Inactive'
   });
 
   const [suspendData, setSuspendData] = useState({
@@ -46,14 +47,25 @@ const UserModal: React.FC<UserModalProps> = ({
     e.preventDefault();
     if (mode === 'add') {
       onAdd({
-        ...formData,
-        joinDate: new Date().toISOString().split('T')[0],
+        // @ts-ignore
+        joinDate: new Date().toISOString(),
+        dateCreated: new Date().toISOString(),
+        phoneNumber: formData.phone,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        isActive: formData.status === "Active",
         orders: 0,
         totalSpent: 0,
-        avatar: '/placeholder.svg'
+        profileImage: '/placeholder.svg'
       });
     } else if (mode === 'edit' && user) {
-      onSave({ ...user, ...formData });
+      onSave({ 
+        ...user, 
+        firstName: formData.firstName, 
+        lastName: formData.lastName, 
+        phoneNumber: formData.phone,
+        isActive: formData.status === "Active"
+      } as any);
     } else if (mode === 'suspend' && user) {
       onSuspend(user.id, suspendData.reason, suspendData.duration);
     }
@@ -97,9 +109,9 @@ const UserModal: React.FC<UserModalProps> = ({
                   <User className="w-8 h-8 text-gray-500" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold">{user.name}</h3>
-                  <Badge className={getStatusColor(user.status)}>
-                    {user.status}
+                  <h3 className="text-lg font-semibold">{user.firstName} {user.lastName}</h3>
+                  <Badge className={getStatusColor(user.isActive ? "Active" : "Inactive")}>
+                    {user.isActive ? "Active" : "Inactive"}
                   </Badge>
                 </div>
               </div>
@@ -117,7 +129,7 @@ const UserModal: React.FC<UserModalProps> = ({
                     <Phone className="w-4 h-4 text-gray-500" />
                     <span className="text-sm text-gray-600">Phone</span>
                   </div>
-                  <p className="font-medium">{user.phone}</p>
+                  <p className="font-medium">{user.phoneNumber}</p>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -131,7 +143,7 @@ const UserModal: React.FC<UserModalProps> = ({
                     <Calendar className="w-4 h-4 text-gray-500" />
                     <span className="text-sm text-gray-600">Join Date</span>
                   </div>
-                  <p className="font-medium">{new Date(user.joinDate).toLocaleDateString()}</p>
+                  <p className="font-medium">{new Date(user.dateCreated).toLocaleDateString()}</p>
                 </div>
               </div>
 
@@ -153,7 +165,7 @@ const UserModal: React.FC<UserModalProps> = ({
               <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg">
                 <ShieldAlert className="w-5 h-5 text-red-600" />
                 <div>
-                  <p className="font-medium text-red-800">Suspend User: {user.name}</p>
+                  <p className="font-medium text-red-800">Suspend User: {user.firstName} {user.lastName}</p>
                   <p className="text-sm text-red-600">This action will restrict the user's access</p>
                 </div>
               </div>
@@ -190,11 +202,20 @@ const UserModal: React.FC<UserModalProps> = ({
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="firstName">First Name</Label>
                   <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                     required
                   />
                 </div>

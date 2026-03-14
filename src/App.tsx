@@ -39,7 +39,6 @@ import AdminProducts from "./pages/admin/products/AdminProducts";
 import AdminTransactions from "./pages/admin/transactions/AdminTransactions";
 import AdminSettings from "./pages/admin/settings/AdminSettings";
 import StoreTransactions from "./pages/store/transactions/StoreTransactions";
-import AdminRiders from "./pages/admin/riders/AdminRiders";
 import AdminNotifications from "./pages/admin/notifications/AdminNotifications";
 
 // Super Admin Portal Components
@@ -213,7 +212,6 @@ const App = () => (
                           element={<AdminDisbursements />}
                         />
                         <Route path="settings" element={<AdminSettings />} />
-                        <Route path="riders" element={<AdminRiders />} />
                         <Route
                           path="notifications"
                           element={<AdminNotifications />}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import SEO from "@/components/SEO";
 import AdminPageLayout from "@/components/admin/AdminPageLayout";
-import { Notification, NotificationSettings } from "@/types";
+import { Notification, NotificationSettings } from "@/types-new";
 import adminNotificationsService, {
   NotificationTemplate,
   BroadcastNotification,
@@ -102,7 +102,7 @@ const AdminNotifications = () => {
     try {
       await adminNotificationsService.markAsRead(id);
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
       );
       toast({
         title: "Notification marked as read",
@@ -121,7 +121,7 @@ const AdminNotifications = () => {
     try {
       await adminNotificationsService.markAllAsRead();
       setNotifications((prev) =>
-        prev.map((notif) => ({ ...notif, read: true }))
+        prev.map((notif) => ({ ...notif, isRead: true }))
       );
       toast({
         title: "All notifications marked as read",

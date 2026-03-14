@@ -1,6 +1,6 @@
 import apiClient, { handleApiError } from '@/services/apiClient';
 import adminService from '@/services/adminService';
-import { Notification, NotificationSettings } from '@/types';
+import { Notification, NotificationSettings } from '@/types-new';
 
 interface BackendNotification {
   id?: string;
@@ -39,11 +39,12 @@ const map = (n: BackendNotification): Notification => ({
   id: String(n.id || ''),
   title: n.title || 'Notification',
   message: n.message || '',
-  type: (n.notification_type as Notification['type']) || 'info',
-  timestamp: n.created_at || new Date().toISOString(),
-  read: !!n.is_read,
+  type: (n.notification_type as Notification['type']) || 'system',
+  dateCreated: n.created_at || new Date().toISOString(),
+  isRead: !!n.is_read,
   priority: 'low',
-  category: 'system',
+  referenceID: null,
+  referenceType: null,
 });
 
 class AdminNotificationsService {
@@ -68,21 +69,23 @@ class AdminNotificationsService {
           id: '1',
           title: 'New Order Alert',
           message: 'You have received a new order from customer John Doe',
-          type: 'info',
-          timestamp: new Date().toISOString(),
-          read: false,
+          type: 'order',
+          dateCreated: new Date().toISOString(),
+          isRead: false,
           priority: 'high',
-          category: 'order'
+          referenceType: null,
+          referenceID: null,
         },
         {
           id: '2',
           title: 'System Maintenance',
           message: 'Scheduled maintenance will occur tonight from 2:00 AM to 4:00 AM',
-          type: 'warning',
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-          read: true,
+          type: 'system',
+          dateCreated: new Date(Date.now() - 3600000).toISOString(),
+          isRead: true,
           priority: 'medium',
-          category: 'system'
+          referenceType: null,
+          referenceID: null,
         }
       ];
     }
