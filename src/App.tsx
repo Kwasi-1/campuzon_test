@@ -77,6 +77,9 @@ import {
   SellerProductsPage,
   SellerSettingsPage,
 } from "./pages/seller";
+import { ProfileLayout } from "./pages/client-new/profile/layout/ProfileLayout";
+import { OrdersPage } from "./pages/client-new/profile/pages/orders";
+import { OrderDetailPage } from "./pages/client-new/profile/pages/orders/pages/order-details";
 
 const queryClient = new QueryClient();
 
@@ -98,7 +101,10 @@ const App = () => (
                       <Route path="/login" element={<Login />} />
                       <Route path="/2fa-verify" element={<TwoFactorAuth />} />
                       <Route path="/register" element={<RegisterPage />} />
-                      <Route path="/become-seller" element={<BecomeSellerPage />} />
+                      <Route
+                        path="/become-seller"
+                        element={<BecomeSellerPage />}
+                      />
                       {/* Seller Routes */}
                       <Route element={<SellLayout />}>
                         <Route
@@ -253,11 +259,16 @@ const App = () => (
                                 path="/order-confirmation"
                                 element={<OrderConfirmation />}
                               />
+                              <Route element={<ProfileLayout />}>
+                                <Route
+                                  path="/orders"
+                                  element={<OrderHistory />}
+                                />
+                              </Route>
                               <Route
-                                path="/orders"
-                                element={<OrderHistory />}
+                                path="/wishlist-old"
+                                element={<Wishlist />}
                               />
-                              <Route path="/wishlist" element={<Wishlist />} />
                               <Route path="/account" element={<Account />} />
                               <Route path="/contact" element={<ContactUs />} />
                               <Route path="/faqs" element={<FAQs />} />
@@ -278,43 +289,53 @@ const App = () => (
                                 element={<StoreDetailPage />}
                               />
 
-                              <Route
-                                path="/profile"
-                                element={<ProfilePage />}
-                              />
-                              <Route
-                                path="/settings"
-                                element={<SettingsPage />}
-                              />
-                              <Route
-                                path="/settings/security"
-                                element={<TwoFactorSettingsPage />}
-                              />
-                              <Route
-                                path="/notifications"
-                                element={<NotificationsPage />}
-                              />
-                              <Route
-                                path="/wishlist"
-                                element={<WishlistPage />}
-                              />
-                              <Route
-                                path="/addresses"
-                                element={<AddressesPage />}
-                              />
-                              <Route
-                                path="/messages"
-                                element={<MessagesPage />}
-                              />
-                              <Route
-                                path="/messages/:id"
-                                element={<ConversationPage />}
-                              />
-                              <Route path="/" element={<AddressesPage />} />
-                              <Route
-                                path="/payments"
-                                element={<PaymentMethodsPage />}
-                              />
+                              {/* Profile pages wrapped in new layout */}
+                              <Route element={<ProfileLayout />}>
+                                <Route
+                                  path="/profile"
+                                  element={<ProfilePage />}
+                                />
+                                <Route
+                                  path="/settings"
+                                  element={<SettingsPage />}
+                                />
+                                <Route
+                                  path="/settings/security"
+                                  element={<TwoFactorSettingsPage />}
+                                />
+                                <Route
+                                  path="/notifications"
+                                  element={<NotificationsPage />}
+                                />
+                                <Route
+                                  path="/wishlist"
+                                  element={<WishlistPage />}
+                                />
+                                <Route
+                                  path="/addresses"
+                                  element={<AddressesPage />}
+                                />
+                                <Route
+                                  path="/messages"
+                                  element={<MessagesPage />}
+                                />
+                                <Route
+                                  path="/messages/:id"
+                                  element={<ConversationPage />}
+                                />
+                                <Route
+                                  path="/payments"
+                                  element={<PaymentMethodsPage />}
+                                />
+                                <Route
+                                  path="/orders"
+                                  element={<OrdersPage />}
+                                />
+                                <Route
+                                  path="/orders/:id"
+                                  element={<OrderDetailPage />}
+                                />
+                              </Route>
 
                               <Route
                                 path="/checkout"
