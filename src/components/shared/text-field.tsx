@@ -134,7 +134,7 @@ export const CustomSelectField: FC<CustomSelectFieldProps> = ({
 
 // CUSTOM INPUT
 interface CustomInputTextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
-  type?: "text" | "number" | "date" | "email" | "password" | "tel";
+  type?: "text" | "number" | "date" | "email" | "password" | "tel" | "url";
   onChange?: (e: any) => unknown;
   placeholder?: string;
   required?: boolean;

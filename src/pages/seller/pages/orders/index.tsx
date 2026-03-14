@@ -21,8 +21,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { CustomInputTextField, CustomSelectField } from "@/components/shared/text-field";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Modal } from "@/components/shared/Modal";
 import { useAuthStore } from "@/stores";
@@ -266,7 +265,7 @@ export function SellerOrdersPage() {
             {/* Search */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
+              <CustomInputTextField
                 placeholder="Search orders..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -275,9 +274,9 @@ export function SellerOrdersPage() {
             </div>
 
             {/* Status Filter */}
-            <Select
+            <CustomSelectField
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              inputProps={{ onChange: (e) => setStatusFilter(e.target.value) }}
               options={STATUS_OPTIONS}
               className="w-full md:w-48"
             />

@@ -22,11 +22,9 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { Modal } from "@/components/shared/Modal";
 import { Alert } from "@/components/ui/alert";
-import { Textarea } from "@/components/ui/textarea";
+import { CustomInputTextField, CustomSelectField, CustomTextareaField } from "@/components/shared/text-field";
 import { useAuthStore } from "@/stores";
 import { useAutoResponder, useUpdateAutoResponder } from "@/hooks";
 
@@ -206,6 +204,7 @@ export function SellerSettingsPage() {
                 type="file"
                 accept="image/*"
                 className="hidden"
+                title="Upload Store Banner"
                 onChange={(e) => handleImageUpload("banner", e)}
               />
               <p className="text-sm text-muted-foreground mt-1">
@@ -239,6 +238,7 @@ export function SellerSettingsPage() {
                 type="file"
                 accept="image/*"
                 className="hidden"
+                title="Upload Store Logo"
                 onChange={(e) => handleImageUpload("logo", e)}
               />
               <div>
@@ -257,7 +257,7 @@ export function SellerSettingsPage() {
                 <label className="block text-sm font-medium mb-1">
                   Store Name
                 </label>
-                <Input
+                <CustomInputTextField
                   value={formData.storeName}
                   onChange={(e) => handleChange("storeName", e.target.value)}
                   placeholder="Your store name"
@@ -271,7 +271,7 @@ export function SellerSettingsPage() {
                   <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 bg-muted text-sm text-muted-foreground">
                     campuzon.com/store/
                   </span>
-                  <Input
+                  <CustomInputTextField
                     value={formData.storeSlug}
                     onChange={(e) =>
                       handleChange(
@@ -289,7 +289,7 @@ export function SellerSettingsPage() {
               <label className="block text-sm font-medium mb-1">
                 Store Description
               </label>
-              <Textarea
+              <CustomTextareaField
                 value={formData.description}
                 onChange={(e) => handleChange("description", e.target.value)}
                 placeholder="Tell customers about your store..."
@@ -313,7 +313,7 @@ export function SellerSettingsPage() {
                   <Mail className="h-4 w-4 inline mr-1" />
                   Email Address
                 </label>
-                <Input
+                <CustomInputTextField
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleChange("email", e.target.value)}
@@ -325,7 +325,7 @@ export function SellerSettingsPage() {
                   <Phone className="h-4 w-4 inline mr-1" />
                   Phone Number
                 </label>
-                <Input
+                <CustomInputTextField
                   type="tel"
                   value={formData.phoneNumber}
                   onChange={(e) => handleChange("phoneNumber", e.target.value)}
@@ -337,9 +337,9 @@ export function SellerSettingsPage() {
                   <MapPin className="h-4 w-4 inline mr-1" />
                   Location / Institution
                 </label>
-                <Select
+                <CustomSelectField
                   value="ug"
-                  onChange={(e) => handleChange("institution", e.target.value)}
+                  inputProps={{ onChange: (e) => handleChange("institution", e.target.value) }}
                   options={INSTITUTION_OPTIONS}
                 />
               </div>
@@ -348,7 +348,7 @@ export function SellerSettingsPage() {
                   <Globe className="h-4 w-4 inline mr-1" />
                   Website (Optional)
                 </label>
-                <Input
+                <CustomInputTextField
                   type="url"
                   value={formData.website}
                   onChange={(e) => handleChange("website", e.target.value)}
@@ -360,7 +360,7 @@ export function SellerSettingsPage() {
                   <Clock className="h-4 w-4 inline mr-1" />
                   Business Hours
                 </label>
-                <Input
+                <CustomInputTextField
                   value={formData.businessHours}
                   onChange={(e) =>
                     handleChange("businessHours", e.target.value)
@@ -396,6 +396,7 @@ export function SellerSettingsPage() {
                       handleChange("autoResponderEnabled", e.target.checked)
                     }
                     className="sr-only peer"
+                    title="Enable Auto-Responder"
                   />
                   <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                 </label>
@@ -411,7 +412,7 @@ export function SellerSettingsPage() {
                     <label className="block text-sm font-medium mb-1">
                       Bot Name
                     </label>
-                    <Input
+                    <CustomInputTextField
                       value={formData.autoResponderName}
                       onChange={(e) =>
                         handleChange("autoResponderName", e.target.value)
@@ -423,7 +424,7 @@ export function SellerSettingsPage() {
                     <label className="block text-sm font-medium mb-1">
                       Auto-Reply Message
                     </label>
-                    <Textarea
+                    <CustomTextareaField
                       value={formData.autoResponderMessage}
                       onChange={(e) =>
                         handleChange("autoResponderMessage", e.target.value)
@@ -484,6 +485,7 @@ export function SellerSettingsPage() {
                       type="checkbox"
                       defaultChecked
                       className="sr-only peer"
+                      title={item.label}
                     />
                     <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                   </label>
@@ -585,7 +587,7 @@ export function SellerSettingsPage() {
           <p>
             Type <strong>DELETE</strong> to confirm:
           </p>
-          <Input placeholder="Type DELETE" />
+          <CustomInputTextField placeholder="Type DELETE" />
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
               Cancel

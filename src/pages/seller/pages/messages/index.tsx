@@ -16,8 +16,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { CustomInputTextField, CustomSelectField } from "@/components/shared/text-field";
 import { useAuthStore } from "@/stores";
 import { formatRelativeTime } from "@/lib/utils";
 
@@ -224,7 +223,7 @@ export function SellerMessagesPage() {
             {/* Search */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
+              <CustomInputTextField
                 placeholder="Search messages..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -233,9 +232,9 @@ export function SellerMessagesPage() {
             </div>
 
             {/* Filter */}
-            <Select
+            <CustomSelectField
               value={filter}
-              onChange={(e) => setFilter(e.target.value)}
+              inputProps={{ onChange: (e) => setFilter(e.target.value) }}
               options={FILTER_OPTIONS}
               className="w-full md:w-48"
             />

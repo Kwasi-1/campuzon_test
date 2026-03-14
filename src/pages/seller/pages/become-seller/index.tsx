@@ -20,10 +20,8 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { CustomInputTextField, CustomTextareaField, CustomSelectField } from "@/components/shared/text-field";
 import { useAuthStore } from "@/stores";
 
 const INSTITUTION_OPTIONS = [
@@ -344,7 +342,7 @@ export function BecomeSellerPage() {
                       <label className="block text-sm font-medium mb-1">
                         Store Name <span className="text-red-500">*</span>
                       </label>
-                      <Input
+                      <CustomInputTextField
                         value={formData.storeName}
                         onChange={(e) =>
                           handleChange("storeName", e.target.value)
@@ -364,11 +362,12 @@ export function BecomeSellerPage() {
                         What will you sell?{" "}
                         <span className="text-red-500">*</span>
                       </label>
-                      <Select
+                      <CustomSelectField
                         value={formData.category}
-                        onChange={(e) =>
-                          handleChange("category", e.target.value)
-                        }
+                        inputProps={{
+                          onChange: (e) =>
+                            handleChange("category", e.target.value)
+                        }}
                         options={CATEGORY_OPTIONS}
                         className={errors.category ? "border-red-500" : ""}
                       />
@@ -383,11 +382,12 @@ export function BecomeSellerPage() {
                       <label className="block text-sm font-medium mb-1">
                         Your Institution <span className="text-red-500">*</span>
                       </label>
-                      <Select
+                      <CustomSelectField
                         value={formData.institution}
-                        onChange={(e) =>
-                          handleChange("institution", e.target.value)
-                        }
+                        inputProps={{
+                          onChange: (e) =>
+                            handleChange("institution", e.target.value)
+                        }}
                         options={INSTITUTION_OPTIONS}
                         className={errors.institution ? "border-red-500" : ""}
                       />
@@ -422,14 +422,14 @@ export function BecomeSellerPage() {
                         Store Description{" "}
                         <span className="text-red-500">*</span>
                       </label>
-                      <Textarea
+                      <CustomTextareaField
                         value={formData.description}
                         onChange={(e) =>
                           handleChange("description", e.target.value)
                         }
                         placeholder="Tell customers what you offer..."
                         rows={4}
-                        className={errors.description ? "border-red-500" : ""}
+                        error={errors.description}
                       />
                       {errors.description && (
                         <p className="text-sm text-red-500 mt-1">
@@ -443,7 +443,7 @@ export function BecomeSellerPage() {
                         <Phone className="h-4 w-4 inline mr-1" />
                         Phone Number <span className="text-red-500">*</span>
                       </label>
-                      <Input
+                      <CustomInputTextField
                         type="tel"
                         value={formData.phoneNumber}
                         onChange={(e) =>
@@ -464,7 +464,7 @@ export function BecomeSellerPage() {
                         <Mail className="h-4 w-4 inline mr-1" />
                         Email Address
                       </label>
-                      <Input
+                      <CustomInputTextField
                         type="email"
                         value={formData.email}
                         onChange={(e) => handleChange("email", e.target.value)}

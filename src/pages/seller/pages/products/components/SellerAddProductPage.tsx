@@ -20,12 +20,10 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/shared/Skeleton";
 import { Alert } from "@/components/ui/alert";
-import { Textarea } from "@/components/ui/textarea";
+import { CustomInputTextField, CustomSelectField, CustomTextareaField } from "@/components/shared/text-field";
 import { Modal } from "@/components/shared/Modal";
 import { useAuthStore } from "@/stores";
 import { useCreateProduct, useUpdateProduct, useProduct } from "@/hooks";
@@ -350,11 +348,11 @@ export function SellerAddProductPage() {
                 <label className="block text-sm font-medium mb-1">
                   Product Name <span className="text-red-500">*</span>
                 </label>
-                <Input
+                <CustomInputTextField
                   value={formData.name}
                   onChange={(e) => handleChange("name", e.target.value)}
                   placeholder="Enter product name"
-                  className={errors.name ? "border-red-500" : ""}
+                  error={errors.name}
                 />
                 {errors.name && (
                   <p className="text-sm text-red-500 mt-1">{errors.name}</p>
@@ -365,12 +363,12 @@ export function SellerAddProductPage() {
                 <label className="block text-sm font-medium mb-1">
                   Description <span className="text-red-500">*</span>
                 </label>
-                <Textarea
+                <CustomTextareaField
                   value={formData.description}
                   onChange={(e) => handleChange("description", e.target.value)}
                   placeholder="Describe your product in detail..."
                   rows={5}
-                  className={errors.description ? "border-red-500" : ""}
+                  error={errors.description}
                 />
                 {errors.description && (
                   <p className="text-sm text-red-500 mt-1">
@@ -386,9 +384,9 @@ export function SellerAddProductPage() {
                 <label className="block text-sm font-medium mb-1">
                   Category <span className="text-red-500">*</span>
                 </label>
-                <Select
+                <CustomSelectField
                   value={formData.category}
-                  onChange={(e) => handleChange("category", e.target.value)}
+                  inputProps={{ onChange: (e) => handleChange("category", e.target.value) }}
                   options={[
                     { value: "", label: "Select a category" },
                     ...CATEGORY_OPTIONS,
@@ -493,20 +491,15 @@ export function SellerAddProductPage() {
                 <label className="block text-sm font-medium mb-1">
                   Price (GHS) <span className="text-red-500">*</span>
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    ₵
-                  </span>
-                  <Input
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) => handleChange("price", e.target.value)}
-                    placeholder="0.00"
-                    className={`pl-8 ${errors.price ? "border-red-500" : ""}`}
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
+                <CustomInputTextField
+                  type="number"
+                  value={formData.price}
+                  onChange={(e) => handleChange("price", e.target.value)}
+                  placeholder="0.00"
+                  inputProps={{ min: "0", step: "0.01" }}
+                  startContent={<span className="text-muted-foreground mr-1">₵</span>}
+                  error={errors.price}
+                />
                 {errors.price && (
                   <p className="text-sm text-red-500 mt-1">{errors.price}</p>
                 )}
@@ -516,22 +509,16 @@ export function SellerAddProductPage() {
                 <label className="block text-sm font-medium mb-1">
                   Compare-at Price (GHS)
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    ₵
-                  </span>
-                  <Input
-                    type="number"
-                    value={formData.comparePrice}
-                    onChange={(e) =>
-                      handleChange("comparePrice", e.target.value)
-                    }
-                    placeholder="0.00"
-                    className="pl-8"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
+                <CustomInputTextField
+                  type="number"
+                  value={formData.comparePrice}
+                  onChange={(e) =>
+                    handleChange("comparePrice", e.target.value)
+                  }
+                  placeholder="0.00"
+                  inputProps={{ min: "0", step: "0.01" }}
+                  startContent={<span className="text-muted-foreground mr-1">₵</span>}
+                />
                 <p className="text-sm text-muted-foreground mt-1">
                   Shows as original price with strikethrough
                 </p>
@@ -553,13 +540,13 @@ export function SellerAddProductPage() {
                 <label className="block text-sm font-medium mb-1">
                   Quantity in Stock <span className="text-red-500">*</span>
                 </label>
-                <Input
+                <CustomInputTextField
                   type="number"
                   value={formData.quantity}
                   onChange={(e) => handleChange("quantity", e.target.value)}
                   placeholder="0"
-                  className={errors.quantity ? "border-red-500" : ""}
-                  min="0"
+                  error={errors.quantity}
+                  inputProps={{ min: "0" }}
                 />
                 {errors.quantity && (
                   <p className="text-sm text-red-500 mt-1">{errors.quantity}</p>
@@ -570,14 +557,14 @@ export function SellerAddProductPage() {
                 <label className="block text-sm font-medium mb-1">
                   Min Order Quantity
                 </label>
-                <Input
+                <CustomInputTextField
                   type="number"
                   value={formData.minOrderQuantity}
                   onChange={(e) =>
                     handleChange("minOrderQuantity", e.target.value)
                   }
                   placeholder="1"
-                  min="1"
+                  inputProps={{ min: "1" }}
                 />
               </div>
 
@@ -585,14 +572,14 @@ export function SellerAddProductPage() {
                 <label className="block text-sm font-medium mb-1">
                   Max Order Quantity
                 </label>
-                <Input
+                <CustomInputTextField
                   type="number"
                   value={formData.maxOrderQuantity}
                   onChange={(e) =>
                     handleChange("maxOrderQuantity", e.target.value)
                   }
                   placeholder="No limit"
-                  min="1"
+                  inputProps={{ min: "1" }}
                 />
               </div>
             </div>
@@ -608,7 +595,7 @@ export function SellerAddProductPage() {
             </h2>
 
             <div className="flex gap-2 mb-3">
-              <Input
+              <CustomInputTextField
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 placeholder="Add a tag..."
@@ -662,9 +649,9 @@ export function SellerAddProductPage() {
                 <label className="block text-sm font-medium mb-1">
                   Visibility
                 </label>
-                <Select
+                <CustomSelectField
                   value={formData.status}
-                  onChange={(e) => handleChange("status", e.target.value)}
+                  inputProps={{ onChange: (e) => handleChange("status", e.target.value) }}
                   options={STATUS_OPTIONS}
                 />
               </div>
