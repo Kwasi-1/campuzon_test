@@ -207,7 +207,7 @@ export default function Home() {
         {/* Trust & Safety Banner */}
         <section className="pb-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-4 p-6 bg-green-50 rounded-xl border border-green-200 ">
+            <div className="flex items-center gap-4 p-6 bg-green-50 rounded-xl borde border-green-200 ">
               <div className="w-12 h-12 rounded-full bg-green-100  flex items-center justify-center">
                 <ShieldCheck className="w-6 h-6 text-green-600 " />
               </div>
@@ -220,7 +220,7 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-4 p-6 bg-blue-50 rounded-xl border border-blue-200">
+            <div className="flex items-center gap-4 p-6 bg-blue-50 rounded-xl borde border-blue-200">
               <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
                 <Truck className="w-6 h-6 text-blue-600 " />
               </div>
@@ -231,7 +231,7 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-4 p-6 bg-purple-50 rounded-xl border border-purple-200 ">
+            <div className="flex items-center gap-4 p-6 bg-purple-50 rounded-xl borde border-purple-200 ">
               <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
                 <CreditCard className="w-6 h-6 text-purple-600 " />
               </div>

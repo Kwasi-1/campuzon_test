@@ -9,7 +9,6 @@ import { CartProvider } from "./contexts/CartContext";
 import { OrderProvider } from "./contexts/OrderContext";
 import { WishlistProvider } from "./contexts/WishlistContext";
 import ScrollToTop from "./components/ScrollToTop";
-import Layout from "./components/Layout";
 import Home from "./pages/client-new/home-page";
 import Products from "./pages/client-new/products";
 import ProductDetail from "./pages/client/products/ProductDetail";
@@ -79,6 +78,8 @@ import {
 import { ProfileLayout } from "./pages/client-new/profile/layout/ProfileLayout";
 import { OrdersPage } from "./pages/client-new/profile/pages/orders";
 import { OrderDetailPage } from "./pages/client-new/profile/pages/orders/pages/order-details";
+import { Layout } from "./components/layout/Layout";
+import { LayoutWithFooter } from "./components/layout/LayoutWithFooter";
 
 const queryClient = new QueryClient();
 
@@ -224,125 +225,86 @@ const App = () => (
                       />
 
                       {/* Pages with main layout */}
-                      <Route
-                        path="/*"
-                        element={
-                          <Layout>
-                            <Routes>
-                              <Route path="/" element={<Home />} />
-                              <Route path="/products" element={<Products />} />
-                              <Route
-                                path="/categories"
-                                element={<Products />}
-                              />
-                              <Route
-                                path="/categories/:categoryName"
-                                element={<Products />}
-                              />
-                              <Route path="/deals" element={<Products />} />
-                              <Route
-                                path="/product/:id"
-                                element={<ProductDetailPage />}
-                              />
-                              <Route path="/cart" element={<Cart />} />
-                              <Route
-                                path="/track"
-                                element={<OrderTracking />}
-                              />
-                              <Route
-                                path="/track/:orderId"
-                                element={<OrderConfirmation />}
-                              />
-                              <Route
-                                path="/order-confirmation"
-                                element={<OrderConfirmation />}
-                              />
-                              {/* <Route element={<ProfileLayout />}>
+                      <Route path="/" element={<Layout />}>
+                        <Route element={<LayoutWithFooter />}>
+                          <Route path="/" element={<Home />} />
+                          <Route path="/products" element={<Products />} />
+                          <Route path="/categories" element={<Products />} />
+                        </Route>
+                        <Route
+                          path="/categories/:categoryName"
+                          element={<Products />}
+                        />
+                        <Route path="/deals" element={<Products />} />
+                        <Route
+                          path="/product/:id"
+                          element={<ProductDetailPage />}
+                        />
+                        <Route path="/cart" element={<Cart />} />
+                        <Route path="/track" element={<OrderTracking />} />
+                        <Route
+                          path="/track/:orderId"
+                          element={<OrderConfirmation />}
+                        />
+                        <Route
+                          path="/order-confirmation"
+                          element={<OrderConfirmation />}
+                        />
+                        {/* <Route element={<ProfileLayout />}>
                                 <Route
                                   path="/orders"
                                   element={<OrderHistory />}
                                 />
                               </Route> */}
-                              <Route
-                                path="/wishlist-old"
-                                element={<Wishlist />}
-                              />
-                              <Route path="/account" element={<Account />} />
-                              <Route path="/contact" element={<ContactUs />} />
-                              <Route path="/faqs" element={<FAQs />} />
-                              <Route
-                                path="/terms"
-                                element={<TermsConditions />}
-                              />
-                              <Route
-                                path="/privacy"
-                                element={<PrivacyPolicy />}
-                              />
-                              <Route path="/about" element={<AboutUs />} />
-                              <Route path="*" element={<NotFound />} />
+                        <Route path="/account" element={<Account />} />
+                        <Route path="/contact" element={<ContactUs />} />
+                        <Route path="/faqs" element={<FAQs />} />
+                        <Route path="/terms" element={<TermsConditions />} />
+                        <Route path="/privacy" element={<PrivacyPolicy />} />
+                        <Route path="/about" element={<AboutUs />} />
+                        <Route path="*" element={<NotFound />} />
 
-                              <Route path="/stores" element={<StoresPage />} />
-                              <Route
-                                path="/stores/:slug"
-                                element={<StoreDetailPage />}
-                              />
+                        <Route path="/stores" element={<StoresPage />} />
+                        <Route
+                          path="/stores/:slug"
+                          element={<StoreDetailPage />}
+                        />
 
-                              {/* Profile pages wrapped in new layout */}
-                              <Route element={<ProfileLayout />}>
-                                <Route
-                                  path="/profile"
-                                  element={<ProfilePage />}
-                                />
-                                <Route
-                                  path="/settings"
-                                  element={<SettingsPage />}
-                                />
-                                <Route
-                                  path="/settings/security"
-                                  element={<TwoFactorSettingsPage />}
-                                />
-                                <Route
-                                  path="/notifications"
-                                  element={<NotificationsPage />}
-                                />
-                                <Route
-                                  path="/wishlist"
-                                  element={<WishlistPage />}
-                                />
-                                <Route
-                                  path="/addresses"
-                                  element={<AddressesPage />}
-                                />
-                                <Route
-                                  path="/messages"
-                                  element={<MessagesPage />}
-                                />
-                                <Route
-                                  path="/messages/:id"
-                                  element={<ConversationPage />}
-                                />
-                                <Route
-                                  path="/payments"
-                                  element={<PaymentMethodsPage />}
-                                />
-                                <Route
-                                  path="/orders"
-                                  element={<OrdersPage />}
-                                />
-                                <Route
-                                  path="/orders/:id"
-                                  element={<OrderDetailPage />}
-                                />
-                              </Route>
+                        {/* Profile pages wrapped in new layout */}
+                        <Route element={<ProfileLayout />}>
+                          <Route path="/profile" element={<ProfilePage />} />
+                          <Route path="/settings" element={<SettingsPage />} />
+                          <Route
+                            path="/settings/security"
+                            element={<TwoFactorSettingsPage />}
+                          />
+                          <Route
+                            path="/notifications"
+                            element={<NotificationsPage />}
+                          />
+                          <Route path="/wishlist" element={<WishlistPage />} />
+                          <Route
+                            path="/addresses"
+                            element={<AddressesPage />}
+                          />
+                          <Route path="/messages" element={<MessagesPage />} />
+                          <Route
+                            path="/messages/:id"
+                            element={<ConversationPage />}
+                          />
+                          <Route
+                            path="/payments"
+                            element={<PaymentMethodsPage />}
+                          />
+                          <Route path="/orders" element={<OrdersPage />} />
+                          <Route
+                            path="/orders/:id"
+                            element={<OrderDetailPage />}
+                          />
+                        </Route>
 
-                              <Route
-                                path="/checkout"
-                                element={<CheckoutPage />}
-                              />
-                            </Routes>
-                          </Layout>
-                        }
-                      />
+                        <Route path="/checkout" element={<CheckoutPage />} />
+                      </Route>
                     </Routes>
                   </NextUIProvider>
                 </BrowserRouter>
