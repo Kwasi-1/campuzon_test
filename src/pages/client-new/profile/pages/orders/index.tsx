@@ -119,7 +119,7 @@ export function OrdersPage() {
               <button
                 key={cat.key}
                 onClick={() => setActiveCategory(cat.key)}
-                className={`flex items-center justify-between pl-5 pr-1 py-1 rounded-full transition-all shrink-0 lg:shrink-auto whitespace-nowrap lg:whitespace-normal border shadowsm ${
+                className={`flex items-center justify-between pl-5 pr-[2px] py-[3px] md:py-1 md:pr-1 rounded-full transition-all shrink-0 lg:shrink-auto whitespace-nowrap lg:whitespace-normal border shadowsm ${
                   isActive
                     ? "bg-[#1C1C1E] text-white border-[#1C1C1E]"
                     : "bg-white text-gray-700 bordergray-200 hover:border-gray-300 hover:bg-gray-50"
@@ -127,7 +127,7 @@ export function OrdersPage() {
               >
                 <span className="font-medium text-[15px]">{cat.label}</span>
                 <span
-                  className={`w-12 h-12 flex items-center justify-center rounded-full text-xs font-bold ${
+                  className={`h-10 w-10 md:w-12 md:h-12 ml-3 flex items-center justify-center rounded-full text-xs font-bold ${
                     isActive ? "bg-white text-black" : "bg-secondary text-gray-600"
                   }`}
                 >

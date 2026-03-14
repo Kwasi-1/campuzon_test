@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation, Navigate, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores";
-import { User, Heart, ShoppingBag, Box, Shield, LogOut } from "lucide-react";
+import { User, Heart, ShoppingBag, Box, Shield, LogOut, MessageCircle, CreditCard, Bell, Settings } from "lucide-react";
 
 export function ProfileLayout() {
   const { user, logout } = useAuthStore();
@@ -8,12 +8,18 @@ export function ProfileLayout() {
   const navigate = useNavigate();
 
   const navItems = [
-    { label: "Profile", icon: User, path: "/profile" },
-    { label: "Wishlist", icon: Heart, path: "/wishlist" },
-    { label: "My Order", icon: ShoppingBag, path: "/orders" },
-    { label: "Saved Address", icon: Box, path: "/addresses" },
-    { label: "Change Password", icon: Shield, path: "/settings/security" },
-  ];
+  { label: "Profile", icon: User, path: "/profile" },
+  { label: "Wishlist", icon: Heart, path: "/wishlist" },
+  { label: "My Order", icon: ShoppingBag, path: "/orders" },
+  { label: "Saved Address", icon: Box, path: "/addresses" },
+  { label: "Change Password", icon: Shield, path: "/settings/security" },
+
+  { label: "Messages", icon: MessageCircle, path: "/messages" },
+  { label: "Payment Methods", icon: CreditCard, path: "/payments" },
+  { label: "Notifications", icon: Bell, path: "/notifications" },
+  { label: "Security", icon: Shield, path: "/settings/security" },
+  { label: "Settings", icon: Settings, path: "/settings" },
+];
 
   const handleLogout = () => {
     logout();
@@ -26,18 +32,18 @@ export function ProfileLayout() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="container mx-auto px-4 py-8 lg:px-8">
+      <div className="container mx-auto px-4 py-6 lg:px-8">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-4 border-b border-gray-100 gap-6">
+        <div className="flex flex-col md:flex-row md:items-end md:gap-36 gap-20 lg:gap-40 justify-between mb-8 pb-8 border-b border-gray-100">
           <div>
             <p className="text-gray-500 text-sm mb-1">Good Morning,</p>
-            <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">
+            <h1 className="text-3xl font-semibold text-gray-900 tracking-tight w-full text-nowrap capitalize">
               {user.firstName} {user.lastName}
             </h1>
           </div>
 
           {/* Navigation Pills */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flexwrap items-center gap-2 overflow-y-auto scrollbar-hide ">
             {navItems.map((item) => {
               const isActive =
                 location.pathname === item.path ||
@@ -47,7 +53,7 @@ export function ProfileLayout() {
                 <Link
                   key={item.label}
                   to={item.path}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
+                  className={`flex items-center gap-3 px-6 py-3.5 rounded-full text-sm font-medium transition-all text-nowrap ${
                     isActive
                       ? "bg-gray-900 text-white shadow-sm"
                       : "bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50"
