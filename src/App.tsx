@@ -64,6 +64,9 @@ import { NotificationsPage } from "./pages/client-new/profile/pages/notification
 import { WishlistPage } from "./pages/client-new/profile/pages/wishlist/WishlistPage";
 import { PaymentMethodsPage } from "./pages/client-new/profile/pages/payment-methods/PaymentMethodsPage";
 import { CheckoutPage } from "./pages/client-new/profile/pages/orders/pages/check-out";
+import { AddressesPage } from "./pages/client-new/profile/pages/addresses/AddressesPage";
+import { MessagesPage } from "./pages/client-new/profile/pages/messages";
+import { ConversationPage } from "./pages/client-new/profile/pages/messages/pages/ConversationPage";
 
 const queryClient = new QueryClient();
 
@@ -275,34 +278,43 @@ const App = () => (
                                 element={<ProfilePage />}
                               />
                               <Route
-                              path="/settings"
-                              element={<SettingsPage />}
-                            /> 
-                            <Route
-                              path="/settings/security"
-                              element={<TwoFactorSettingsPage />}
-                            />
-                            <Route
-                              path="/notifications"
-                              element={<NotificationsPage />}
-                            />
-                            <Route
-                              path="/wishlist"
-                              element={<WishlistPage />}
-                            />
-                            {/* <Route
-                              path="/addresses"
-                              element={<AddressesPage />}
-                            /> */}
-                            <Route
-                              path="/payments"
-                              element={<PaymentMethodsPage />}
-                            />
+                                path="/settings"
+                                element={<SettingsPage />}
+                              />
+                              <Route
+                                path="/settings/security"
+                                element={<TwoFactorSettingsPage />}
+                              />
+                              <Route
+                                path="/notifications"
+                                element={<NotificationsPage />}
+                              />
+                              <Route
+                                path="/wishlist"
+                                element={<WishlistPage />}
+                              />
+                              <Route
+                                path="/addresses"
+                                element={<AddressesPage />}
+                              />
+                              <Route
+                                path="/messages"
+                                element={<MessagesPage />}
+                              />
+                              <Route
+                                path="/messages/:id"
+                                element={<ConversationPage />}
+                              />
+                              <Route path="/" element={<AddressesPage />} />
+                              <Route
+                                path="/payments"
+                                element={<PaymentMethodsPage />}
+                              />
 
-                            <Route
-                              path="/checkout"
-                              element={<CheckoutPage />}
-                            /> 
+                              <Route
+                                path="/checkout"
+                                element={<CheckoutPage />}
+                              />
                             </Routes>
                           </Layout>
                         }
