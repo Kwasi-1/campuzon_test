@@ -100,6 +100,7 @@ export interface User {
   institution?: Institution;
   hall?: Hall;
   store?: Store;
+  institutionName?: string;
 }
 
 export interface Store {

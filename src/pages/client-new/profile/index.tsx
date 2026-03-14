@@ -384,7 +384,7 @@ export function ProfilePage() {
                       Institution
                     </p>
                     <p className="text-sm font-medium text-gray-900">
-                      {institution?.name || "Not specified"}
+                      {user.institutionName || user.institution?.name || institution?.name || "Not specified"}
                     </p>
                   </div>
                 </div>

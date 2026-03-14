@@ -259,12 +259,12 @@ const App = () => (
                                 path="/order-confirmation"
                                 element={<OrderConfirmation />}
                               />
-                              <Route element={<ProfileLayout />}>
+                              {/* <Route element={<ProfileLayout />}>
                                 <Route
                                   path="/orders"
                                   element={<OrderHistory />}
                                 />
-                              </Route>
+                              </Route> */}
                               <Route
                                 path="/wishlist-old"
                                 element={<Wishlist />}

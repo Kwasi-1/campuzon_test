@@ -21,7 +21,8 @@ export function useMyOrders(filters?: Record<string, unknown>) {
     queryKey: orderKeys.list(filters),
     queryFn: async (): Promise<Order[]> => {
       const response = await api.get('/orders', { params: filters });
-      return extractData<Order[]>(response);
+      const data = extractData<{ orders?: Order[]; items?: Order[] } | Order[]>(response);
+      return Array.isArray(data) ? data : data.orders || data.items || [];
     },
   });
 }
@@ -44,7 +45,8 @@ export function useStoreOrders(storeId: string) {
     queryKey: orderKeys.storeOrders(storeId),
     queryFn: async (): Promise<Order[]> => {
       const response = await api.get(`/stores/${storeId}/orders`);
-      return extractData<Order[]>(response);
+      const data = extractData<{ orders?: Order[]; items?: Order[] } | Order[]>(response);
+      return Array.isArray(data) ? data : data.orders || data.items || [];
     },
     enabled: !!storeId,
   });
