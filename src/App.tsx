@@ -67,6 +67,16 @@ import { CheckoutPage } from "./pages/client-new/profile/pages/orders/pages/chec
 import { AddressesPage } from "./pages/client-new/profile/pages/addresses/AddressesPage";
 import { MessagesPage } from "./pages/client-new/profile/pages/messages";
 import { ConversationPage } from "./pages/client-new/profile/pages/messages/pages/ConversationPage";
+import { SellLayout } from "./components/layout/SellLayout";
+import {
+  BecomeSellerPage,
+  SellerAddProductPage,
+  SellerDashboardPage,
+  SellerMessagesPage,
+  SellerOrdersPage,
+  SellerProductsPage,
+  SellerSettingsPage,
+} from "./pages/seller";
 
 const queryClient = new QueryClient();
 
@@ -88,43 +98,38 @@ const App = () => (
                       <Route path="/login" element={<Login />} />
                       <Route path="/2fa-verify" element={<TwoFactorAuth />} />
                       <Route path="/register" element={<RegisterPage />} />
-                      {/* <Route
-                      path="/store-signup"
-                      element={<MultiStepStoreSignup />}
-                    /> */}
-
-                      {/* Store Portal login outside protected area to avoid full-screen spinner */}
-                      {/* <Route
-                      path="/store-portal/login"
-                      element={
-                        <StoreAuthProvider skipBootstrap>
-                          <StoreLogin />
-                        </StoreAuthProvider>
-                      }
-                    /> */}
-
-                      {/* Store Portal protected routes with full bootstrap and layout */}
-                      {/* <Route
-                      path="/store-portal/*"
-                      element={
-                        <StoreAuthProvider>
-                          <StorePortalLayout />
-                        </StoreAuthProvider>
-                      }
-                    >
-                      <Route index element={<StorePortalDashboard />} />
-                      <Route path="products" element={<StoreProducts />} />
-                      <Route path="orders" element={<StoreOrders />} />
-                      <Route
-                        path="transactions"
-                        element={<StoreTransactions />}
-                      />
-                      <Route path="settings" element={<StoreSettings />} />
-                      <Route
-                        path="notifications"
-                        element={<StoreNotifications />}
-                      />
-                    </Route> */}
+                      <Route path="/become-seller" element={<BecomeSellerPage />} />
+                      {/* Seller Routes */}
+                      <Route element={<SellLayout />}>
+                        <Route
+                          path="/seller/dashboard"
+                          element={<SellerDashboardPage />}
+                        />
+                        <Route
+                          path="/seller/products"
+                          element={<SellerProductsPage />}
+                        />
+                        <Route
+                          path="/seller/products/new"
+                          element={<SellerAddProductPage />}
+                        />
+                        <Route
+                          path="/seller/products/:productId/edit"
+                          element={<SellerAddProductPage />}
+                        />
+                        <Route
+                          path="/seller/orders"
+                          element={<SellerOrdersPage />}
+                        />
+                        <Route
+                          path="/seller/messages"
+                          element={<SellerMessagesPage />}
+                        />
+                        <Route
+                          path="/seller/settings"
+                          element={<SellerSettingsPage />}
+                        />
+                      </Route>
 
                       {/* Admin and Super Admin login routes (wrapped with AdminAuthProvider) */}
                       <Route

@@ -1,0 +1,7 @@
+export { SellerDashboardPage } from './pages/dashboard';
+export { SellerProductsPage } from './pages/products';
+export { SellerAddProductPage } from './pages/products/components/SellerAddProductPage';
+export { SellerOrdersPage } from './pages/orders';
+export { SellerMessagesPage } from './pages/messages';
+export { SellerSettingsPage } from './pages/settings/SellerSettingsPage';
+export { BecomeSellerPage } from './pages/become-seller';
