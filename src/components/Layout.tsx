@@ -399,10 +399,10 @@ const Layout = ({ children }: LayoutProps) => {
             <div className="flex items-center space-x-8 overflow-x-auto scrollbar-hide">
               <Link
                 to="/"
-                className={`py-4 px-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                className={`py-4 px-2 text-sm font-medium transition-colors whitespace-nowrap ${
                   location.pathname === "/"
-                    ? "border-red-500 text-red-500"
-                    : "border-transparent text-gray-600 hover:text-gray-900"
+                    ? "text-red-500"
+                    : "text-gray-600 hover:text-gray-900"
                 }`}
               >
                 HOME
@@ -411,7 +411,7 @@ const Layout = ({ children }: LayoutProps) => {
                 <Link
                   key={category}
                   to={`/categories?category=${encodeURIComponent(category)}`}
-                  className="py-4 px-2 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent hover:border-red-500 transition-colors whitespace-nowrap"
+                  className="py-4 px-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors whitespace-nowrap"
                 >
                   {category.toUpperCase()}
                 </Link>
@@ -432,7 +432,7 @@ const Layout = ({ children }: LayoutProps) => {
 
       {/* Footer - Simplified for grocery focus */}
       <footer className="bg-black text-white mt-8">
-        <div className="container mx-auto px-4 py-12 md:section-padding pb-8 pt-16 md:pt-24">
+        <div className="container mx-auto px-4 lg:px-6 py-12 md:section-padding pb-8 pt-16 md:pt-24">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 md:pb-8">
             {/* Brand */}
             <div>

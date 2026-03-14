@@ -131,7 +131,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 md:px-6 lg:px-8">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 xl:px-6">
         {/* Hero Carousel */}
         <section className="pt-6 pb-8">
           <HeroCarousel />

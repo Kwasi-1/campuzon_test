@@ -17,7 +17,7 @@ export default {
 			center: true,
 			padding: '2rem',
 			screens: {
-				'2xl': '1440px'
+				'2xl': '1480px'
 			}
 		},
 		extend: {
@@ -68,8 +68,8 @@ export default {
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
-				md: 'calc(var(--radius) - 4px)',
-				sm: 'calc(var(--radius) - 6px)'
+				md: 'calc(var(--radius) - 2px)',
+				sm: 'calc(var(--radius) - 4px)'
 			},
 			keyframes: {
 				'accordion-down': {
@@ -124,7 +124,7 @@ export default {
 				"slide-out-up": "slide-out-up 0.4s cubic-bezier(0.25, 1, 0.5, 1)"
 			},
 			fontFamily: {
-				'display': ['Orpheus Pro', 'serif'],
+				// 'display': ['Orpheus Pro', 'serif'],
 				'inter': ['Inter', 'sans-serif'],
 				'dashboard': ['Public Sans', 'sans-serif'],
 			}

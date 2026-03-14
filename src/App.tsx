@@ -58,6 +58,12 @@ import Login from "./pages/auth-new/Login";
 import { ProfilePage } from "./pages/client-new/profile";
 import { NextUIProvider } from "@nextui-org/react";
 import { RegisterPage } from "./pages/auth-new/RegisterPage";
+import { SettingsPage } from "./pages/client-new/profile/pages/settings/SettingsPage";
+import { TwoFactorSettingsPage } from "./pages/client-new/profile/pages/security/TwoFactorSettingsPage";
+import { NotificationsPage } from "./pages/client-new/profile/pages/notifications";
+import { WishlistPage } from "./pages/client-new/profile/pages/wishlist/WishlistPage";
+import { PaymentMethodsPage } from "./pages/client-new/profile/pages/payment-methods/PaymentMethodsPage";
+import { CheckoutPage } from "./pages/client-new/profile/pages/orders/pages/check-out";
 
 const queryClient = new QueryClient();
 
@@ -268,10 +274,10 @@ const App = () => (
                                 path="/profile"
                                 element={<ProfilePage />}
                               />
-                              {/*<Route
+                              <Route
                               path="/settings"
                               element={<SettingsPage />}
-                            />
+                            /> 
                             <Route
                               path="/settings/security"
                               element={<TwoFactorSettingsPage />}
@@ -284,10 +290,10 @@ const App = () => (
                               path="/wishlist"
                               element={<WishlistPage />}
                             />
-                            <Route
+                            {/* <Route
                               path="/addresses"
                               element={<AddressesPage />}
-                            />
+                            /> */}
                             <Route
                               path="/payments"
                               element={<PaymentMethodsPage />}
@@ -296,7 +302,7 @@ const App = () => (
                             <Route
                               path="/checkout"
                               element={<CheckoutPage />}
-                            /> */}
+                            /> 
                             </Routes>
                           </Layout>
                         }

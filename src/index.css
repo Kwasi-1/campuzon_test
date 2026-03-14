@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Public+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Market+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Public+Sans:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -103,12 +103,12 @@ All colors MUST be HSL.
 
   body {
     @apply bg-white text-foreground;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Market Sans', sans-serif;
     letter-spacing: -0.01rem;
   }
-  /* h1, h2, h3, h4, h5, h6 {
-    @apply lg:tracking-tight font-semibold;
-  } */
+  h1, h2, h3, h4, h5, h6 {
+    @apply lg:tracking-wide font-semibold;
+  }
 }
 
  html {

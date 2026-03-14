@@ -9,7 +9,7 @@ function AppLogo({ isLight, className}: AppLogoProps) {
   return (
     <Link to="/" className={`flex items-center font-display ${className || ''}`}>
       <div className="text-3xl font-bold">
-        <span className={`${isLight ? "text-white" : "text-black"}`}>Tobra</span>
+        <span className={`${isLight ? "text-white" : "text-black"}`}>Campuzon</span>
         <span className="text-red-500">.com</span>
       </div>
     </Link>

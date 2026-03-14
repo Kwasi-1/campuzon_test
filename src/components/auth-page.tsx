@@ -101,7 +101,7 @@ export function AuthPage({
           </Link>
         </Button>
 
-        <div className="mx-auto space-y-4 sm:w-sm overflow-y-auto scrollbar-hide py-20 px-2">
+        <div className="mx-auto space-y-4 sm:w-sm overflow-y-auto scrollbar-hide py-20 md:px-2">
           {/* Logo visible on mobile (hidden on lg where sidebar shows) */}
           <img
             src={campuzonLogo}
