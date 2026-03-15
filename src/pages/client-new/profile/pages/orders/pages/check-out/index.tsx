@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useCartStore, useAuthStore } from "@/stores";
 import { useCreateOrder, usePayment } from "@/hooks";
+import { extractError } from "@/lib/api";
 import { formatPrice } from "@/lib/utils";
 import type { DeliveryMethod, Order } from "@/types-new";
 
@@ -121,7 +122,13 @@ export function CheckoutPage() {
   };
 
   const handlePlaceOrder = async () => {
-    if (!storeID) return;
+    const resolvedStoreID = storeID || items[0]?.product.storeID || null;
+    if (!resolvedStoreID) {
+      setError(
+        "Unable to determine the seller for this cart. Please refresh and try again.",
+      );
+      return;
+    }
 
     setIsProcessing(true);
     setError(null);
@@ -129,7 +136,7 @@ export function CheckoutPage() {
     try {
       // 1. Create Order
       const orderData = {
-        storeID,
+        storeID: resolvedStoreID,
         items: items.map((item) => ({
           productID: item.product.id,
           quantity: item.quantity,
@@ -149,7 +156,10 @@ export function CheckoutPage() {
       )) as unknown as Order;
 
       // 2. Initialize Payment (Paystack)
-      const paymentResponse = await initializePayment.mutateAsync(order.id);
+      const paymentResponse = await initializePayment.mutateAsync({
+        orderId: order.id,
+        callbackUrl: `${window.location.origin}/orders/${order.id}`,
+      });
       const authorizationUrl =
         paymentResponse.authorizationUrl || paymentResponse.authorization_url;
 
@@ -164,10 +174,7 @@ export function CheckoutPage() {
       }
     } catch (err: unknown) {
       console.error("Checkout error:", err);
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Failed to place order. Please try again.";
+      const errorMessage = extractError(err);
       setError(errorMessage);
       setIsProcessing(false);
       return;

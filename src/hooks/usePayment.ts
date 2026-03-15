@@ -20,8 +20,13 @@ export function usePayment() {
   const queryClient = useQueryClient();
 
   const initializePayment = useMutation({
-    mutationFn: async (orderId: string) => {
-      const response = await api.post(`/orders/${orderId}/pay`);
+    mutationFn: async ({ orderId, callbackUrl }: { orderId: string; callbackUrl?: string }) => {
+      const resolvedCallbackUrl =
+        callbackUrl || `${window.location.origin}/orders/${orderId}`;
+
+      const response = await api.post(`/orders/${orderId}/pay`, {
+        callbackUrl: resolvedCallbackUrl,
+      });
       return extractData<PaymentResponse>(response);
     },
   });
