@@ -38,15 +38,13 @@ export function StoreCategories({
         )}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 overflow-x-auto hide-scrollbar pb-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-4 overflow-x-auto hide-scrollbar pb-2">
         {categories.map((category) => (
           <button
             key={category.name}
             onClick={() => onCategorySelect(category.name)}
             className={cn(
               "flex flex-col items-center flex-shrink0 group transition-all",
-              selectedCategory === category.name &&
-                "ring-2 ring-gray-900 rounded-lg",
             )}
           >
             <div className="w-full h-full aspect-square  rounded-full overflow-hidden bg-gray-100 border border-gray-200 mb-2">
@@ -54,7 +52,11 @@ export function StoreCategories({
                 <img
                   src={category.image}
                   alt={category.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  className={cn(
+                    "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300",
+                    selectedCategory === category.name &&
+                      "ring-2 ring-gray-900 rounded-lg",
+                  )}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-50">

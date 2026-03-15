@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Pause,
+  CheckCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Store } from "@/types-new";
@@ -26,39 +27,51 @@ export function StoreHeader({
   onSave,
   isSaved,
 }: StoreHeaderProps) {
-  // For stores with hero banners/promotions
-  const hasHeroBanner = store.banner || store.description;
+  const bannerSrc = store.banner || store.logo;
+  const previewText = store.description
+    ? store.description.length > 100
+      ? `${store.description.slice(0, 100)}...`
+      : store.description
+    : "Discover what this campus store has in stock right now.";
 
   return (
-    <div className="bg-white rounded-md overflow-hidden mt-6">
-      {/* Hero Banner Carousel */}
-      {hasHeroBanner && (
-        <div className="relative bg-gradient-to-r from-gray-900 to-gray-800 overflow-hidden">
-          <div className="relative h-32 sm:h-40 md:h-52">
-            {store.banner ? (
+    <div className="mt-6 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <div className="p-1">
+        <div className="relative overflow-hidden rounded-xl md:rounded-xl lg:rounded-[1.125rem] bg-gradient-to-r from-slate-900 to-slate-700">
+          <div className="relative h-52 sm:h-56 md:h-56 lg:h-64">
+            {bannerSrc ? (
               <img
-                src={store.banner}
+                src={bannerSrc}
                 alt={`${store.storeName} banner`}
-                className="w-full h-full object-cover opacity-90"
+                className="w-full h-full object-cover"
               />
             ) : (
-              <div className="absolute inset-0 bg-gradient-to-r from-gray-800 to-gray-700" />
+              <div className="absolute inset-0 bg-gradient-to-br from-muted to-secondary/60" />
+            )}
+
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/55 to-slate-900/20" />
+
+            {store.isVerified && (
+              <div className="absolute top-3 md:top-4 right-4 flex items-center gap-1 rounded-full border border-white/15 bg-white/90 px-3 py-1 text-xs font-medium text-primary shadow-sm backdrop-blur-sm">
+                <CheckCircle className="h-3.5 w-3.5" />
+                <span className="hidden md:block">Verified</span>
+              </div>
             )}
 
             {/* Banner Content Overlay */}
             <div className="absolute inset-0 flex items-center">
-              <div className="container mx-auto px-4 md:px-8">
+              <div className="w-full px-5 py-6 sm:px-6 md:px-8">
                 <div className="max-w-2xl text-white">
-                  <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-2 leading-tight">
-                    Welcome to {store.storeName}!{" "}
-                    {store.description && store.description.length > 100
-                      ? `${store.description.slice(0, 100)}...`
-                      : store.description}
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight tracking-tight">
+                    Welcome to {store.storeName}!
                   </h2>
+                  <p className="mt-3 max-w-xl text-sm sm:text-base text-white/90 leading-relaxed">
+                    {previewText}
+                  </p>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="bg-white border-gray-700 text-primary hover:opacity-90 mt-3 rounded-full px-4 py-2"
+                    className="mt-4 rounded-full border-white/30 bg-white text-primary hover:bg-white/90"
                   >
                     Learn more
                   </Button>
@@ -69,19 +82,19 @@ export function StoreHeader({
             {/* Banner Navigation */}
             <div className="absolute bottom-4 right-4 flex items-center gap-2">
               <button
-                className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
                 aria-label="Previous slide"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
-                className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
                 aria-label="Next slide"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
               <button
-                className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
                 aria-label="Pause slideshow"
               >
                 <Pause className="w-4 h-4" />
@@ -89,19 +102,20 @@ export function StoreHeader({
             </div>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Store Info Section */}
-      <div className="border-b border-gray-200">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+      <div className="border-t border-border/80 px-4 pb-5 pt-0 sm:px-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex min-w-0 flex-1 gap-4 flex-row sm:items-center">
             {/* Store Avatar */}
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.2 }}
+              className="rounded-full border w-fit"
             >
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-gray-200 bg-white overflow-hidden flex-shrink-0">
+              <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center overflow-hidden rounded-full border-2 border-background bg-muted ">
                 {store.logo ? (
                   <img
                     src={store.logo}
@@ -109,90 +123,84 @@ export function StoreHeader({
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="h-full w-full flex items-center justify-center bg-gray-100">
-                    <ShoppingBag className="h-8 w-8 text-gray-400" />
+                  <div className="flex h-full w-full items-center justify-center bg-secondary">
+                    <ShoppingBag className="h-8 w-8 text-primary/70" />
                   </div>
                 )}
               </div>
             </motion.div>
 
             {/* Store Details */}
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                <div className="min-w-0">
-                  {/* Store Name */}
-                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-                    {store.storeName}
-                  </h1>
+            <div className="min-w-0 flex-1 pt-2 sm:pt-0">
+              <h1 className="truncate text-xl  sm:text-2xl font-bold text-foreground lg:text-2xl">
+                {store.storeName}
+              </h1>
 
-                  {/* Store Stats */}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-gray-600">
-                    {store.rating && (
-                      <span className="font-medium text-blue-700 hover:underline cursor-pointer">
-                        {store.rating.toFixed(1)}% positive feedback
-                      </span>
-                    )}
-                    {store.totalOrders !== undefined && (
-                      <span>
-                        <span className="font-medium">
-                          {store.totalOrders >= 1000
-                            ? `${(store.totalOrders / 1000).toFixed(0)}K`
-                            : store.totalOrders.toLocaleString()}
-                        </span>{" "}
-                        items sold
-                      </span>
-                    )}
-                    {store.totalSales !== undefined && (
-                      <span>
-                        <span className="font-medium">
-                          {store.totalSales >= 1000
-                            ? `${(store.totalSales / 1000).toFixed(0)}K`
-                            : store.totalSales.toLocaleString()}
-                        </span>{" "}
-                        followers
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onShare}
-                    className="text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                  >
-                    <Share2 className="h-4 w-4 mr-1.5" />
-                    Share
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onContact}
-                    className="text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                  >
-                    <MessageCircle className="h-4 w-4 mr-1.5" />
-                    Contact
-                  </Button>
-                  {onSave && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={onSave}
-                      className="text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                    >
-                      <Heart
-                        className={`h-4 w-4 mr-1.5 ${
-                          isSaved ? "fill-red-500 text-red-500" : ""
-                        }`}
-                      />
-                      {isSaved ? "Saved" : "Save Seller"}
-                    </Button>
-                  )}
-                </div>
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                {typeof store.rating === "number" && (
+                  <span className="font-medium text-primary hover:underline cursor-pointer">
+                    {store.rating.toFixed(1)}% positive feedback
+                  </span>
+                )}
+                {typeof store.totalOrders === "number" && (
+                  <span>
+                    <span className="font-medium text-foreground">
+                      {store.totalOrders >= 1000
+                        ? `${(store.totalOrders / 1000).toFixed(0)}K`
+                        : store.totalOrders.toLocaleString()}
+                    </span>{" "}
+                    items sold
+                  </span>
+                )}
+                {typeof store.totalSales === "number" && (
+                  <span>
+                    <span className="font-medium text-foreground">
+                      {store.totalSales >= 1000
+                        ? `${(store.totalSales / 1000).toFixed(0)}K`
+                        : store.totalSales.toLocaleString()}
+                    </span>{" "}
+                    followers
+                  </span>
+                )}
               </div>
             </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onShare}
+              className="rounded-full text-gray-700 hover:bg-muted hover:text-gray-900"
+            >
+              <Share2 className="mr-1.5 h-4 w-4" />
+              Share
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onContact}
+              className="rounded-full text-gray-700 hover:bg-muted hover:text-gray-900"
+            >
+              <MessageCircle className="mr-1.5 h-4 w-4" />
+              Contact
+            </Button>
+            {onSave && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onSave}
+                className="rounded-full text-gray-700 hover:bg-muted hover:text-gray-900"
+              >
+                <Heart
+                  className={`mr-1.5 h-4 w-4 ${
+                    isSaved ? "fill-red-500 text-red-500" : ""
+                  }`}
+                />
+                {isSaved ? "Saved" : "Save Seller"}
+              </Button>
+            )}
           </div>
         </div>
       </div>

@@ -1,26 +1,40 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, Star, ShoppingBag, CheckCircle } from "lucide-react";
+import {
+  Search,
+  Star,
+  ShoppingBag,
+  CheckCircle,
+  Store as StoreIcon,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/shared/Skeleton";
-import { mockStores } from "@/lib/mockData";
+import { useStores } from "@/hooks";
 import type { Store } from "@/types-new";
 
 function StoreCard({ store }: { store: Store }) {
+  const destination = `/stores/${store.storeSlug || store.id}`;
+  const bannerSrc = store.logo || store.banner;
+
   return (
     <Link
-      to={`/stores/${store.storeSlug}`}
-      className="group block bg-card rounded-lg border border-border overflow-hidden shadow-sm hover:shadow-lg hover:border-primary/20 transition-all duration-300"
+      to={destination}
+      className="group block bg-card rounded-md border border-border overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
     >
       {/* Banner */}
       <div className="relative h-48 overflow-hidden p-1 pb-0">
-        {store.logo && (
+        {bannerSrc ? (
           <img
-            src={store.logo}
+            src={bannerSrc}
             alt={`${store.storeName} banner`}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 rounded-md border"
           />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-muted to-secondary/70 flex items-center justify-center rounded-md border">
+            <StoreIcon className="h-10 w-10 text-muted-foreground/60" />
+          </div>
         )}
+
         {/* Verified Badge */}
         {store.isVerified && (
           <div className="absolute top-3 right-3 flex items-center gap-1 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium text-primary">
@@ -32,25 +46,9 @@ function StoreCard({ store }: { store: Store }) {
 
       {/* Logo & Info */}
       <div className="relative px-4 pb-4">
-        {/* Logo - positioned to overlap banner */}
-        {/* <div className="absolute -top-8 left-4">
-          <div className="h-16 w-16 rounded-xl border-4 border-background bg-muted overflow-hidden shadow-md">
-            {store.logo ? (
-              <img
-                src={store.logo}
-                alt={store.storeName}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="h-full w-full flex items-center justify-center bg-primary/10">
-                <ShoppingBag className="h-6 w-6 text-primary" />
-              </div>
-            )}
-          </div>
-        </div> */}
 
         {/* Store Details */}
-        <div className="py-5">
+        <div className="py-4">
           <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors line-clamp-1">
             {store.storeName}
           </h3>
@@ -62,7 +60,7 @@ function StoreCard({ store }: { store: Store }) {
           {/* Stats */}
           <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border">
             {/* Rating */}
-            {store.rating && (
+            {typeof store.rating === "number" && (
               <div className="flex items-center gap-1">
                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                 <span className="text-sm font-medium">
@@ -72,7 +70,7 @@ function StoreCard({ store }: { store: Store }) {
             )}
 
             {/* Total Orders */}
-            {store.totalOrders !== undefined && (
+            {typeof store.totalOrders === "number" && (
               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                 <ShoppingBag className="h-4 w-4" />
                 <span>{store.totalOrders.toLocaleString()} orders</span>
@@ -88,11 +86,9 @@ function StoreCard({ store }: { store: Store }) {
 function StoreCardSkeleton() {
   return (
     <div className="bg-card rounded-xl border border-border overflow-hidden">
-      <Skeleton className="h-32 rounded-none" />
+      <Skeleton className="h-48 rounded-md m-1" />
       <div className="relative px-4 pb-4">
-        <div className="absolute -top-8 left-4">
-          <Skeleton className="h-16 w-16 rounded-xl" />
-        </div>
+        
         <div className="pt-10 space-y-2">
           <Skeleton className="h-5 w-3/4" />
           <Skeleton className="h-4 w-full" />
@@ -109,10 +105,16 @@ function StoreCardSkeleton() {
 
 export function StoresPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading] = useState(false);
+  const { data: storesData, isLoading } = useStores({
+    search: searchQuery || undefined,
+    sort: "popular",
+    page: 1,
+    perPage: 100,
+  });
+  const stores = storesData?.items || [];
 
   // Filter stores based on search
-  const filteredStores = mockStores.filter(
+  const filteredStores = stores.filter(
     (store) =>
       store.storeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       store.description?.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -145,13 +147,13 @@ export function StoresPage() {
 
       {/* Stores Grid */}
       {isLoading ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, i) => (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
             <StoreCardSkeleton key={i} />
           ))}
         </div>
       ) : filteredStores.length > 0 ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredStores.map((store) => (
             <StoreCard key={store.id} store={store} />
           ))}

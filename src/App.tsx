@@ -80,6 +80,7 @@ import { OrdersPage } from "./pages/client-new/profile/pages/orders";
 import { OrderDetailPage } from "./pages/client-new/profile/pages/orders/pages/order-details";
 import { Layout } from "./components/layout/Layout";
 import { LayoutWithFooter } from "./components/layout/LayoutWithFooter";
+import { StoreLayout } from "./components/layout/StoreLayout";
 
 const queryClient = new QueryClient();
 
@@ -223,9 +224,8 @@ const App = () => (
                         path="/admin-portal/login"
                         element={<Navigate to="/login" replace />}
                       />
-
                       {/* Pages with main layout */}
-                      <Route path="/" element={<Layout />}>
+                      <Route element={<Layout />}>
                         <Route element={<LayoutWithFooter />}>
                           <Route path="/" element={<Home />} />
                           <Route path="/products" element={<Products />} />
@@ -264,11 +264,6 @@ const App = () => (
                         <Route path="/about" element={<AboutUs />} />
                         <Route path="*" element={<NotFound />} />
 
-                        <Route path="/stores" element={<StoresPage />} />
-                        <Route
-                          path="/stores/:slug"
-                          element={<StoreDetailPage />}
-                        />
 
                         {/* Profile pages wrapped in new layout */}
                         <Route element={<ProfileLayout />}>
@@ -304,6 +299,18 @@ const App = () => (
                         </Route>
 
                         <Route path="/checkout" element={<CheckoutPage />} />
+                      </Route>
+
+                      <Route path="" element={<StoreLayout />}>
+                        <Route path="/stores" element={<StoresPage />} />
+                        <Route
+                          path="/stores/:slug"
+                          element={<StoreDetailPage />}
+                        />
+                        {/* <Route
+                          path="/become-seller"
+                          element={<BecomeSellerPage />}
+                        /> */}
                       </Route>
                     </Routes>
                   </NextUIProvider>

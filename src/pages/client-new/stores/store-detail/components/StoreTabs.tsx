@@ -28,7 +28,7 @@ export function StoreTabs({
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
           {/* Categories Button + Tabs */}
-          <div className="flex items-center gap-1 overflow-x-auto hide-scrollbar">
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
             {/* Categories Button */}
             <button className="flex items-center gap-2 px-4 py-3 text-sm font-medium bg-gray-900 text-white rounded-full my-2">
               <svg

@@ -15,7 +15,7 @@ import {
   type StoreTabType,
 } from "./components";
 import { useAuthStore } from "@/stores";
-import { useStoreBySlug, useProducts } from "@/hooks";
+import { useStoreBySlug, useStoreProductsForStorePage } from "@/hooks";
 
 type SortOption =
   | "newest"
@@ -41,25 +41,28 @@ export function StoreDetailPage() {
   // Fetch store by slug
   const { data: store, isLoading: storeLoading } = useStoreBySlug(slug!);
 
-  // Fetch store products
-  const { data: productsData, isLoading: productsLoading } = useProducts({
-    storeId: store?.id,
-    category:
-      selectedCategory !== "all" ? (selectedCategory as any) : undefined,
-    sortBy:
-      sortBy === "newest"
-        ? "date_created"
-        : sortBy === "price-low" || sortBy === "price-high"
-          ? "price"
-          : sortBy === "popular"
-            ? "sold_count"
-            : "rating",
-    sortOrder: sortBy === "price-low" ? "asc" : "desc",
-    page: currentPage,
-    perPage: ITEMS_PER_PAGE,
-  });
+  const backendSort: "newest" | "price_low" | "price_high" | "popular" =
+    sortBy === "price-low"
+      ? "price_low"
+      : sortBy === "price-high"
+        ? "price_high"
+        : sortBy === "popular"
+          ? "popular"
+          : "newest";
 
-  const storeProducts = productsData?.items || [];
+  // Fetch store products via store endpoint that supports slug identifiers
+  const { data: productsData, isLoading: productsLoading } =
+    useStoreProductsForStorePage(slug || "", {
+      category: selectedCategory !== "all" ? selectedCategory : undefined,
+      sort: backendSort,
+      page: currentPage,
+      perPage: ITEMS_PER_PAGE,
+    });
+
+  const storeProducts = useMemo(
+    () => productsData?.items || [],
+    [productsData],
+  );
   const totalItems = productsData?.pagination.total || 0;
 
   // Get unique categories from store products
