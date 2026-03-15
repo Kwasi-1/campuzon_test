@@ -9,7 +9,10 @@ interface ProductScrollerProps {
   className?: string;
 }
 
-export default function ProductScroller({ products, className }: ProductScrollerProps) {
+export default function ProductScroller({
+  products,
+  className,
+}: ProductScrollerProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: "left" | "right") => {
@@ -41,7 +44,6 @@ export default function ProductScroller({ products, className }: ProductScroller
       <div
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-1 py-2"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {products.map((product) => (
           <ProductScrollerCard key={product.id} product={product} />
@@ -69,7 +71,7 @@ function ProductScrollerCard({ product }: { product: Product }) {
 
   return (
     <Link
-      to={`/products/${product.slug}`}
+      to={`/product/${product.id}`}
       className="flex-shrink-0 w-[220px] md:w-[250px] group/card"
     >
       {/* Image */}

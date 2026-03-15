@@ -46,7 +46,7 @@ function FeaturedDealCard({
 
   return (
     <Link
-      to={`/products/${product.slug}`}
+      to={`/product/${product.id}`}
       className={cn(
         "group relative bg-white rounded-xl overflow-hidden border border-border hover:border-primary transition-colors",
         className,
@@ -103,7 +103,7 @@ function DealCard({ product }: { product: Product }) {
 
   return (
     <Link
-      to={`/products/${product.slug}`}
+      to={`/product/${product.id}`}
       className="group bg-white rounded-lg overflow-hidden border border-border hover:border-primary transition-colors"
     >
       {/* Image */}
