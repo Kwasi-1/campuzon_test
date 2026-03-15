@@ -18,6 +18,116 @@ export const productKeys = {
   search: (query: string) => [...productKeys.all, 'search', query] as const,
 };
 
+function toNumber(value: unknown, fallback = 0): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
+}
+
+function normalizeProduct(rawProduct: unknown): Product {
+  const raw = (rawProduct ?? {}) as Record<string, unknown>;
+  const rawStore =
+    raw.store && typeof raw.store === 'object'
+      ? (raw.store as Record<string, unknown>)
+      : null;
+
+  const comparePriceValue =
+    raw.comparePrice ?? raw.compare_price ?? raw.originalPrice ?? null;
+  const maxOrderQuantityValue =
+    raw.maxOrderQuantity ?? raw.max_order_quantity ?? null;
+
+  return {
+    id: String(raw.id ?? ''),
+    storeID: String(raw.storeID ?? raw.store_id ?? ''),
+    name: String(raw.name ?? raw.productName ?? raw.title ?? 'Untitled Product'),
+    slug: String(raw.slug ?? ''),
+    description: String(raw.description ?? ''),
+    price: toNumber(raw.price ?? raw.unitPrice ?? raw.unit_price, 0),
+    comparePrice:
+      comparePriceValue === null || comparePriceValue === undefined
+        ? null
+        : toNumber(comparePriceValue, 0),
+    quantity: toNumber(raw.quantity ?? raw.stock ?? raw.inventory, 0),
+    minOrderQuantity: toNumber(
+      raw.minOrderQuantity ?? raw.min_order_quantity,
+      1,
+    ),
+    maxOrderQuantity:
+      maxOrderQuantityValue === null || maxOrderQuantityValue === undefined
+        ? null
+        : toNumber(maxOrderQuantityValue, 0),
+    images: Array.isArray(raw.images)
+      ? raw.images.map(String)
+      : typeof raw.thumbnail === 'string'
+        ? [raw.thumbnail]
+        : typeof raw.primary_image === 'string'
+          ? [raw.primary_image]
+          : [],
+    thumbnail:
+      typeof raw.thumbnail === 'string'
+        ? raw.thumbnail
+        : typeof raw.primary_image === 'string'
+          ? raw.primary_image
+          : null,
+    category: String(raw.category ?? 'other') as Product['category'],
+    condition: raw.condition as Product['condition'] | undefined,
+    tags: Array.isArray(raw.tags) ? raw.tags.map(String) : [],
+    status: (raw.status as Product['status']) ?? 'active',
+    isActive: Boolean(raw.isActive ?? raw.is_active ?? true),
+    isFeatured: Boolean(raw.isFeatured ?? raw.is_featured ?? false),
+    rating:
+      raw.rating === null || raw.rating === undefined
+        ? null
+        : toNumber(raw.rating, 0),
+    reviewCount: toNumber(raw.reviewCount ?? raw.review_count, 0),
+    soldCount: toNumber(raw.soldCount ?? raw.sold_count, 0),
+    viewCount: toNumber(raw.viewCount ?? raw.view_count, 0),
+    dateCreated: String(raw.dateCreated ?? raw.date_created ?? ''),
+    store: rawStore
+      ? {
+          id: String(rawStore.id ?? ''),
+          name: String(
+            rawStore.name ?? rawStore.storeName ?? rawStore.store_name ?? '',
+          ),
+          slug: String(
+            rawStore.slug ?? rawStore.storeSlug ?? rawStore.store_slug ?? '',
+          ),
+          logo:
+            typeof rawStore.logo === 'string' ? rawStore.logo : undefined,
+          location:
+            typeof rawStore.location === 'string'
+              ? rawStore.location
+              : undefined,
+          totalSales:
+            rawStore.totalSales === null || rawStore.totalSales === undefined
+              ? rawStore.total_sales === null || rawStore.total_sales === undefined
+                ? undefined
+                : toNumber(rawStore.total_sales, 0)
+              : toNumber(rawStore.totalSales, 0),
+        }
+      : undefined,
+  };
+}
+
+function unwrapProduct(rawData: unknown): Product | null {
+  if (!rawData) return null;
+  const record = rawData as Record<string, unknown>;
+  return normalizeProduct(record.product ?? record.item ?? rawData);
+}
+
+function unwrapProductArray(rawData: unknown): Product[] {
+  if (Array.isArray(rawData)) {
+    return rawData.map(normalizeProduct);
+  }
+
+  const record = (rawData ?? {}) as Record<string, unknown>;
+  const items = record.products ?? record.items ?? record.results ?? [];
+  return Array.isArray(items) ? items.map(normalizeProduct) : [];
+}
+
 // Get all products with filters
 export function useProducts(filters: ProductFilters = {}) {
   return useQuery<PaginatedResponse<Product>>({
@@ -38,15 +148,17 @@ export function useProducts(filters: ProductFilters = {}) {
       if (filters.storeId) params.set('store_id', filters.storeId);
 
       const response = await api.get(`/products?${params.toString()}`);
-      const data = extractData<{ pagination: Pagination; products: Product[] }>(response);
+      const data = extractData<{ pagination?: Pagination; products?: unknown[]; items?: unknown[] }>(response);
+      const products = unwrapProductArray(data);
+      const pagination = data.pagination;
       return {
-        items: data.products,
-        pagination: data.pagination,
-        total: data.pagination.total,
-        pages: data.pagination.pages,
-        page: data.pagination.page,
-        hasNext: data.pagination.hasNext,
-        hasPrev: data.pagination.hasPrev,
+        items: products,
+        pagination,
+        total: pagination?.total ?? products.length,
+        pages: pagination?.pages ?? 1,
+        page: pagination?.page ?? 1,
+        hasNext: pagination?.hasNext ?? false,
+        hasPrev: pagination?.hasPrev ?? false,
       };
     },
   });
@@ -61,7 +173,7 @@ export function useProduct(id: string) {
         return mockApi.getProduct(id);
       }
       const response = await api.get(`/products/${id}`);
-      return extractData<Product>(response);
+      return unwrapProduct(extractData<unknown>(response) ?? response.data);
     },
     enabled: !!id,
   });
@@ -76,7 +188,7 @@ export function useStoreProducts(storeId: string) {
         return mockApi.getStoreProducts(storeId);
       }
       const response = await api.get(`/stores/${storeId}/products`);
-      return extractData<Product[]>(response);
+      return unwrapProductArray(extractData<unknown>(response) ?? response.data);
     },
     enabled: !!storeId,
   });
@@ -88,8 +200,8 @@ export function useSearchProducts(query: string) {
     queryKey: productKeys.search(query),
     queryFn: async (): Promise<Product[]> => {
       const response = await api.get(`/products?search=${encodeURIComponent(query)}`);
-      const data = extractData<{ pagination: Pagination; products: Product[] }>(response);
-      return data.products;
+      const data = extractData<{ products?: unknown[]; items?: unknown[] }>(response);
+      return unwrapProductArray(data);
     },
     enabled: query.length >= 2,
   });

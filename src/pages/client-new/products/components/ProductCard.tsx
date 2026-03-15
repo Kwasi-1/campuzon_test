@@ -103,7 +103,7 @@ export function ProductCard({
       className="h-full"
     >
       <Link
-        to={`/products/${product.slug || product.id}`}
+        to={`/product/${product.id}`}
         className="group block h-full focus:outline-none"
       >
         <article className="flex flex-col h-full bg-white">
@@ -165,9 +165,7 @@ export function ProductCard({
             <div className="text-[13px] leading-snug space-y-0.5">
               {/* <p className="text-gray-500">Buy It Now</p> */}
               {isOutOfStock && (
-                <p className="text-danger font-medium">
-                  Out of Stock
-                </p>
+                <p className="text-danger font-medium">Out of Stock</p>
               )}
 
               <p className="text-gray-500">
@@ -267,12 +265,12 @@ function ListCard({
                   {formatPrice(product.price)}
                 </span>
 
-                <p className="text-[13px] text-[#1a8a2a] font-bold">Buy It Now</p>
+                <p className="text-[13px] text-[#1a8a2a] font-bold">
+                  Buy It Now
+                </p>
 
                 {isOutOfStock && (
-                  <p className="text-danger font-medium">
-                    Out of Stock
-                  </p>
+                  <p className="text-danger font-medium">Out of Stock</p>
                 )}
 
                 <p className="text-[13px] text-gray-500">

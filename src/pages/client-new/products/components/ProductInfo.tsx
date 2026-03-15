@@ -42,6 +42,11 @@ export function ProductInfo({
   const [selectedCondition, setSelectedCondition] = useState<string>(
     product.condition || "new",
   );
+  const currentPrice = Number.isFinite(product.price) ? product.price : 0;
+  const comparePrice = Number.isFinite(product.comparePrice)
+    ? product.comparePrice
+    : null;
+  const storeInitial = product.store?.name?.charAt(0) || "S";
 
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
@@ -55,11 +60,11 @@ export function ProductInfo({
 
   // Calculate savings if comparePrice exists
   const savings =
-    product.comparePrice && product.comparePrice > product.price
-      ? product.comparePrice - product.price
+    comparePrice && comparePrice > currentPrice
+      ? comparePrice - currentPrice
       : null;
   const savingsPercent = savings
-    ? Math.round((savings / product.comparePrice!) * 100)
+    ? Math.round((savings / comparePrice!) * 100)
     : null;
 
   return (
@@ -81,7 +86,7 @@ export function ProductInfo({
                   src={product.store?.logo}
                   alt={product.store?.name}
                 />
-                <AvatarFallback>{product.store?.name.charAt(0)}</AvatarFallback>
+                <AvatarFallback>{storeInitial}</AvatarFallback>
               </Avatar>
             </Link>
             <div>
@@ -123,13 +128,13 @@ export function ProductInfo({
         <div className="flex items-baseline gap-2">
           <span className="text-sm text-gray-600">US</span>
           <span className="text-3xl font-bold text-gray-900">
-            ${product.price.toFixed(2)}
+            ${currentPrice.toFixed(2)}
           </span>
         </div>
         {savings && savingsPercent && (
           <div className="mt-2 flex items-center gap-2">
             <span className="text-sm text-gray-500 line-through">
-              ${product.comparePrice!.toFixed(2)}
+              ${comparePrice!.toFixed(2)}
             </span>
             <Badge variant="destructive" className="text-xs">
               Save ${savings.toFixed(2)} ({savingsPercent}% off)

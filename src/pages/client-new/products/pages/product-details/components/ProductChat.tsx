@@ -197,7 +197,7 @@ export function ProductChat({ product, onLoginRequired }: ProductChatProps) {
                     alt={product.store?.name}
                   />
                   <AvatarFallback>
-                    {product.store?.name.charAt(0)}
+                    {product.store?.name?.charAt(0) || "S"}
                   </AvatarFallback>
                 </Avatar>
                 <div>
@@ -212,12 +212,16 @@ export function ProductChat({ product, onLoginRequired }: ProductChatProps) {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setIsMinimized(!isMinimized)}
+                  aria-label={isMinimized ? "Expand chat" : "Minimize chat"}
+                  title={isMinimized ? "Expand chat" : "Minimize chat"}
                   className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
                 >
                   <Minimize2 className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
+                  aria-label="Close chat"
+                  title="Close chat"
                   className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
                 >
                   <X className="h-4 w-4" />
@@ -244,7 +248,11 @@ export function ProductChat({ product, onLoginRequired }: ProductChatProps) {
                         {product.name}
                       </p>
                       <p className="text-sm text-primary font-semibold">
-                        GH₵ {product.price.toLocaleString()}
+                        GH₵{" "}
+                        {(Number.isFinite(product.price)
+                          ? product.price
+                          : 0
+                        ).toLocaleString()}
                       </p>
                     </div>
                   </div>

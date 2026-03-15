@@ -64,7 +64,24 @@ api.interceptors.response.use(
 
 // Helper to extract data from response
 export function extractData<T>(response: AxiosResponse): T {
-  return response.data.success?.data || response.data;
+  const payload = response.data;
+
+  if (payload && typeof payload === 'object') {
+    const record = payload as Record<string, unknown>;
+
+    if (record.success && typeof record.success === 'object') {
+      const successRecord = record.success as Record<string, unknown>;
+      if ('data' in successRecord && successRecord.data !== undefined) {
+        return successRecord.data as T;
+      }
+    }
+
+    if ('data' in record && record.data !== undefined) {
+      return record.data as T;
+    }
+  }
+
+  return payload as T;
 }
 
 // Helper to extract error message
