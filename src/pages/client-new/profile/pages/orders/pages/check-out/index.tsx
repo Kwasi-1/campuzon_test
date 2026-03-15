@@ -18,18 +18,13 @@ import {
   AlertCircle,
   Info,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/shared/Skeleton";  
+import { Skeleton } from "@/components/shared/Skeleton";
 import { Alert } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea } from "@/components/ui/textarea";
 import { useCartStore, useAuthStore } from "@/stores";
 import { useCreateOrder, usePayment } from "@/hooks";
 import { formatPrice } from "@/lib/utils";
@@ -153,25 +148,32 @@ export function CheckoutPage() {
         orderData,
       )) as unknown as Order;
 
-      // 2. Clear Cart
-      clearCart();
-
-      // 3. Initialize Payment (Paystack)
-      // Note: Backend endpoint /orders/:id/pay returns authorization_url
+      // 2. Initialize Payment (Paystack)
       const paymentResponse = await initializePayment.mutateAsync(order.id);
+      const authorizationUrl =
+        paymentResponse.authorizationUrl || paymentResponse.authorization_url;
 
-      // 4. Redirect to Paystack
-      if (paymentResponse.authorization_url) {
-        window.location.href = paymentResponse.authorization_url;
+      // 3. Redirect to Paystack
+      if (authorizationUrl) {
+        // Clear local cart only after backend order + payment initialization succeeds.
+        clearCart();
+        window.location.href = authorizationUrl;
       } else {
         // Fallback or error if no URL
         navigate(`/orders/${order.id}`); // Go to order details to retry?
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Checkout error:", err);
-      setError(err.message || "Failed to place order. Please try again.");
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to place order. Please try again.";
+      setError(errorMessage);
       setIsProcessing(false);
+      return;
     }
+
+    setIsProcessing(false);
   };
 
   if (items.length === 0) {
@@ -180,7 +182,6 @@ export function CheckoutPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-
       {/* Progress Steps */}
       <div className="mb-8">
         <div className="flex items-center justify-center">
@@ -675,13 +676,17 @@ export function CheckoutPage() {
           {/* Navigation Buttons */}
           <div className="flex justify-between mt-6">
             {currentStep !== "delivery" ? (
-              <Button variant="outline"  className="rounded-full" onClick={handlePrevStep}>
+              <Button
+                variant="outline"
+                className="rounded-full"
+                onClick={handlePrevStep}
+              >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
               </Button>
             ) : (
               <Link to="/cart">
-                <Button variant="outline"  className="rounded-full">
+                <Button variant="outline" className="rounded-full">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Cart
                 </Button>
@@ -721,7 +726,7 @@ export function CheckoutPage() {
               <p className="text-sm text-muted-foreground">
                 {items.length} item{items.length > 1 ? "s" : ""} from{" "}
                 <Link
-                  to={`/stores/${storeName}`}
+                  to={storeID ? `/stores/${storeID}` : "/stores"}
                   className="text-primary hover:underline"
                 >
                   {storeName}

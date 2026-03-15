@@ -8,7 +8,7 @@ import {
   Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/shared/EmptyState";  
+import { EmptyState } from "@/components/shared/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { useCartStore, useAuthStore } from "@/stores";
 import { formatPrice } from "@/lib/utils";
@@ -16,8 +16,17 @@ import { formatPrice } from "@/lib/utils";
 export function CartPage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
-  const { items, storeName, updateQuantity, removeItem, clearCart } =
-    useCartStore();
+  const {
+    items,
+    storeID,
+    storeName,
+    storeSlug,
+    updateQuantity,
+    removeItem,
+    clearCart,
+  } = useCartStore();
+
+  const storeIdentifier = storeSlug || storeID || "";
 
   const subtotal = items.reduce(
     (total, item) => total + item.product.price * item.quantity,
@@ -72,7 +81,9 @@ export function CartPage() {
                 <span className="text-sm font-semibold text-gray-900">
                   Seller:{" "}
                   <Link
-                    to={`/stores/${storeName}`}
+                    to={
+                      storeIdentifier ? `/stores/${storeIdentifier}` : "/stores"
+                    }
                     className="text-primary hover:underline"
                   >
                     {storeName}
@@ -99,10 +110,7 @@ export function CartPage() {
               >
                 <div className="flex gap-4">
                   {/* Image */}
-                  <Link
-                    to={`/products/${item.product.id}`}
-                    className="shrink-0"
-                  >
+                  <Link to={`/product/${item.product.id}`} className="shrink-0">
                     <img
                       src={
                         item.product.images?.[0] || "/placeholder-product.jpg"
@@ -116,7 +124,7 @@ export function CartPage() {
                   <div className="flex-1 min-w-0 flex flex-col justify-between">
                     <div>
                       <Link
-                        to={`/products/${item.product.id}`}
+                        to={`/product/${item.product.id}`}
                         className="text-sm font-medium text-gray-900 hover:text-primary hover:underline transition-colors line-clamp-2"
                       >
                         {item.product.name}

@@ -3,8 +3,10 @@ import api, { extractData } from '@/lib/api';
 import type { ApiResponse } from '@/types-new';
 
 interface PaymentResponse {
-  authorization_url: string;
-  access_code: string;
+  authorizationUrl?: string;
+  authorization_url?: string;
+  accessCode?: string;
+  access_code?: string;
   reference: string;
 }
 

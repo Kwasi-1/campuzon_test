@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, extractData, extractError } from '@/lib/api';
 import type { Order, OrderStatus, CreateOrderRequest } from '@/types-new';
 import toast from 'react-hot-toast';
-import { useCartStore } from '@/stores';
 
 // Query Keys
 export const orderKeys = {
@@ -55,7 +54,6 @@ export function useStoreOrders(storeId: string) {
 // Create order
 export function useCreateOrder() {
   const queryClient = useQueryClient();
-  const clearCart = useCartStore((state) => state.clearCart);
 
   return useMutation({
     mutationFn: async (data: CreateOrderRequest) => {
@@ -64,7 +62,6 @@ export function useCreateOrder() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: orderKeys.all });
-      clearCart();
       toast.success('Order placed successfully!');
     },
     onError: (error) => {
