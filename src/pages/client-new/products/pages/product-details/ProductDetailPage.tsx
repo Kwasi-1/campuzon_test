@@ -74,12 +74,12 @@ export function ProductDetailPage() {
       navigate("/login");
       return;
     }
-    if (!product?.storeID) return;
+    if (!product?.id) return;
 
     try {
-      const conversation = (await startConversation.mutateAsync(
-        product.storeID,
-      )) as Conversation;
+      const conversation = (await startConversation.mutateAsync({
+        productID: product.id,
+      })) as Conversation;
       navigate(`/messages/${conversation.id}`);
     } catch (error) {
       console.error("Failed to start conversation", error);

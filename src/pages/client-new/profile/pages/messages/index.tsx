@@ -1,8 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { MessageCircle } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+  useConversations,
+  useMarkAsRead,
+  useMessages,
+  useSendMessage,
+  useUploadChatImage,
+} from "@/hooks";
 import { useAuthStore, useCartStore } from "@/stores";
-import type { Conversation } from "@/types-new";
 import { CompleteOrderBanner } from "./components/CompleteOrderBanner";
 import { ConversationHeader } from "./components/ConversationHeader";
 import { ConversationsSidebar } from "./components/ConversationsSidebar";
@@ -15,167 +21,24 @@ import type {
   SelectedImage,
 } from "./components/types";
 
-// Mock conversations for display
-const mockConversations: Conversation[] = [
-  {
-    id: "conv-1",
-    buyerID: "user-1",
-    storeID: "store-1",
-    productID: "prod-1",
-    orderID: "order-1",
-    type: "order",
-    subject: "Order CPZ-ABC123",
-    isActive: true,
-    buyerUnreadCount: 2,
-    sellerUnreadCount: 0,
-    lastMessageAt: "2024-12-29T10:30:00Z",
-    dateCreated: "2024-12-20T09:00:00Z",
-    store: {
-      id: "store-1",
-      name: "TechHub UG",
-      logo: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=100&h=100&fit=crop",
-    },
-    product: {
-      id: "prod-1",
-      name: "iPhone 14 Pro Max",
-      price: 5500,
-      thumbnail:
-        "https://images.unsplash.com/photo-1678685888221-cda773a3dcdb?w=100&h=100&fit=crop",
-    },
-    lastMessage: {
-      id: "msg-1",
-      conversationID: "conv-1",
-      senderID: "store-1",
-      content: "Your order is ready for pickup at Balme Library!",
-      messageType: "text",
-      attachments: null,
-      isRead: false,
-      isSystemMessage: false,
-      isDeleted: false,
-      dateCreated: "2024-12-29T10:30:00Z",
-    },
-  },
-  {
-    id: "conv-2",
-    buyerID: "user-1",
-    storeID: "store-2",
-    productID: "prod-2",
-    orderID: null,
-    type: "inquiry",
-    subject: "Question about AirPods Pro",
-    isActive: true,
-    buyerUnreadCount: 0,
-    sellerUnreadCount: 1,
-    lastMessageAt: "2024-12-28T15:20:00Z",
-    dateCreated: "2024-12-28T14:00:00Z",
-    store: {
-      id: "store-2",
-      name: "Campus Gadgets",
-      logo: null,
-    },
-    product: {
-      id: "prod-2",
-      name: "AirPods Pro (2nd Gen)",
-      price: 850,
-      thumbnail:
-        "https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46?w=100&h=100&fit=crop",
-    },
-    lastMessage: {
-      id: "msg-2",
-      conversationID: "conv-2",
-      senderID: "user-1",
-      content: "Do you have the black silicone case in stock?",
-      messageType: "text",
-      attachments: null,
-      isRead: true,
-      isSystemMessage: false,
-      isDeleted: false,
-      dateCreated: "2024-12-28T15:20:00Z",
-    },
-  },
-  {
-    id: "conv-3",
-    buyerID: "user-1",
-    storeID: "store-3",
-    productID: null,
-    orderID: "order-3",
-    type: "support",
-    subject: "Return Request",
-    isActive: true,
-    buyerUnreadCount: 0,
-    sellerUnreadCount: 0,
-    lastMessageAt: "2024-12-25T09:00:00Z",
-    dateCreated: "2024-12-24T16:00:00Z",
-    store: {
-      id: "store-3",
-      name: "Campus Fashion",
-      logo: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=100&h=100&fit=crop",
-    },
-    lastMessage: {
-      id: "msg-3",
-      conversationID: "conv-3",
-      senderID: "store-3",
-      content:
-        "Your return has been processed. Refund will arrive in 3-5 days.",
-      messageType: "text",
-      attachments: null,
-      isRead: true,
-      isSystemMessage: false,
-      isDeleted: false,
-      dateCreated: "2024-12-25T09:00:00Z",
-    },
-  },
-];
+function extractImageFromAttachments(
+  attachments: string | null | undefined,
+): string | undefined {
+  if (!attachments) return undefined;
 
-const mockMessages: Record<string, MockMessage[]> = {
-  "conv-1": [
-    {
-      id: "msg-system-1",
-      senderID: null,
-      content: "Order placed. Chat started.",
-      timestamp: "2024-12-28T12:00:00Z",
-      isRead: true,
-      isSystemMessage: true,
-    },
-    {
-      id: "msg-0",
-      senderID: "user-1",
-      content: "Hello, is my order ready?",
-      timestamp: "2024-12-28T14:30:00Z",
-      isOwnMessage: true,
-      isRead: true,
-    },
-    {
-      id: "msg-1",
-      senderID: "store-1",
-      content: "Your order is ready for pickup at Balme Library!",
-      timestamp: "2024-12-29T10:30:00Z",
-      isOwnMessage: false,
-      isRead: false,
-    },
-  ],
-  "conv-2": [
-    {
-      id: "msg-2",
-      senderID: "user-1",
-      content: "Do you have the black silicone case in stock?",
-      timestamp: "2024-12-28T15:20:00Z",
-      isOwnMessage: true,
-      isRead: true,
-    },
-  ],
-  "conv-3": [
-    {
-      id: "msg-3",
-      senderID: "store-3",
-      content:
-        "Your return has been processed. Refund will arrive in 3-5 days.",
-      timestamp: "2024-12-25T09:00:00Z",
-      isOwnMessage: false,
-      isRead: true,
-    },
-  ],
-};
+  try {
+    const parsed = JSON.parse(attachments);
+    if (Array.isArray(parsed) && typeof parsed[0] === "string") {
+      return parsed[0];
+    }
+  } catch {
+    if (typeof attachments === "string" && attachments.startsWith("http")) {
+      return attachments;
+    }
+  }
+
+  return undefined;
+}
 
 export function MessagesPage() {
   const navigate = useNavigate();
@@ -189,17 +52,25 @@ export function MessagesPage() {
   const [selectedImage, setSelectedImage] = useState<SelectedImage | null>(
     null,
   );
-  const [isSending, setIsSending] = useState(false);
-  const [conversationMessages, setConversationMessages] =
-    useState<Record<string, MockMessage[]>>(mockMessages);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedType, setSelectedType] = useState<ConversationFilter>("all");
   const selectedConversationId = routeConversationId ?? null;
 
-  // In a real app, this would come from an API
-  const isLoading = false;
-  const conversations = mockConversations;
+  const {
+    data: conversations = [],
+    isLoading: isLoadingConversations,
+    isFetching: isFetchingConversations,
+  } = useConversations(isAuthenticated);
+  const { data: serverMessages = [], isFetching: isFetchingMessages } =
+    useMessages(selectedConversationId || "", isAuthenticated);
+  const sendMessageMutation = useSendMessage();
+  const uploadChatImageMutation = useUploadChatImage();
+  const markAsReadMutation = useMarkAsRead();
+
+  const isSending =
+    sendMessageMutation.isPending || uploadChatImageMutation.isPending;
+  const isLoading = isLoadingConversations || isFetchingConversations;
 
   // Filter conversations
   const filteredConversations = conversations.filter((conv) => {
@@ -215,7 +86,7 @@ export function MessagesPage() {
   });
 
   const totalUnread = conversations.reduce(
-    (sum, conv) => sum + conv.buyerUnreadCount,
+    (sum, conv) => sum + (conv.unreadCount ?? conv.buyerUnreadCount),
     0,
   );
 
@@ -225,9 +96,18 @@ export function MessagesPage() {
   );
 
   const activeMessages = useMemo(() => {
-    if (!selectedConversationId) return [];
-    return conversationMessages[selectedConversationId] || [];
-  }, [conversationMessages, selectedConversationId]);
+    return serverMessages.map(
+      (message): MockMessage => ({
+        id: message.id,
+        senderID: message.senderID,
+        content: message.content || "",
+        timestamp: message.dateCreated,
+        isRead: Boolean(message.isRead),
+        isSystemMessage: Boolean(message.isSystemMessage),
+        imageUrl: extractImageFromAttachments(message.attachments),
+      }),
+    );
+  }, [serverMessages]);
 
   const productInCart = useMemo(() => {
     if (!selectedConversation?.product) return null;
@@ -257,6 +137,16 @@ export function MessagesPage() {
   }, [activeMessages, selectedConversationId]);
 
   useEffect(() => {
+    if (!selectedConversationId || !selectedConversation) return;
+
+    const unreadCount =
+      selectedConversation.unreadCount ?? selectedConversation.buyerUnreadCount;
+    if (unreadCount > 0) {
+      markAsReadMutation.mutate(selectedConversationId);
+    }
+  }, [markAsReadMutation, selectedConversation, selectedConversationId]);
+
+  useEffect(() => {
     return () => {
       if (selectedImage?.previewUrl) {
         URL.revokeObjectURL(selectedImage.previewUrl);
@@ -272,7 +162,7 @@ export function MessagesPage() {
     navigate(`/messages/${conversationId}`);
   };
 
-  const handlePickImage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePickImage = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -285,7 +175,7 @@ export function MessagesPage() {
     event.target.value = "";
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (
       (!newMessage.trim() && !selectedImage) ||
       !selectedConversationId ||
@@ -293,29 +183,31 @@ export function MessagesPage() {
     )
       return;
 
-    setIsSending(true);
+    try {
+      let uploadedImageUrl: string | undefined;
+      if (selectedImage) {
+        uploadedImageUrl = await uploadChatImageMutation.mutateAsync({
+          conversationId: selectedConversationId,
+          file: selectedImage.file,
+        });
+      }
 
-    const nextMessage: MockMessage = {
-      id: `temp-${Date.now()}`,
-      senderID: user?.id || "user-1",
-      content: newMessage,
-      timestamp: new Date().toISOString(),
-      isOwnMessage: true,
-      isRead: false,
-      imageUrl: selectedImage?.previewUrl,
-    };
+      await sendMessageMutation.mutateAsync({
+        conversationId: selectedConversationId,
+        content: newMessage.trim(),
+        type: uploadedImageUrl && !newMessage.trim() ? "image" : "text",
+        attachments: uploadedImageUrl ? [uploadedImageUrl] : [],
+      });
 
-    setConversationMessages((prev) => {
-      const previousMessages = prev[selectedConversationId] || [];
-      return {
-        ...prev,
-        [selectedConversationId]: [...previousMessages, nextMessage],
-      };
-    });
+      setNewMessage("");
 
-    setNewMessage("");
-    setSelectedImage(null);
-    setIsSending(false);
+      if (selectedImage?.previewUrl) {
+        URL.revokeObjectURL(selectedImage.previewUrl);
+      }
+      setSelectedImage(null);
+    } catch {
+      // Error toasts are handled in mutation hooks.
+    }
   };
 
   return (
@@ -352,6 +244,12 @@ export function MessagesPage() {
               currentUserId={user?.id}
               messagesEndRef={messagesEndRef}
             />
+
+            {isFetchingMessages && (
+              <div className="px-4 pb-2 text-xs text-muted-foreground">
+                Refreshing messages...
+              </div>
+            )}
 
             {showCompleteOrderButton && productInCart && (
               <CompleteOrderBanner quantity={productInCart.quantity} />

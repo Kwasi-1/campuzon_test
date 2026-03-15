@@ -62,11 +62,11 @@ export function ProductChat({ product, onLoginRequired }: ProductChatProps) {
     setIsMinimized(false);
 
     // Start or get existing conversation
-    if (!conversation && product.storeID) {
+    if (!conversation && product.id) {
       try {
-        const conv = (await startConversation.mutateAsync(
-          product.storeID,
-        )) as Conversation;
+        const conv = (await startConversation.mutateAsync({
+          productID: product.id,
+        })) as Conversation;
         setConversation(conv);
       } catch (error) {
         console.error("Failed to start conversation:", error);
