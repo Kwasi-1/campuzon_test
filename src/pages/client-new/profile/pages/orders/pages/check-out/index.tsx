@@ -252,7 +252,6 @@ export function CheckoutPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Truck className="h-5 w-5" />
                       Delivery Method
                     </CardTitle>
                   </CardHeader>
@@ -263,7 +262,7 @@ export function CheckoutPage() {
                         onClick={() => setDeliveryMethod("pickup")}
                         className={`p-4 rounded-xl border-2 text-left transition-all ${
                           deliveryMethod === "pickup"
-                            ? "border-primary bg-primary/5"
+                            ? "border-primary"
                             : "border-border hover:border-primary/50"
                         }`}
                       >
@@ -293,7 +292,7 @@ export function CheckoutPage() {
                         onClick={() => setDeliveryMethod("delivery")}
                         className={`p-4 rounded-xl border-2 text-left transition-all ${
                           deliveryMethod === "delivery"
-                            ? "border-primary bg-primary/5"
+                            ? "border-primary"
                             : "border-border hover:border-primary/50"
                         }`}
                       >
@@ -676,13 +675,13 @@ export function CheckoutPage() {
           {/* Navigation Buttons */}
           <div className="flex justify-between mt-6">
             {currentStep !== "delivery" ? (
-              <Button variant="outline" onClick={handlePrevStep}>
+              <Button variant="outline"  className="rounded-full" onClick={handlePrevStep}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
               </Button>
             ) : (
               <Link to="/cart">
-                <Button variant="outline">
+                <Button variant="outline"  className="rounded-full">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Cart
                 </Button>
@@ -690,7 +689,7 @@ export function CheckoutPage() {
             )}
 
             {currentStep !== "review" ? (
-              <Button onClick={handleNextStep}>
+              <Button onClick={handleNextStep} className="rounded-full">
                 Continue
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
@@ -699,6 +698,7 @@ export function CheckoutPage() {
                 onClick={handlePlaceOrder}
                 disabled={isProcessing}
                 size="lg"
+                className="rounded-full"
               >
                 {isProcessing ? (
                   <>

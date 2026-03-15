@@ -64,7 +64,6 @@ import { PaymentMethodsPage } from "./pages/client-new/profile/pages/payment-met
 import { CheckoutPage } from "./pages/client-new/profile/pages/orders/pages/check-out";
 import { AddressesPage } from "./pages/client-new/profile/pages/addresses/AddressesPage";
 import { MessagesPage } from "./pages/client-new/profile/pages/messages";
-import { ConversationPage } from "./pages/client-new/profile/pages/messages/pages/ConversationPage";
 import { SellLayout } from "./components/layout/SellLayout";
 import {
   BecomeSellerPage,
@@ -81,6 +80,7 @@ import { OrderDetailPage } from "./pages/client-new/profile/pages/orders/pages/o
 import { Layout } from "./components/layout/Layout";
 import { LayoutWithFooter } from "./components/layout/LayoutWithFooter";
 import { StoreLayout } from "./components/layout/StoreLayout";
+import { CartPage } from "./pages/client-new/profile/pages/cart/CartPage";
 
 const queryClient = new QueryClient();
 
@@ -240,7 +240,7 @@ const App = () => (
                           path="/product/:id"
                           element={<ProductDetailPage />}
                         />
-                        <Route path="/cart" element={<Cart />} />
+                        <Route path="/cart" element={<CartPage />} />
                         <Route path="/track" element={<OrderTracking />} />
                         <Route
                           path="/track/:orderId"
@@ -264,7 +264,6 @@ const App = () => (
                         <Route path="/about" element={<AboutUs />} />
                         <Route path="*" element={<NotFound />} />
 
-
                         {/* Profile pages wrapped in new layout */}
                         <Route element={<ProfileLayout />}>
                           <Route path="/profile" element={<ProfilePage />} />
@@ -285,7 +284,7 @@ const App = () => (
                           <Route path="/messages" element={<MessagesPage />} />
                           <Route
                             path="/messages/:id"
-                            element={<ConversationPage />}
+                            element={<MessagesPage />}
                           />
                           <Route
                             path="/payments"
