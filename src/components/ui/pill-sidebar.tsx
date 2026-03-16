@@ -1,0 +1,54 @@
+import type { ReactNode } from "react";
+
+export interface PillSidebarOption {
+  key: string;
+  label: ReactNode;
+  count?: number;
+}
+
+interface PillSidebarProps {
+  options: PillSidebarOption[];
+  activeKey: string;
+  onChange: (key: string) => void;
+  className?: string;
+}
+
+export function PillSidebar({
+  options,
+  activeKey,
+  onChange,
+  className = "",
+}: PillSidebarProps) {
+  return (
+    <div
+      className={`flex xl:flex-col gap-3 overflow-x-auto xl:overflow-visible pb-2 xl:pb-0 scrollbar-hide ${className}`}
+    >
+      {options.map((opt) => {
+        const isActive = activeKey === opt.key;
+        return (
+          <button
+            key={opt.key}
+            type="button"
+            onClick={() => onChange(opt.key)}
+            className={`flex items-center justify-between pl-5 pr-[2px] py-[3px] xl:py-1 xl:pr-1 rounded-full transition-all shrink-0 xl:shrink-auto whitespace-nowrap xl:whitespace-normal border shadow-sm ${
+              isActive
+                ? "bg-[#1C1C1E] text-white border-[#1C1C1E]"
+                : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+            }`}
+          >
+            <span className="font-medium text-[15px]">{opt.label}</span>
+            {typeof opt.count === "number" && (
+              <span
+                className={`h-10 w-10 xl:w-12 xl:h-12 ml-3 flex items-center justify-center rounded-full text-xs font-bold ${
+                  isActive ? "bg-white text-black" : "bg-gray-100 text-gray-600"
+                }`}
+              >
+                {opt.count}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}

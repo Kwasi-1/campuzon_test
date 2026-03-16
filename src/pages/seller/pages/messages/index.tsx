@@ -16,10 +16,8 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { CustomInputTextField } from "@/components/shared/text-field";
 import { useAuthStore } from "@/stores";
 import { formatRelativeTime } from "@/lib/utils";
-import {
-  SellerPageTemplate,
-  SellerSidebarPanel,
-} from "@/pages/seller/components/SellerPageTemplate";
+import { SellerPageTemplate } from "@/pages/seller/components/SellerPageTemplate";
+import { PillSidebar } from "@/components/ui/pill-sidebar";
 
 // Mock conversations data for seller
 const mockSellerConversations = [
@@ -203,69 +201,46 @@ export function SellerMessagesPage() {
   }
 
   const sidebar = (
-    <div className="space-y-4 xl:sticky xl:top-24">
-      <SellerSidebarPanel title="Message Filters">
-        <div className="space-y-2">
-          {FILTER_OPTIONS.map((option) => {
-            const isActive = filter === option.value;
-            const count =
-              option.value === "all"
-                ? totalMessages
-                : option.value === "unread"
-                  ? unreadCount
-                  : option.value === "starred"
-                    ? starredCount
-                    : option.value === "with-order"
-                      ? withOrderCount
-                      : totalMessages - withOrderCount;
-
-            return (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => setFilter(option.value)}
-                className={`w-full rounded-2xl border px-3 py-2.5 text-left flex items-center justify-between transition-colors ${
-                  isActive
-                    ? "bg-[#1C1C1E] text-white border-[#1C1C1E]"
-                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                <span className="text-sm font-medium">{option.label}</span>
-                <span className="text-xs rounded-full px-2 py-0.5 bg-black/5 text-current">
-                  {count}
-                </span>
-              </button>
-            );
-          })}
+    <div className="space-y-6 xl:sticky xl:top-24">
+      <PillSidebar
+        options={FILTER_OPTIONS.map((option) => ({
+          key: option.value,
+          label: option.label,
+          count:
+            option.value === "all"
+              ? totalMessages
+              : option.value === "unread"
+                ? unreadCount
+                : option.value === "starred"
+                  ? starredCount
+                  : option.value === "with-order"
+                    ? withOrderCount
+                    : totalMessages - withOrderCount,
+        }))}
+        activeKey={filter}
+        onChange={setFilter}
+        className="mb-4"
+      />
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-2xl bg-gray-50 p-3">
+          <p className="text-xs text-gray-500">Total</p>
+          <p className="text-lg font-semibold text-gray-900">{totalMessages}</p>
         </div>
-      </SellerSidebarPanel>
-
-      <SellerSidebarPanel title="Overview">
-        <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-2xl bg-gray-50 p-3">
-            <p className="text-xs text-gray-500">Total</p>
-            <p className="text-lg font-semibold text-gray-900">
-              {totalMessages}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-gray-50 p-3">
-            <p className="text-xs text-gray-500">Unread</p>
-            <p className="text-lg font-semibold text-gray-900">{unreadCount}</p>
-          </div>
-          <div className="rounded-2xl bg-gray-50 p-3">
-            <p className="text-xs text-gray-500">Starred</p>
-            <p className="text-lg font-semibold text-gray-900">
-              {starredCount}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-gray-50 p-3">
-            <p className="text-xs text-gray-500">Orders</p>
-            <p className="text-lg font-semibold text-gray-900">
-              {withOrderCount}
-            </p>
-          </div>
+        <div className="rounded-2xl bg-gray-50 p-3">
+          <p className="text-xs text-gray-500">Unread</p>
+          <p className="text-lg font-semibold text-gray-900">{unreadCount}</p>
         </div>
-      </SellerSidebarPanel>
+        <div className="rounded-2xl bg-gray-50 p-3">
+          <p className="text-xs text-gray-500">Starred</p>
+          <p className="text-lg font-semibold text-gray-900">{starredCount}</p>
+        </div>
+        <div className="rounded-2xl bg-gray-50 p-3">
+          <p className="text-xs text-gray-500">Orders</p>
+          <p className="text-lg font-semibold text-gray-900">
+            {withOrderCount}
+          </p>
+        </div>
+      </div>
     </div>
   );
 

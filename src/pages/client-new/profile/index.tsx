@@ -177,8 +177,8 @@ export function ProfilePage() {
       )}
 
       {/* Profile Header & Picture update */}
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-        <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6 border-b border-gray-100 bg-gray-50/50">
+      <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
+        <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6 border-b border-gray-100 bg-gray-50/50 hidden">
           <div className="relative shrink-0">
             {user.profileImage ? (
               <img

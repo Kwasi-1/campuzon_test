@@ -32,10 +32,8 @@ import {
   useCurrency,
 } from "@/hooks";
 import { Skeleton } from "@/components/shared/Skeleton";
-import {
-  SellerPageTemplate,
-  SellerSidebarPanel,
-} from "../../components/SellerPageTemplate";
+import { SellerPageTemplate } from "../../components/SellerPageTemplate";
+import { PillSidebar } from "@/components/ui/pill-sidebar";
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest First" },
@@ -198,65 +196,37 @@ export function SellerProductsPage() {
   };
 
   const sidebar = (
-    <>
-      <SellerSidebarPanel title="Filter by Status">
-        <div className="space-y-1">
-          {[
-            { value: "all", label: "All Products", count: statusCounts.all },
-            { value: "active", label: "Active", count: statusCounts.active },
-            { value: "draft", label: "Draft", count: statusCounts.draft },
-            {
-              value: "sold_out",
-              label: "Sold Out",
-              count: statusCounts.sold_out,
-            },
-            { value: "paused", label: "Paused", count: statusCounts.paused },
-          ].map(({ value, label, count }) => (
-            <button
-              key={value}
-              onClick={() => setStatusFilter(value)}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-full text-sm transition-colors ${
-                statusFilter === value
-                  ? "bg-[#1C1C1E] text-white font-medium"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              <span>{label}</span>
-              <span
-                className={`text-xs font-medium rounded-full px-1.5 py-0.5 ${
-                  statusFilter === value
-                    ? "bg-white/20 text-white"
-                    : "bg-gray-100 text-gray-500"
-                }`}
-              >
-                {count}
-              </span>
-            </button>
-          ))}
-        </div>
-      </SellerSidebarPanel>
+    <div className="space-y-6 xl:sticky xl:top-24">
+      <PillSidebar
+        options={[
+          { key: "all", label: "All Products", count: statusCounts.all },
+          { key: "active", label: "Active", count: statusCounts.active },
+          { key: "draft", label: "Draft", count: statusCounts.draft },
+          {
+            key: "sold_out",
+            label: "Sold Out",
+            count: statusCounts.sold_out,
+          },
+          { key: "paused", label: "Paused", count: statusCounts.paused },
+        ]}
+        activeKey={statusFilter}
+        onChange={setStatusFilter}
+      />
 
-      <div className="mt-4">
-        <SellerSidebarPanel title="Overview">
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: "Total", value: statusCounts.all },
-              { label: "Active", value: statusCounts.active },
-              { label: "Draft", value: statusCounts.draft },
-              { label: "Low Stock", value: statusCounts.lowStock },
-            ].map(({ label, value }) => (
-              <div
-                key={label}
-                className="rounded-2xl bg-gray-50 p-3 text-center"
-              >
-                <p className="text-lg font-bold text-gray-900">{value}</p>
-                <p className="text-xs text-gray-500">{label}</p>
-              </div>
-            ))}
+      <div className="grid grid-cols-2 gap-3">
+        {[
+          { label: "Total", value: statusCounts.all },
+          { label: "Active", value: statusCounts.active },
+          { label: "Draft", value: statusCounts.draft },
+          { label: "Low Stock", value: statusCounts.lowStock },
+        ].map(({ label, value }) => (
+          <div key={label} className="rounded-2xl bg-gray-50 p-3 text-center">
+            <p className="text-lg font-bold text-gray-900">{value}</p>
+            <p className="text-xs text-gray-500">{label}</p>
           </div>
-        </SellerSidebarPanel>
+        ))}
       </div>
-    </>
+    </div>
   );
 
   return (

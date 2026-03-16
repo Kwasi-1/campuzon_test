@@ -31,10 +31,8 @@ import {
   useUpdateOrderStatus,
 } from "@/hooks";
 import { Skeleton } from "@/components/shared/Skeleton";
-import {
-  SellerPageTemplate,
-  SellerSidebarPanel,
-} from "@/pages/seller/components/SellerPageTemplate";
+import { SellerPageTemplate } from "@/pages/seller/components/SellerPageTemplate";
+import { PillSidebar } from "@/components/ui/pill-sidebar";
 
 // Mock orders data for seller
 const mockSellerOrders: Order[] = [];
@@ -234,63 +232,39 @@ export function SellerOrdersPage() {
   }
 
   const sidebar = (
-    <div className="space-y-4 xl:sticky xl:top-24">
-      <SellerSidebarPanel title="Order Filters">
-        <div className="space-y-2">
-          {STATUS_OPTIONS.map((option) => {
-            const isActive = statusFilter === option.value;
-            const count =
-              statusCounts[option.value as keyof typeof statusCounts] ?? 0;
-
-            return (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => setStatusFilter(option.value)}
-                className={`w-full rounded-2xl border px-3 py-2.5 text-left flex items-center justify-between transition-colors ${
-                  isActive
-                    ? "bg-[#1C1C1E] text-white border-[#1C1C1E]"
-                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                <span className="text-sm font-medium">{option.label}</span>
-                <span className="text-xs rounded-full px-2 py-0.5 bg-black/5 text-current">
-                  {count}
-                </span>
-              </button>
-            );
-          })}
+    <div className="space-y-6 xl:sticky xl:top-24">
+      <PillSidebar
+        options={STATUS_OPTIONS.map((option) => ({
+          key: option.value,
+          label: option.label,
+          count: statusCounts[option.value as keyof typeof statusCounts] ?? 0,
+        }))}
+        activeKey={statusFilter}
+        onChange={setStatusFilter}
+        className="mb-4"
+      />
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-2xl bg-gray-50 p-3">
+          <p className="text-xs text-gray-500">Pending</p>
+          <p className="text-lg font-semibold text-gray-900">{stats.pending}</p>
         </div>
-      </SellerSidebarPanel>
-
-      <SellerSidebarPanel title="Overview">
-        <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-2xl bg-gray-50 p-3">
-            <p className="text-xs text-gray-500">Pending</p>
-            <p className="text-lg font-semibold text-gray-900">
-              {stats.pending}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-gray-50 p-3">
-            <p className="text-xs text-gray-500">Shipped</p>
-            <p className="text-lg font-semibold text-gray-900">
-              {stats.shipped}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-gray-50 p-3">
-            <p className="text-xs text-gray-500">Completed</p>
-            <p className="text-lg font-semibold text-gray-900">
-              {stats.completed}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-gray-50 p-3">
-            <p className="text-xs text-gray-500">Revenue</p>
-            <p className="text-sm font-semibold text-gray-900 truncate">
-              {formatGHS(stats.totalRevenue)}
-            </p>
-          </div>
+        <div className="rounded-2xl bg-gray-50 p-3">
+          <p className="text-xs text-gray-500">Shipped</p>
+          <p className="text-lg font-semibold text-gray-900">{stats.shipped}</p>
         </div>
-      </SellerSidebarPanel>
+        <div className="rounded-2xl bg-gray-50 p-3">
+          <p className="text-xs text-gray-500">Completed</p>
+          <p className="text-lg font-semibold text-gray-900">
+            {stats.completed}
+          </p>
+        </div>
+        <div className="rounded-2xl bg-gray-50 p-3">
+          <p className="text-xs text-gray-500">Revenue</p>
+          <p className="text-sm font-semibold text-gray-900 truncate">
+            {formatGHS(stats.totalRevenue)}
+          </p>
+        </div>
+      </div>
     </div>
   );
 

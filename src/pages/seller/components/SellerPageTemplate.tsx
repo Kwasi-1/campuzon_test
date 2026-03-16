@@ -38,22 +38,3 @@ export function SellerPageTemplate({
     </div>
   );
 }
-
-interface SellerSidebarPanelProps {
-  title: string;
-  children: ReactNode;
-}
-
-export function SellerSidebarPanel({
-  title,
-  children,
-}: SellerSidebarPanelProps) {
-  return (
-    <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-4">
-      <p className="text-xs uppercase tracking-wide text-gray-500 mb-3">
-        {title}
-      </p>
-      {children}
-    </div>
-  );
-}
