@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Package,
@@ -84,15 +84,30 @@ const getStatusConfig = (status: ProductStatus) => {
 
 export function SellerProductsPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, isAuthenticated } = useAuthStore();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+
+  const activeModal = searchParams.get("modal");
+  const isAddProductOpen = activeModal === "add-product";
+
+  const openAddProductModal = () => {
+    const next = new URLSearchParams(searchParams);
+    next.set("modal", "add-product");
+    setSearchParams(next);
+  };
+
+  const closeAddProductModal = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("modal");
+    setSearchParams(next);
+  };
 
   const { data: store } = useMyStore();
   const { data: mockProducts, isLoading } = useStoreProducts(store?.id || "");
@@ -249,7 +264,7 @@ export function SellerProductsPage() {
           />
           <Button
             className="gap-2 rounded-full bg-[#1C1C1E] text-white hover:bg-black"
-            onClick={() => setIsAddProductOpen(true)}
+            onClick={openAddProductModal}
           >
             <Plus className="h-4 w-4" />
             Add Product
@@ -306,7 +321,7 @@ export function SellerProductsPage() {
               action={
                 <Button
                   className="gap-2 rounded-full bg-[#1C1C1E] text-white hover:bg-black"
-                  onClick={() => setIsAddProductOpen(true)}
+                  onClick={openAddProductModal}
                 >
                   <Plus className="h-4 w-4" />
                   Add Product
@@ -469,7 +484,7 @@ export function SellerProductsPage() {
 
       <AddProductModal
         isOpen={isAddProductOpen}
-        onClose={() => setIsAddProductOpen(false)}
+        onClose={closeAddProductModal}
       />
 
       {/* Delete Confirmation Modal */}
