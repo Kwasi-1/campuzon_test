@@ -64,7 +64,7 @@ export function SellLayout() {
     <div className="min-h-screen flex flex-col bg-white text-foreground">
       {/* Seller Header */}
       <header className="sticky top-0 z-40 w-full bg-white border-b border-gray-100 shadow-sm">
-        <div className="container mx-auto px-4 py-3">
+        <div className="container mx-auto px-4 py-2">
           <div className="flex h-16 items-center justify-between gap-4">
             {/* Left: Back link + Logo + Store pill */}
             <div className="flex items-center gap-3">
@@ -85,11 +85,9 @@ export function SellLayout() {
               </Link>
 
               <div className="h-5 w-px bg-gray-200" />
-
-              <Link to="/seller/dashboard" className="shrink-0">
-                <img src={logo} alt="Campuzon" className="h-7 w-auto" />
+              <Link to="/seller/dashboard" className="shrink-0 hidden md:block">
+                <img src={logo} alt="Campuzon" className="h-12 w-auto" />
               </Link>
-
               {store?.name && (
                 <div className="hidden md:flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
                   <Store className="h-3.5 w-3.5 shrink-0" />
@@ -208,7 +206,7 @@ export function SellLayout() {
                   key={to}
                   to={to}
                   className={({ isActive }) =>
-                    `flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2.5 text-sm font-medium transition-colors ${
+                    `flex items-center gap-2.5 whitespace-nowrap rounded-full border px-5 py-3.5 text-sm font-medium transition-colors ${
                       isActive
                         ? "border-transparent text-gray-900 bg-muted/70"
                         : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-800"
@@ -235,7 +233,9 @@ export function SellLayout() {
             <div className="flex h-16 items-center justify-between border-b border-gray-100 px-4">
               <div className="flex items-center gap-2">
                 <img src={logo} alt="Campuzon" className="h-6 w-auto" />
-                <span className="text-sm font-semibold text-gray-900">Seller Menu</span>
+                <span className="text-sm font-semibold text-gray-900">
+                  Seller Menu
+                </span>
               </div>
               <button
                 onClick={() => setMobileMenuOpen(false)}
@@ -246,7 +246,10 @@ export function SellLayout() {
               </button>
             </div>
 
-            <nav className="flex flex-col gap-1 px-3 py-3" aria-label="Mobile seller navigation">
+            <nav
+              className="flex flex-col gap-1 px-3 py-3"
+              aria-label="Mobile seller navigation"
+            >
               {NAV_LINKS.map(({ to, label, icon: Icon }) => (
                 <NavLink
                   key={to}
