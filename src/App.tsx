@@ -57,7 +57,6 @@ import { ProfilePage } from "./pages/client-new/profile";
 import { NextUIProvider } from "@nextui-org/react";
 import { RegisterPage } from "./pages/auth-new/RegisterPage";
 import { SettingsPage } from "./pages/client-new/profile/pages/settings/SettingsPage";
-import { TwoFactorSettingsPage } from "./pages/client-new/profile/pages/security/TwoFactorSettingsPage";
 import { NotificationsPage } from "./pages/client-new/profile/pages/notifications";
 import { WishlistPage } from "./pages/client-new/profile/pages/wishlist/WishlistPage";
 import { PaymentMethodsPage } from "./pages/client-new/profile/pages/payment-methods/PaymentMethodsPage";
@@ -270,7 +269,7 @@ const App = () => (
                           <Route path="/settings" element={<SettingsPage />} />
                           <Route
                             path="/settings/security"
-                            element={<TwoFactorSettingsPage />}
+                            element={<Navigate to="/settings" replace />}
                           />
                           <Route
                             path="/notifications"

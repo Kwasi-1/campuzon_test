@@ -1,6 +1,22 @@
-import { Outlet, Link, useLocation, Navigate, useNavigate } from "react-router-dom";
+import {
+  Outlet,
+  Link,
+  useLocation,
+  Navigate,
+  useNavigate,
+} from "react-router-dom";
 import { useAuthStore } from "@/stores";
-import { User, Heart, ShoppingBag, Box, Shield, LogOut, MessageCircle, CreditCard, Bell, Settings } from "lucide-react";
+import {
+  User,
+  Heart,
+  ShoppingBag,
+  Box,
+  LogOut,
+  MessageCircle,
+  CreditCard,
+  Bell,
+  Settings,
+} from "lucide-react";
 
 export function ProfileLayout() {
   const { user, logout } = useAuthStore();
@@ -8,18 +24,15 @@ export function ProfileLayout() {
   const navigate = useNavigate();
 
   const navItems = [
-  { label: "Profile", icon: User, path: "/profile" },
-  { label: "Wishlist", icon: Heart, path: "/wishlist" },
-  { label: "My Order", icon: ShoppingBag, path: "/orders" },
-  { label: "Saved Address", icon: Box, path: "/addresses" },
-  { label: "Change Password", icon: Shield, path: "/settings/security" },
-
-  { label: "Messages", icon: MessageCircle, path: "/messages" },
-  { label: "Payment Methods", icon: CreditCard, path: "/payments" },
-  { label: "Notifications", icon: Bell, path: "/notifications" },
-  { label: "Security", icon: Shield, path: "/settings/security" },
-  { label: "Settings", icon: Settings, path: "/settings" },
-];
+    { label: "Profile", icon: User, path: "/profile" },
+    { label: "Wishlist", icon: Heart, path: "/wishlist" },
+    { label: "My Order", icon: ShoppingBag, path: "/orders" },
+    { label: "Saved Address", icon: Box, path: "/addresses" },
+    { label: "Messages", icon: MessageCircle, path: "/messages" },
+    { label: "Payment Methods", icon: CreditCard, path: "/payments" },
+    { label: "Notifications", icon: Bell, path: "/notifications" },
+    { label: "Settings", icon: Settings, path: "/settings" },
+  ];
 
   const handleLogout = () => {
     logout();
@@ -59,7 +72,10 @@ export function ProfileLayout() {
                       : "bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                   }`}
                 >
-                  <item.icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-gray-500'}`} strokeWidth={isActive ? 2.5 : 2} />
+                  <item.icon
+                    className={`h-4 w-4 ${isActive ? "text-white" : "text-gray-500"}`}
+                    strokeWidth={isActive ? 2.5 : 2}
+                  />
                   {item.label}
                 </Link>
               );
@@ -68,7 +84,10 @@ export function ProfileLayout() {
               onClick={handleLogout}
               className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all bg-white text-gray-700 border border-gray-200 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
             >
-              <LogOut className="h-4 w-4 text-gray-500 hover:text-red-600" strokeWidth={2} />
+              <LogOut
+                className="h-4 w-4 text-gray-500 hover:text-red-600"
+                strokeWidth={2}
+              />
               Logout
             </button>
           </div>
