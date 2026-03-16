@@ -15,20 +15,26 @@ import {
   Calendar,
   DollarSign,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CustomInputTextField, CustomSelectField } from "@/components/shared/text-field";
+import { CustomInputTextField } from "@/components/shared/text-field";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Modal } from "@/components/shared/Modal";
 import { useAuthStore } from "@/stores";
-import { formatPrice, formatRelativeTime } from "@/lib/utils";
+import { formatRelativeTime } from "@/lib/utils";
 import type { Order, OrderStatus } from "@/types-new";
-import { useMyStore, useStoreOrders, useUpdateOrderStatus } from "@/hooks";
+import {
+  useCurrency,
+  useMyStore,
+  useStoreOrders,
+  useUpdateOrderStatus,
+} from "@/hooks";
 import { Skeleton } from "@/components/shared/Skeleton";
+import {
+  SellerPageTemplate,
+  SellerSidebarPanel,
+} from "@/pages/seller/components/SellerPageTemplate";
 
 // Mock orders data for seller
 const mockSellerOrders: Order[] = [];
@@ -109,6 +115,7 @@ const getStatusConfig = (status: OrderStatus) => {
 export function SellerOrdersPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
+  const { formatGHS } = useCurrency();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -206,79 +213,102 @@ export function SellerOrdersPage() {
     return { pending, shipped, completed, totalRevenue };
   }, [storeOrders]);
 
+  const statusCounts = useMemo(() => {
+    const orders = storeOrders || [];
+    return {
+      all: orders.length,
+      pending: orders.filter((o) => o.status === "pending").length,
+      paid: orders.filter((o) => o.status === "paid").length,
+      processing: orders.filter((o) => o.status === "processing").length,
+      shipped: orders.filter((o) => o.status === "shipped").length,
+      delivered: orders.filter((o) => o.status === "delivered").length,
+      completed: orders.filter((o) => o.status === "completed").length,
+      cancelled: orders.filter((o) => o.status === "cancelled").length,
+    };
+  }, [storeOrders]);
+
   // Redirect if not authenticated or not a store owner
   if (!isAuthenticated || !user?.isOwner) {
     navigate("/login");
     return null;
   }
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Orders</h1>
-          <p className="text-muted-foreground">
-            Manage customer orders ({(storeOrders || []).length} total)
-          </p>
-        </div>
-      </div>
+  const sidebar = (
+    <div className="space-y-4 xl:sticky xl:top-24">
+      <SellerSidebarPanel title="Order Filters">
+        <div className="space-y-2">
+          {STATUS_OPTIONS.map((option) => {
+            const isActive = statusFilter === option.value;
+            const count =
+              statusCounts[option.value as keyof typeof statusCounts] ?? 0;
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-yellow-600">
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setStatusFilter(option.value)}
+                className={`w-full rounded-2xl border px-3 py-2.5 text-left flex items-center justify-between transition-colors ${
+                  isActive
+                    ? "bg-[#1C1C1E] text-white border-[#1C1C1E]"
+                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <span className="text-sm font-medium">{option.label}</span>
+                <span className="text-xs rounded-full px-2 py-0.5 bg-black/5 text-current">
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </SellerSidebarPanel>
+
+      <SellerSidebarPanel title="Overview">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-2xl bg-gray-50 p-3">
+            <p className="text-xs text-gray-500">Pending</p>
+            <p className="text-lg font-semibold text-gray-900">
               {stats.pending}
             </p>
-            <p className="text-sm text-muted-foreground">Pending</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-blue-600">{stats.shipped}</p>
-            <p className="text-sm text-muted-foreground">Shipped</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-green-600">
+          </div>
+          <div className="rounded-2xl bg-gray-50 p-3">
+            <p className="text-xs text-gray-500">Shipped</p>
+            <p className="text-lg font-semibold text-gray-900">
+              {stats.shipped}
+            </p>
+          </div>
+          <div className="rounded-2xl bg-gray-50 p-3">
+            <p className="text-xs text-gray-500">Completed</p>
+            <p className="text-lg font-semibold text-gray-900">
               {stats.completed}
             </p>
-            <p className="text-sm text-muted-foreground">Completed</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-primary">
-              {formatPrice(stats.totalRevenue)}
+          </div>
+          <div className="rounded-2xl bg-gray-50 p-3">
+            <p className="text-xs text-gray-500">Revenue</p>
+            <p className="text-sm font-semibold text-gray-900 truncate">
+              {formatGHS(stats.totalRevenue)}
             </p>
-            <p className="text-sm text-muted-foreground">Revenue</p>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </div>
+      </SellerSidebarPanel>
+    </div>
+  );
 
-      {/* Filters */}
-      <Card className="mb-6">
+  return (
+    <SellerPageTemplate
+      title="Orders"
+      description={`Manage customer orders (${(storeOrders || []).length} total)`}
+      sidebar={sidebar}
+    >
+      <Card className="mb-6 rounded-3xl border-gray-200/80">
         <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <CustomInputTextField
-                placeholder="Search orders..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
-            {/* Status Filter */}
-            <CustomSelectField
-              value={statusFilter}
-              inputProps={{ onChange: (e) => setStatusFilter(e.target.value) }}
-              options={STATUS_OPTIONS}
-              className="w-full md:w-48"
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <CustomInputTextField
+              placeholder="Search orders..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
             />
           </div>
         </CardContent>
@@ -318,7 +348,7 @@ export function SellerOrdersPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <Card className="hover:shadow-md transition-shadow">
+                <Card className="rounded-3xl border-gray-200/80 hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
                     <div className="flex flex-col md:flex-row md:items-start gap-4">
                       {/* Order Info */}
@@ -340,7 +370,7 @@ export function SellerOrdersPage() {
                             </p>
                           </div>
                           <p className="text-lg font-bold text-primary">
-                            {formatPrice(order.totalAmount)}
+                            {formatGHS(order.totalAmount)}
                           </p>
                         </div>
 
@@ -376,8 +406,7 @@ export function SellerOrdersPage() {
                                   {item.productName}
                                 </p>
                                 <p className="text-muted-foreground">
-                                  {item.quantity}x @{" "}
-                                  {formatPrice(item.unitPrice)}
+                                  {item.quantity}x @ {formatGHS(item.unitPrice)}
                                 </p>
                               </div>
                             </div>
@@ -490,6 +519,6 @@ export function SellerOrdersPage() {
           </div>
         </div>
       </Modal>
-    </div>
+    </SellerPageTemplate>
   );
 }

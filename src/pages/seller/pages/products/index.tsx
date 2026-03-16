@@ -15,31 +15,27 @@ import {
   Clock,
   Pause,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CustomInputTextField, CustomSelectField } from "@/components/shared/text-field";
+import {
+  CustomInputTextField,
+  CustomSelectField,
+} from "@/components/shared/text-field";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Modal } from "@/components/shared/Modal";
 import { useAuthStore } from "@/stores";
-import { formatPrice } from "@/lib/utils";
 import type { Product, ProductStatus } from "@/types-new";
-import { useMyStore, useStoreProducts, useDeleteProduct } from "@/hooks";
+import {
+  useMyStore,
+  useStoreProducts,
+  useDeleteProduct,
+  useCurrency,
+} from "@/hooks";
 import { Skeleton } from "@/components/shared/Skeleton";
-
-// Mock products data
-const mockSellerProducts: Product[] = [];
-
-const STATUS_OPTIONS = [
-  { value: "all", label: "All Products" },
-  { value: "active", label: "Active" },
-  { value: "draft", label: "Draft" },
-  { value: "sold_out", label: "Sold Out" },
-  { value: "paused", label: "Paused" },
-];
+import {
+  SellerPageTemplate,
+  SellerSidebarPanel,
+} from "../../components/SellerPageTemplate";
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest First" },
@@ -104,16 +100,13 @@ export function SellerProductsPage() {
   const { data: mockProducts, isLoading } = useStoreProducts(store?.id || "");
   const deleteProduct = useDeleteProduct();
 
-  // Filter and sort products
   const filteredProducts = useMemo(() => {
     let products = [...(mockProducts || [])];
 
-    // Filter by status
     if (statusFilter !== "all") {
       products = products.filter((p) => p.status === statusFilter);
     }
 
-    // Filter by search
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       products = products.filter(
@@ -124,7 +117,6 @@ export function SellerProductsPage() {
       );
     }
 
-    // Sort
     switch (sortBy) {
       case "oldest":
         products.sort(
@@ -157,7 +149,20 @@ export function SellerProductsPage() {
     return products;
   }, [mockProducts, searchQuery, statusFilter, sortBy]);
 
-  // Redirect if not authenticated or not a store owner
+  const { formatGHS } = useCurrency();
+
+  const statusCounts = useMemo(() => {
+    const all = mockProducts || [];
+    return {
+      all: all.length,
+      active: all.filter((p) => p.status === "active").length,
+      draft: all.filter((p) => p.status === "draft").length,
+      sold_out: all.filter((p) => p.status === "sold_out").length,
+      paused: all.filter((p) => p.status === "paused").length,
+      lowStock: all.filter((p) => p.quantity > 0 && p.quantity <= 5).length,
+    };
+  }, [mockProducts]);
+
   if (!isAuthenticated || !user?.isOwner) {
     navigate("/login");
     return null;
@@ -192,65 +197,109 @@ export function SellerProductsPage() {
     }
   };
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Products</h1>
-          <p className="text-muted-foreground">
-            Manage your store products ({(mockProducts || []).length} total)
-          </p>
+  const sidebar = (
+    <>
+      <SellerSidebarPanel title="Filter by Status">
+        <div className="space-y-1">
+          {[
+            { value: "all", label: "All Products", count: statusCounts.all },
+            { value: "active", label: "Active", count: statusCounts.active },
+            { value: "draft", label: "Draft", count: statusCounts.draft },
+            {
+              value: "sold_out",
+              label: "Sold Out",
+              count: statusCounts.sold_out,
+            },
+            { value: "paused", label: "Paused", count: statusCounts.paused },
+          ].map(({ value, label, count }) => (
+            <button
+              key={value}
+              onClick={() => setStatusFilter(value)}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-full text-sm transition-colors ${
+                statusFilter === value
+                  ? "bg-[#1C1C1E] text-white font-medium"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <span>{label}</span>
+              <span
+                className={`text-xs font-medium rounded-full px-1.5 py-0.5 ${
+                  statusFilter === value
+                    ? "bg-white/20 text-white"
+                    : "bg-gray-100 text-gray-500"
+                }`}
+              >
+                {count}
+              </span>
+            </button>
+          ))}
         </div>
+      </SellerSidebarPanel>
 
+      <div className="mt-4">
+        <SellerSidebarPanel title="Overview">
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: "Total", value: statusCounts.all },
+              { label: "Active", value: statusCounts.active },
+              { label: "Draft", value: statusCounts.draft },
+              { label: "Low Stock", value: statusCounts.lowStock },
+            ].map(({ label, value }) => (
+              <div
+                key={label}
+                className="rounded-2xl bg-gray-50 p-3 text-center"
+              >
+                <p className="text-lg font-bold text-gray-900">{value}</p>
+                <p className="text-xs text-gray-500">{label}</p>
+              </div>
+            ))}
+          </div>
+        </SellerSidebarPanel>
+      </div>
+    </>
+  );
+
+  return (
+    <SellerPageTemplate
+      title="Products"
+      description={`Manage your store products (${(mockProducts || []).length} total)`}
+      headerActions={
         <Link to="/seller/products/new">
-          <Button className="gap-2">
+          <Button className="gap-2 rounded-full bg-[#1C1C1E] text-white hover:bg-black">
             <Plus className="h-4 w-4" />
             Add Product
           </Button>
         </Link>
-      </div>
-
-      {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <CustomInputTextField
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
-            {/* Status Filter */}
-            <CustomSelectField
-              value={statusFilter}
-              inputProps={{ onChange: (e) => setStatusFilter(e.target.value) }}
-              options={STATUS_OPTIONS}
-              className="w-full md:w-40"
-            />
-
-            {/* Sort */}
-            <CustomSelectField
-              value={sortBy}
-              inputProps={{ onChange: (e) => setSortBy(e.target.value) }}
-              options={SORT_OPTIONS}
-              className="w-full md:w-48"
+      }
+      sidebar={sidebar}
+    >
+      {/* Search & Sort */}
+      <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <CustomInputTextField
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
             />
           </div>
-        </CardContent>
-      </Card>
+          <CustomSelectField
+            value={sortBy}
+            inputProps={{ onChange: (e) => setSortBy(e.target.value) }}
+            options={SORT_OPTIONS}
+            className="w-full sm:w-48"
+          />
+        </div>
+      </div>
 
       {/* Bulk Actions */}
       {selectedProducts.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-4 p-4 bg-primary/10 rounded-lg flex items-center justify-between"
+          className="mb-4 p-4 bg-primary/10 rounded-2xl flex items-center justify-between"
         >
           <span className="text-sm font-medium">
             {selectedProducts.length} product(s) selected
@@ -272,7 +321,7 @@ export function SellerProductsPage() {
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-40 w-full rounded-xl" />
+            <Skeleton key={i} className="h-40 w-full rounded-3xl" />
           ))}
         </div>
       ) : filteredProducts.length === 0 ? (
@@ -290,7 +339,7 @@ export function SellerProductsPage() {
           }
           action={
             <Link to="/seller/products/new">
-              <Button className="gap-2">
+              <Button className="gap-2 rounded-full bg-[#1C1C1E] text-white hover:bg-black">
                 <Plus className="h-4 w-4" />
                 Add Product
               </Button>
@@ -300,12 +349,12 @@ export function SellerProductsPage() {
       ) : (
         <div className="space-y-4">
           {/* Select All */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
             <input
               type="checkbox"
               checked={selectedProducts.length === filteredProducts.length}
               onChange={selectAllProducts}
-              className="rounded border-border"
+              className="rounded border-gray-300"
               aria-label="Select all products"
             />
             <span>Select all ({filteredProducts.length})</span>
@@ -323,124 +372,126 @@ export function SellerProductsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <Card className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-4">
-                      {/* Checkbox */}
-                      <input
-                        type="checkbox"
-                        checked={selectedProducts.includes(product.id)}
-                        onChange={() => toggleProductSelection(product.id)}
-                        className="mt-1 rounded border-border"
-                        aria-label={`Select product ${product.name}`}
-                      />
+                <div className="rounded-3xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow p-4">
+                  <div className="flex items-start gap-4">
+                    {/* Checkbox */}
+                    <input
+                      type="checkbox"
+                      checked={selectedProducts.includes(product.id)}
+                      onChange={() => toggleProductSelection(product.id)}
+                      className="mt-1 rounded border-gray-300"
+                      aria-label={`Select product ${product.name}`}
+                    />
 
-                      {/* Product Image */}
-                      <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                        {product.thumbnail ? (
-                          <img
-                            src={product.thumbnail}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                          </div>
-                        )}
+                    {/* Product Image */}
+                    <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
+                      {product.thumbnail ? (
+                        <img
+                          src={product.thumbnail}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <ImageIcon className="h-8 w-8 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Product Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <Link
+                            to={`/products/${product.slug}`}
+                            className="font-semibold text-gray-900 hover:text-emerald-600 transition-colors line-clamp-1"
+                          >
+                            {product.name}
+                          </Link>
+                          <p className="text-sm text-gray-500 line-clamp-1">
+                            {product.description}
+                          </p>
+                        </div>
+
+                        <Badge className={statusConfig.color}>
+                          <StatusIcon className="h-3 w-3 mr-1" />
+                          {statusConfig.label}
+                        </Badge>
                       </div>
 
-                      {/* Product Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <Link
-                              to={`/products/${product.slug}`}
-                              className="font-medium hover:text-primary transition-colors line-clamp-1"
-                            >
-                              {product.name}
-                            </Link>
-                            <p className="text-sm text-muted-foreground line-clamp-1">
-                              {product.description}
-                            </p>
-                          </div>
-
-                          <Badge className={statusConfig.color}>
-                            <StatusIcon className="h-3 w-3 mr-1" />
-                            {statusConfig.label}
-                          </Badge>
+                      {/* Stats Row */}
+                      <div className="flex flex-wrap items-center gap-4 mt-2 text-sm">
+                        <div>
+                          <span className="text-gray-500">Price: </span>
+                          <span className="font-semibold text-gray-900">
+                            {formatGHS(product.price)}
+                          </span>
+                          {product.comparePrice && (
+                            <span className="text-gray-400 line-through ml-1">
+                              {formatGHS(product.comparePrice)}
+                            </span>
+                          )}
                         </div>
-
-                        {/* Stats Row */}
-                        <div className="flex flex-wrap items-center gap-4 mt-2 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">
-                              Price:{" "}
-                            </span>
-                            <span className="font-semibold text-primary">
-                              {formatPrice(product.price)}
-                            </span>
-                            {product.comparePrice && (
-                              <span className="text-muted-foreground line-through ml-1">
-                                {formatPrice(product.comparePrice)}
-                              </span>
-                            )}
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Stock:{" "}
-                            </span>
-                            <span
-                              className={
-                                product.quantity === 0
-                                  ? "text-red-500 font-semibold"
-                                  : ""
-                              }
-                            >
-                              {product.quantity}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Sold:{" "}
-                            </span>
-                            <span>{product.soldCount}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Views:{" "}
-                            </span>
-                            <span>{product.viewCount}</span>
-                          </div>
+                        <div>
+                          <span className="text-gray-500">Stock: </span>
+                          <span
+                            className={
+                              product.quantity === 0
+                                ? "text-red-500 font-semibold"
+                                : "text-gray-900"
+                            }
+                          >
+                            {product.quantity}
+                          </span>
                         </div>
+                        <div>
+                          <span className="text-gray-500">Sold: </span>
+                          <span className="text-gray-900">
+                            {product.soldCount}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Views: </span>
+                          <span className="text-gray-900">
+                            {product.viewCount}
+                          </span>
+                        </div>
+                      </div>
 
-                        {/* Actions */}
-                        <div className="flex items-center gap-2 mt-3">
-                          <Link to={`/seller/products/${product.id}/edit`}>
-                            <Button variant="outline" size="sm">
-                              <Edit2 className="h-4 w-4 mr-1" />
-                              Edit
-                            </Button>
-                          </Link>
-                          <Link to={`/products/${product.slug}`}>
-                            <Button variant="ghost" size="sm">
-                              <Eye className="h-4 w-4 mr-1" />
-                              View
-                            </Button>
-                          </Link>
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 mt-3">
+                        <Link to={`/seller/products/${product.id}/edit`}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-full"
+                          >
+                            <Edit2 className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                        </Link>
+                        <Link to={`/products/${product.slug}`}>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => handleDeleteProduct(product)}
+                            className="rounded-full"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
                           </Button>
-                        </div>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="rounded-full text-red-500 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => handleDeleteProduct(product)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </motion.div>
             );
           })}
@@ -469,6 +520,6 @@ export function SellerProductsPage() {
           </div>
         </div>
       </Modal>
-    </div>
+    </SellerPageTemplate>
   );
 }

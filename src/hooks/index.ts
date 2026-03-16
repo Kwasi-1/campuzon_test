@@ -7,4 +7,5 @@ export * from './useStores';
 export * from './useReviews';
 export * from './useWallet';
 export * from './useStoreSettings';
+export * from './useCurrency';
 export * from './use-toast';

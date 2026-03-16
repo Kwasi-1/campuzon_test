@@ -19,7 +19,7 @@ export function SellLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
       {/* Seller Header */}
-      <header className="sticky top-0 z-40 w-full bg-header-bg border-b border-border">
+      <header className="sticky top-0 z-40 w-full bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
             {/* Back to Store */}
@@ -78,6 +78,13 @@ export function SellLayout() {
               >
                 <MessageSquare className="h-4 w-4" />
                 Messages
+              </Link>
+              <Link
+                to="/seller/settings"
+                className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-foreground hover:text-primary border-b-2 border-transparent hover:border-primary transition-colors whitespace-nowrap"
+              >
+                <MessageSquare className="h-4 w-4" />
+                Settings
               </Link>
             </nav>
           </div>

@@ -9,16 +9,17 @@ import {
   CheckCheck,
   Package,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { CustomInputTextField, CustomSelectField } from "@/components/shared/text-field";
+import { CustomInputTextField } from "@/components/shared/text-field";
 import { useAuthStore } from "@/stores";
 import { formatRelativeTime } from "@/lib/utils";
+import {
+  SellerPageTemplate,
+  SellerSidebarPanel,
+} from "@/pages/seller/components/SellerPageTemplate";
 
 // Mock conversations data for seller
 const mockSellerConversations = [
@@ -188,6 +189,12 @@ export function SellerMessagesPage() {
     (c) => c.unreadCount > 0,
   ).length;
   const totalMessages = mockSellerConversations.length;
+  const starredCount = mockSellerConversations.filter(
+    (c) => c.isStarred,
+  ).length;
+  const withOrderCount = mockSellerConversations.filter(
+    (c) => c.hasOrder,
+  ).length;
 
   // Redirect if not authenticated or not a store owner
   if (!isAuthenticated || !user?.isOwner) {
@@ -195,48 +202,99 @@ export function SellerMessagesPage() {
     return null;
   }
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Messages</h1>
-          <p className="text-muted-foreground">
-            {unreadCount > 0 ? (
-              <span>
-                <span className="text-primary font-medium">
-                  {unreadCount} unread
-                </span>{" "}
-                · {totalMessages} total
-              </span>
-            ) : (
-              `${totalMessages} conversations`
-            )}
-          </p>
+  const sidebar = (
+    <div className="space-y-4 xl:sticky xl:top-24">
+      <SellerSidebarPanel title="Message Filters">
+        <div className="space-y-2">
+          {FILTER_OPTIONS.map((option) => {
+            const isActive = filter === option.value;
+            const count =
+              option.value === "all"
+                ? totalMessages
+                : option.value === "unread"
+                  ? unreadCount
+                  : option.value === "starred"
+                    ? starredCount
+                    : option.value === "with-order"
+                      ? withOrderCount
+                      : totalMessages - withOrderCount;
+
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setFilter(option.value)}
+                className={`w-full rounded-2xl border px-3 py-2.5 text-left flex items-center justify-between transition-colors ${
+                  isActive
+                    ? "bg-[#1C1C1E] text-white border-[#1C1C1E]"
+                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <span className="text-sm font-medium">{option.label}</span>
+                <span className="text-xs rounded-full px-2 py-0.5 bg-black/5 text-current">
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
-      </div>
+      </SellerSidebarPanel>
 
-      {/* Filters */}
-      <Card className="mb-6">
+      <SellerSidebarPanel title="Overview">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-2xl bg-gray-50 p-3">
+            <p className="text-xs text-gray-500">Total</p>
+            <p className="text-lg font-semibold text-gray-900">
+              {totalMessages}
+            </p>
+          </div>
+          <div className="rounded-2xl bg-gray-50 p-3">
+            <p className="text-xs text-gray-500">Unread</p>
+            <p className="text-lg font-semibold text-gray-900">{unreadCount}</p>
+          </div>
+          <div className="rounded-2xl bg-gray-50 p-3">
+            <p className="text-xs text-gray-500">Starred</p>
+            <p className="text-lg font-semibold text-gray-900">
+              {starredCount}
+            </p>
+          </div>
+          <div className="rounded-2xl bg-gray-50 p-3">
+            <p className="text-xs text-gray-500">Orders</p>
+            <p className="text-lg font-semibold text-gray-900">
+              {withOrderCount}
+            </p>
+          </div>
+        </div>
+      </SellerSidebarPanel>
+    </div>
+  );
+
+  return (
+    <SellerPageTemplate
+      title="Messages"
+      description={
+        unreadCount > 0 ? (
+          <span>
+            <span className="text-primary font-medium">
+              {unreadCount} unread
+            </span>{" "}
+            · {totalMessages} total
+          </span>
+        ) : (
+          `${totalMessages} conversations`
+        )
+      }
+      sidebar={sidebar}
+    >
+      <Card className="mb-6 rounded-3xl border-gray-200/80">
         <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <CustomInputTextField
-                placeholder="Search messages..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
-            {/* Filter */}
-            <CustomSelectField
-              value={filter}
-              inputProps={{ onChange: (e) => setFilter(e.target.value) }}
-              options={FILTER_OPTIONS}
-              className="w-full md:w-48"
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <CustomInputTextField
+              placeholder="Search messages..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
             />
           </div>
         </CardContent>
@@ -368,44 +426,6 @@ export function SellerMessagesPage() {
           ))}
         </div>
       )}
-
-      {/* Quick Stats */}
-      <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <MessageCircle className="h-6 w-6 mx-auto mb-2 text-primary" />
-            <p className="text-2xl font-bold">{totalMessages}</p>
-            <p className="text-sm text-muted-foreground">Total Chats</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Badge className="h-6 w-6 mx-auto mb-2 bg-primary/10 text-primary rounded-full flex items-center justify-center">
-              {unreadCount}
-            </Badge>
-            <p className="text-2xl font-bold">{unreadCount}</p>
-            <p className="text-sm text-muted-foreground">Unread</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Star className="h-6 w-6 mx-auto mb-2 text-yellow-500" />
-            <p className="text-2xl font-bold">
-              {mockSellerConversations.filter((c) => c.isStarred).length}
-            </p>
-            <p className="text-sm text-muted-foreground">Starred</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Package className="h-6 w-6 mx-auto mb-2 text-green-500" />
-            <p className="text-2xl font-bold">
-              {mockSellerConversations.filter((c) => c.hasOrder).length}
-            </p>
-            <p className="text-sm text-muted-foreground">With Orders</p>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+    </SellerPageTemplate>
   );
 }
