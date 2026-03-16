@@ -260,6 +260,8 @@ export function PaymentMethodsPage() {
               ))}
             </div>
           ) : filteredMethods.length === 0 ? (
+            <div className="border border-gray-100 bg-white rounded-[28px] overflow-hidden shadow-sm">
+            <div className="text-center py-16 flex flex-col justify-center h-full items-center">
             <EmptyState
               icon={<CreditCard className="h-16 w-16" />}
               title="No payment methods"
@@ -287,6 +289,8 @@ export function PaymentMethodsPage() {
                 )
               }
             />
+            </div>
+          </div>
           ) : (
             <div className="space-y-5">
               {filteredMethods.map((method, index) => (

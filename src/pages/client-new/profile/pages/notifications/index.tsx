@@ -19,8 +19,9 @@ import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/shared/Skeleton";
 import { useAuthStore } from "@/stores";
-import { api, extractData, extractError } from "@/lib/api";
+import { extractError } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/utils";
+import profileNotificationsService from "@/services/profileNotificationsService";
 import type { Notification, NotificationType } from "@/types-new";
 
 const getNotificationIcon = (type: NotificationType) => {
@@ -97,13 +98,10 @@ export function NotificationsPage() {
       setIsLoading(true);
 
       try {
-        const response = await api.get("/notifications", {
-          params: { page: 1, per_page: 200 },
+        const items = await profileNotificationsService.getNotifications({
+          page: 1,
+          perPage: 200,
         });
-        const data = extractData<
-          { notifications?: Notification[] } | Notification[]
-        >(response);
-        const items = Array.isArray(data) ? data : data.notifications || [];
         setNotifications(items);
       } catch (err: unknown) {
         setError(extractError(err));
@@ -123,7 +121,7 @@ export function NotificationsPage() {
     );
 
     try {
-      await api.post(`/notifications/${id}/read`);
+      await profileNotificationsService.markAsRead(id);
     } catch (err: unknown) {
       setNotifications(previous);
       setError(extractError(err));
@@ -135,7 +133,7 @@ export function NotificationsPage() {
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
 
     try {
-      await api.post("/notifications/read-all");
+      await profileNotificationsService.markAllAsRead();
     } catch (err: unknown) {
       setNotifications(previous);
       setError(extractError(err));
@@ -147,7 +145,7 @@ export function NotificationsPage() {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
 
     try {
-      await api.delete(`/notifications/${id}`);
+      await profileNotificationsService.deleteNotification(id);
     } catch (err: unknown) {
       setNotifications(previous);
       setError(extractError(err));
@@ -159,7 +157,7 @@ export function NotificationsPage() {
     setNotifications([]);
 
     try {
-      await api.delete("/notifications/clear", { params: { all: true } });
+      await profileNotificationsService.clearNotifications(true);
     } catch (err: unknown) {
       setNotifications(previous);
       setError(extractError(err));
@@ -279,6 +277,8 @@ export function NotificationsPage() {
               ))}
             </div>
           ) : filteredNotifications.length === 0 ? (
+            <div className="border border-gray-100 bg-white rounded-[28px] overflow-hidden shadow-sm">
+            <div className="text-center py-16 flex flex-col justify-center h-full items-center">
             <EmptyState
               icon={<Bell className="h-16 w-16" />}
               title={
@@ -305,6 +305,8 @@ export function NotificationsPage() {
                 ) : undefined
               }
             />
+            </div>
+          </div>
           ) : (
             <div className="space-y-4">
               {filteredNotifications.map((notification, index) => {

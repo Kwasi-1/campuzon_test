@@ -263,6 +263,8 @@ export function AddressesPage() {
               ))}
             </div>
           ) : filteredAddresses.length === 0 ? (
+            <div className="border border-gray-100 bg-white rounded-[28px] overflow-hidden shadow-sm">
+            <div className="text-center py-16 flex flex-col justify-center h-full items-center">
             <EmptyState
               icon={<MapPin className="h-16 w-16" />}
               title="No addresses saved"
@@ -290,6 +292,8 @@ export function AddressesPage() {
                 )
               }
             />
+            </div>
+          </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               {filteredAddresses.map((address, index) => (

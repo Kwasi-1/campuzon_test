@@ -63,3 +63,7 @@ export type {
   ProfilePaymentMethod,
   PaymentMethodType,
 } from './profilePaymentMethodsService';
+
+// Export profile notifications service
+export { default as profileNotificationsService } from './profileNotificationsService';
+export type { ProfileNotificationsQuery } from './profileNotificationsService';
