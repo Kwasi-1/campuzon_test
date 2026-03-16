@@ -296,6 +296,8 @@ export function SellerOrdersPage() {
           ))}
         </div>
       ) : filteredOrders.length === 0 ? (
+        <div className="border border-gray-100 bg-white rounded-[28px] overflow-hidden shadow-sm">
+            <div className="text-center py-16 flex flex-col justify-center h-full items-center">
         <EmptyState
           icon={<Package className="h-16 w-16" />}
           title={
@@ -309,6 +311,8 @@ export function SellerOrdersPage() {
               : "Orders from customers will appear here"
           }
         />
+         </div>
+        </div>
       ) : (
         <div className="space-y-4">
           {filteredOrders.map((order, index) => {

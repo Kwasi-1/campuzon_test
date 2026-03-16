@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 interface SellerPageTemplateProps {
-  title: string;
+  title?: string;
   description?: ReactNode;
   headerActions?: ReactNode;
   sidebar?: ReactNode;

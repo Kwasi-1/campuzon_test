@@ -295,27 +295,31 @@ export function SellerProductsPage() {
           ))}
         </div>
       ) : filteredProducts.length === 0 ? (
-        <EmptyState
-          icon={<Package className="h-16 w-16" />}
-          title={
-            searchQuery || statusFilter !== "all"
-              ? "No matching products"
-              : "No products yet"
-          }
-          description={
-            searchQuery || statusFilter !== "all"
-              ? "Try adjusting your search or filters"
-              : "Add your first product to start selling"
-          }
-          action={
-            <Link to="/seller/products/new">
-              <Button className="gap-2 rounded-full bg-[#1C1C1E] text-white hover:bg-black">
-                <Plus className="h-4 w-4" />
-                Add Product
-              </Button>
-            </Link>
-          }
-        />
+        <div className="border border-gray-100 bg-white rounded-[28px] overflow-hidden shadow-sm">
+          <div className="text-center py-16 flex flex-col justify-center h-full items-center">
+            <EmptyState
+              icon={<Package className="h-16 w-16" />}
+              title={
+                searchQuery || statusFilter !== "all"
+                  ? "No matching products"
+                  : "No products yet"
+              }
+              description={
+                searchQuery || statusFilter !== "all"
+                  ? "Try adjusting your search or filters"
+                  : "Add your first product to start selling"
+              }
+              action={
+                <Link to="/seller/products/new">
+                  <Button className="gap-2 rounded-full bg-[#1C1C1E] text-white hover:bg-black">
+                    <Plus className="h-4 w-4" />
+                    Add Product
+                  </Button>
+                </Link>
+              }
+            />{" "}
+          </div>
+        </div>
       ) : (
         <div className="space-y-4">
           {/* Select All */}
