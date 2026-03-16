@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Store,
@@ -15,39 +15,18 @@ import {
   MessageCircle,
   Zap,
   Star,
+  MapPin,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   CustomInputTextField,
   CustomTextareaField,
-  CustomSelectField,
 } from "@/components/shared/text-field";
 import { useAuthStore } from "@/stores";
-
-const INSTITUTION_OPTIONS = [
-  { value: "", label: "Select your institution" },
-  { value: "ug", label: "University of Ghana" },
-  { value: "knust", label: "KNUST" },
-  { value: "ucc", label: "University of Cape Coast" },
-  { value: "uew", label: "University of Education, Winneba" },
-  { value: "ashesi", label: "Ashesi University" },
-  { value: "gimpa", label: "GIMPA" },
-  { value: "upsa", label: "UPSA" },
-  { value: "central", label: "Central University" },
-  { value: "other", label: "Other Institution" },
-];
-
-const CATEGORY_OPTIONS = [
-  { value: "", label: "What will you sell?" },
-  { value: "electronics", label: "Electronics & Gadgets" },
-  { value: "fashion", label: "Fashion & Clothing" },
-  { value: "books", label: "Books & Stationery" },
-  { value: "food", label: "Food & Beverages" },
-  { value: "beauty", label: "Health & Beauty" },
-  { value: "services", label: "Services" },
-  { value: "multiple", label: "Multiple Categories" },
-];
+import { sellerOnboardingService } from "@/services";
+import { extractError } from "@/lib/api";
+import { toast } from "sonner";
 
 const BENEFITS = [
   {
@@ -84,16 +63,16 @@ const BENEFITS = [
 
 export function BecomeSellerPage() {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, fetchProfile } = useAuthStore();
 
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [formData, setFormData] = useState({
     storeName: "",
     description: "",
-    category: "",
-    institution: "",
     phoneNumber: user?.phoneNumber || "",
+    additionalNumber: "",
     email: user?.email || "",
     agreeToTerms: false,
   });
@@ -117,25 +96,26 @@ export function BecomeSellerPage() {
     } else if (formData.storeName.length < 3) {
       newErrors.storeName = "Store name must be at least 3 characters";
     }
-    if (!formData.category) {
-      newErrors.category = "Please select what you'll sell";
-    }
-    if (!formData.institution) {
-      newErrors.institution = "Please select your institution";
-    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const validateStep2 = () => {
     const newErrors: Record<string, string> = {};
-    if (!formData.description.trim()) {
-      newErrors.description = "Store description is required";
-    } else if (formData.description.length < 20) {
-      newErrors.description = "Description must be at least 20 characters";
+    if (
+      formData.description.trim() &&
+      formData.description.trim().length < 20
+    ) {
+      newErrors.description =
+        "Description must be at least 20 characters when provided";
     }
     if (!formData.phoneNumber.trim()) {
       newErrors.phoneNumber = "Phone number is required";
+    }
+    if (!formData.email.trim()) {
+      newErrors.email = "Email address is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      newErrors.email = "Enter a valid email address";
     }
     if (!formData.agreeToTerms) {
       newErrors.agreeToTerms = "You must agree to the terms";
@@ -146,6 +126,7 @@ export function BecomeSellerPage() {
 
   const handleNext = () => {
     if (step === 1 && validateStep1()) {
+      setSubmitError("");
       setStep(2);
     }
   };
@@ -154,12 +135,39 @@ export function BecomeSellerPage() {
     if (!validateStep2()) return;
 
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsSubmitting(false);
+    setSubmitError("");
 
-    // Navigate to success or dashboard
-    navigate("/seller/dashboard");
+    try {
+      await sellerOnboardingService.createStore({
+        storeName: formData.storeName.trim(),
+        description: formData.description.trim() || undefined,
+        email: formData.email.trim(),
+        phoneNumber: formData.phoneNumber.trim(),
+        additionalNumber: formData.additionalNumber.trim() || undefined,
+      });
+
+      await fetchProfile();
+      toast.success(
+        "Store created successfully. It will be reviewed by the team.",
+      );
+      navigate("/seller/dashboard");
+    } catch (error) {
+      const message = extractError(error);
+
+      if (message === "You already have a store") {
+        await fetchProfile();
+        toast.success(
+          "Your store already exists. Redirecting to your dashboard.",
+        );
+        navigate("/seller/dashboard");
+        return;
+      }
+
+      setSubmitError(message);
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // If not logged in, show benefits and prompt to login
@@ -284,8 +292,7 @@ export function BecomeSellerPage() {
 
   // If already a seller, redirect
   if (user?.isOwner) {
-    navigate("/seller/dashboard");
-    return null;
+    return <Navigate to="/seller/dashboard" replace />;
   }
 
   return (
@@ -359,45 +366,26 @@ export function BecomeSellerPage() {
                       )}
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        What will you sell?{" "}
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <CustomSelectField
-                        value={formData.category}
-                        inputProps={{
-                          onChange: (e) =>
-                            handleChange("category", e.target.value),
-                        }}
-                        options={CATEGORY_OPTIONS}
-                        className={errors.category ? "border-red-500" : ""}
-                      />
-                      {errors.category && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {errors.category}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Your Institution <span className="text-red-500">*</span>
-                      </label>
-                      <CustomSelectField
-                        value={formData.institution}
-                        inputProps={{
-                          onChange: (e) =>
-                            handleChange("institution", e.target.value),
-                        }}
-                        options={INSTITUTION_OPTIONS}
-                        className={errors.institution ? "border-red-500" : ""}
-                      />
-                      {errors.institution && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {errors.institution}
-                        </p>
-                      )}
+                    <div className="rounded-2xl border border-border/70 bg-muted/30 p-4 text-sm text-muted-foreground">
+                      <div className="mb-2 flex items-center gap-2 font-medium text-foreground">
+                        <MapPin className="h-4 w-4" />
+                        Campus details from your profile
+                      </div>
+                      <p>
+                        Institution:{" "}
+                        {user?.institutionName ||
+                          user?.institution?.name ||
+                          "Saved on your account"}
+                      </p>
+                      <p>
+                        Hall:{" "}
+                        {user?.hall?.name || user?.hallID || "Not specified"}
+                      </p>
+                      <p className="mt-2 text-xs">
+                        The current backend store-creation route uses your
+                        existing profile campus details automatically and does
+                        not accept institution or category fields here.
+                      </p>
                     </div>
 
                     <Button onClick={handleNext} className="w-full gap-2">
@@ -421,8 +409,7 @@ export function BecomeSellerPage() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium mb-1">
-                        Store Description{" "}
-                        <span className="text-red-500">*</span>
+                        Store Description
                       </label>
                       <CustomTextareaField
                         value={formData.description}
@@ -433,6 +420,9 @@ export function BecomeSellerPage() {
                         rows={4}
                         error={errors.description}
                       />
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Optional. If you add one, use at least 20 characters.
+                      </p>
                       {errors.description && (
                         <p className="text-sm text-red-500 mt-1">
                           {errors.description}
@@ -463,16 +453,42 @@ export function BecomeSellerPage() {
 
                     <div>
                       <label className="block text-sm font-medium mb-1">
+                        Additional Phone Number
+                      </label>
+                      <CustomInputTextField
+                        type="tel"
+                        value={formData.additionalNumber}
+                        onChange={(e) =>
+                          handleChange("additionalNumber", e.target.value)
+                        }
+                        placeholder="Optional backup contact"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
                         <Mail className="h-4 w-4 inline mr-1" />
-                        Email Address
+                        Email Address <span className="text-red-500">*</span>
                       </label>
                       <CustomInputTextField
                         type="email"
                         value={formData.email}
                         onChange={(e) => handleChange("email", e.target.value)}
                         placeholder="your@email.com"
+                        className={errors.email ? "border-red-500" : ""}
                       />
+                      {errors.email && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {errors.email}
+                        </p>
+                      )}
                     </div>
+
+                    {submitError && (
+                      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {submitError}
+                      </div>
+                    )}
 
                     <div className="flex items-start gap-2">
                       <input

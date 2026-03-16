@@ -67,3 +67,10 @@ export type {
 // Export profile notifications service
 export { default as profileNotificationsService } from './profileNotificationsService';
 export type { ProfileNotificationsQuery } from './profileNotificationsService';
+
+// Export seller onboarding service
+export { default as sellerOnboardingService } from './sellerOnboardingService';
+export type {
+  CreateStorePayload,
+  SellerStoreRecord,
+} from './sellerOnboardingService';
