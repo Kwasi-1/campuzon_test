@@ -55,8 +55,8 @@ export function SellLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-white text-foreground">
       {/* Seller Header */}
-      <header className="sticky top-0 z-40 w-full bg-white borderb border-gray-100 shadowsm">
-        <div className="container mx-auto px-4">
+      <header className="sticky top-0 z-40 w-full bg-white border-b border-gray-100">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex h-16 items-center justify-between gap-4">
             {/* Left: Back link + Logo + Store pill */}
             <div className="flex items-center gap-3">
@@ -80,6 +80,32 @@ export function SellLayout() {
                   <span className="max-w-[160px] truncate">{store.name}</span>
                 </div>
               )}
+            </div>
+            {/* Nav Tabs */}
+            <div className=" border-gray-100">
+              <div className="container mx-auto px-4">
+                <nav
+                  className="flex items-center gap-1 overflow-x-auto scrollbar-hide"
+                  aria-label="Seller navigation"
+                >
+                  {NAV_LINKS.map(({ to, label, icon: Icon }) => (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      className={({ isActive }) =>
+                        `flex items-center gap-2 whitespace-nowrap borde rounded-full px-4 py-3 text-sm font-medium transition-colors ${
+                          isActive
+                            ? "border-gray-200 text-gray-900 bg-muted/70"
+                            : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-800"
+                        }`
+                      }
+                    >
+                      <Icon className="h-4 w-4" />
+                      {label}
+                    </NavLink>
+                  ))}
+                </nav>
+              </div>
             </div>
 
             {/* Right: Notifications + User avatar */}
@@ -106,7 +132,7 @@ export function SellLayout() {
                       className="h-8 w-8 rounded-full object-cover ring-2 ring-gray-100"
                     />
                   ) : (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-900 text-xs font-bold text-white">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
                       {initials}
                     </div>
                   )}
@@ -177,33 +203,6 @@ export function SellLayout() {
                 )}
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Nav Tabs */}
-        <div className="border-t border-gray-100">
-          <div className="container mx-auto px-4">
-            <nav
-              className="flex items-center gap-1 overflow-x-auto scrollbar-hide"
-              aria-label="Seller navigation"
-            >
-              {NAV_LINKS.map(({ to, label, icon: Icon }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  className={({ isActive }) =>
-                    `flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
-                      isActive
-                        ? "border-gray-900 text-gray-900"
-                        : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-800"
-                    }`
-                  }
-                >
-                  <Icon className="h-4 w-4" />
-                  {label}
-                </NavLink>
-              ))}
-            </nav>
           </div>
         </div>
       </header>
