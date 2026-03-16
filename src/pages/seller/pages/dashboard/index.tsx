@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -41,6 +41,7 @@ import {
   useWallet,
 } from "@/hooks";
 import { formatPrice } from "@/lib/utils";
+import { SellerPageTemplate } from "../../components/SellerPageTemplate";
 
 // Mock data for dashboard
 const mockStats = {
@@ -118,6 +119,15 @@ export function SellerDashboardPage() {
   const { user, isAuthenticated } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
 
+  const { data: store, isLoading: storeLoading } = useMyStore();
+  const { data: orders, isLoading: ordersLoading } = useStoreOrders(
+    store?.id || "",
+  );
+  const { data: products, isLoading: productsLoading } = useStoreProducts(
+    store?.id || "",
+  );
+  const { data: wallet, isLoading: walletLoading } = useWallet();
+
   // Redirect if not authenticated or not a store owner
   if (!isAuthenticated || !user) {
     navigate("/login", { state: { from: "/seller/dashboard" } });
@@ -128,15 +138,6 @@ export function SellerDashboardPage() {
     navigate("/");
     return null;
   }
-
-  const { data: store, isLoading: storeLoading } = useMyStore();
-  const { data: orders, isLoading: ordersLoading } = useStoreOrders(
-    store?.id || "",
-  );
-  const { data: products, isLoading: productsLoading } = useStoreProducts(
-    store?.id || "",
-  );
-  const { data: wallet, isLoading: walletLoading } = useWallet();
 
   const stats = {
     totalSales: wallet?.balance || 0,
@@ -228,44 +229,43 @@ export function SellerDashboardPage() {
     },
   ];
 
+  const cardClassName = "rounded-3xl border border-gray-100 bg-white shadow-sm";
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <SellerPageTemplate
+      title={`Welcome back, ${user.firstName}!`}
+      description="Here's what's happening with your store today."
+      headerActions={
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="rounded-full">
+            <Calendar className="mr-2 h-4 w-4" />
+            Last 30 Days
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="hidden rounded-full sm:flex"
+            onClick={() => navigate("/seller/wallet")}
+          >
+            <DollarSign className="mr-2 h-4 w-4" />
+            Withdraw Funds
+          </Button>
+          <Button
+            size="sm"
+            className="rounded-full"
+            onClick={() => navigate("/seller/products/new")}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Product
+          </Button>
+        </div>
+      }
+    >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="space-y-6"
       >
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">
-              Welcome back, {user.firstName}!
-            </h1>
-            <p className="text-muted-foreground">
-              Here's what's happening with your store today.
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <Calendar className="h-4 w-4 mr-2" />
-              Last 30 Days
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="hidden sm:flex"
-              onClick={() => navigate("/seller/wallet")}
-            >
-              <DollarSign className="h-4 w-4 mr-2" />
-              Withdraw Funds
-            </Button>
-            <Button size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Product
-            </Button>
-          </div>
-        </div>
-
         {/* Stats Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {statCards.map((stat, index) => (
@@ -275,7 +275,7 @@ export function SellerDashboardPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card>
+              <Card className={cardClassName}>
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between">
                     <div>
@@ -336,7 +336,7 @@ export function SellerDashboardPage() {
         {/* Main Content Grid */}
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Recent Orders - Takes 2 columns */}
-          <Card className="lg:col-span-2">
+          <Card className={`${cardClassName} lg:col-span-2`}>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Recent Orders</CardTitle>
@@ -404,7 +404,7 @@ export function SellerDashboardPage() {
           </Card>
 
           {/* Recent Messages */}
-          <Card>
+          <Card className={cardClassName}>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Messages</CardTitle>
@@ -453,7 +453,7 @@ export function SellerDashboardPage() {
         </div>
 
         {/* Top Products */}
-        <Card>
+        <Card className={cardClassName}>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle>Top Products</CardTitle>
@@ -556,7 +556,7 @@ export function SellerDashboardPage() {
 
         {/* Store Performance */}
         <div className="grid gap-6 md:grid-cols-2">
-          <Card>
+          <Card className={cardClassName}>
             <CardHeader>
               <CardTitle>Store Rating</CardTitle>
               <CardDescription>Based on customer reviews</CardDescription>
@@ -590,14 +590,23 @@ export function SellerDashboardPage() {
                           : rating === 2
                             ? 3
                             : 1;
+                  const widthClass =
+                    rating === 5
+                      ? "w-[72%]"
+                      : rating === 4
+                        ? "w-[18%]"
+                        : rating === 3
+                          ? "w-[6%]"
+                          : rating === 2
+                            ? "w-[3%]"
+                            : "w-[1%]";
                   return (
                     <div key={rating} className="flex items-center gap-2">
                       <span className="text-sm w-3">{rating}</span>
                       <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
                       <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
                         <div
-                          className="h-full bg-yellow-400 rounded-full"
-                          style={{ width: `${percentage}%` }}
+                          className={`h-full rounded-full bg-yellow-400 ${widthClass}`}
                         />
                       </div>
                       <span className="text-sm text-muted-foreground w-10">
@@ -610,7 +619,7 @@ export function SellerDashboardPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className={cardClassName}>
             <CardHeader>
               <CardTitle>Quick Stats</CardTitle>
               <CardDescription>Key performance indicators</CardDescription>
@@ -668,6 +677,6 @@ export function SellerDashboardPage() {
           </Card>
         </div>
       </motion.div>
-    </div>
+    </SellerPageTemplate>
   );
 }
