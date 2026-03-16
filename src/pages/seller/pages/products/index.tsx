@@ -8,6 +8,7 @@ import {
   Trash2,
   Eye,
   EyeOff,
+  MoreHorizontal,
   Image as ImageIcon,
   AlertCircle,
   CheckCircle,
@@ -33,6 +34,20 @@ import {
   SellerPageTemplate,
 } from "../../components/SellerPageTemplate";
 import { PillSidebar } from "@/components/ui/pill-sidebar";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest First" },
@@ -203,6 +218,11 @@ export function SellerProductsPage() {
   };
 
   const selectAllProducts = () => {
+    if (filteredProducts.length === 0) {
+      setSelectedProducts([]);
+      return;
+    }
+
     if (selectedProducts.length === filteredProducts.length) {
       setSelectedProducts([]);
     } else {
@@ -298,10 +318,12 @@ export function SellerProductsPage() {
 
       {/* Products List */}
       {isLoading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-40 w-full rounded-3xl" />
-          ))}
+        <div className="rounded-[28px] border border-gray-100 bg-white p-4 shadow-sm">
+          <div className="space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-2xl" />
+            ))}
+          </div>
         </div>
       ) : filteredProducts.length === 0 ? (
         <div className="border border-gray-100 bg-white rounded-[28px] overflow-hidden shadow-sm">
@@ -336,7 +358,10 @@ export function SellerProductsPage() {
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <input
               type="checkbox"
-              checked={selectedProducts.length === filteredProducts.length}
+              checked={
+                filteredProducts.length > 0 &&
+                selectedProducts.length === filteredProducts.length
+              }
               onChange={selectAllProducts}
               className="rounded border-gray-300"
               aria-label="Select all products"
@@ -344,141 +369,142 @@ export function SellerProductsPage() {
             <span>Select all ({filteredProducts.length})</span>
           </div>
 
-          {/* Product Cards */}
-          {filteredProducts.map((product, index) => {
-            const statusConfig = getStatusConfig(product.status);
-            const StatusIcon = statusConfig.icon;
+          <div className="overflow-hidden rounded-[28px] border border-gray-100 bg-white shadow-sm">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="w-12">
+                    <span className="sr-only">Select</span>
+                  </TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Stock</TableHead>
+                  <TableHead>Sold</TableHead>
+                  <TableHead>Views</TableHead>
+                  <TableHead className="w-14 text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredProducts.map((product) => {
+                  const statusConfig = getStatusConfig(product.status);
+                  const StatusIcon = statusConfig.icon;
 
-            return (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <div className="rounded-[28px] border border-gray-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
-                  <div className="flex items-start gap-4">
-                    {/* Checkbox */}
-                    <input
-                      type="checkbox"
-                      checked={selectedProducts.includes(product.id)}
-                      onChange={() => toggleProductSelection(product.id)}
-                      className="mt-1 rounded border-gray-300"
-                      aria-label={`Select product ${product.name}`}
-                    />
-
-                    {/* Product Image */}
-                    <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-2xl border border-gray-100 bg-gray-100">
-                      {product.thumbnail ? (
-                        <img
-                          src={product.thumbnail}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
+                  return (
+                    <TableRow key={product.id}>
+                      <TableCell>
+                        <input
+                          type="checkbox"
+                          checked={selectedProducts.includes(product.id)}
+                          onChange={() => toggleProductSelection(product.id)}
+                          className="rounded border-gray-300"
+                          aria-label={`Select product ${product.name}`}
                         />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <ImageIcon className="h-8 w-8 text-gray-400" />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl border border-gray-100 bg-gray-100">
+                            {product.thumbnail ? (
+                              <img
+                                src={product.thumbnail}
+                                alt={product.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center">
+                                <ImageIcon className="h-5 w-5 text-gray-400" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <Link
+                              to={`/products/${product.slug}`}
+                              className="line-clamp-1 text-sm font-semibold text-gray-900 transition-colors hover:text-emerald-600"
+                            >
+                              {product.name}
+                            </Link>
+                            <p className="mt-0.5 line-clamp-1 text-xs text-gray-500">
+                              {product.description}
+                            </p>
+                          </div>
                         </div>
-                      )}
-                    </div>
-
-                    {/* Product Info */}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <Link
-                            to={`/products/${product.slug}`}
-                            className="line-clamp-1 text-base font-semibold text-gray-900 transition-colors hover:text-emerald-600"
-                          >
-                            {product.name}
-                          </Link>
-                          <p className="mt-0.5 line-clamp-1 text-sm text-gray-500">
-                            {product.description}
-                          </p>
-                        </div>
-
+                      </TableCell>
+                      <TableCell>
                         <Badge className={statusConfig.color}>
-                          <StatusIcon className="h-3 w-3 mr-1" />
+                          <StatusIcon className="mr-1 h-3 w-3" />
                           {statusConfig.label}
                         </Badge>
-                      </div>
-
-                      {/* Stats Row */}
-                      <div className="mt-3 grid grid-cols-2 gap-3 rounded-2xl border border-gray-100 bg-gray-50/70 p-3 text-sm md:grid-cols-4">
-                        <div>
-                          <span className="text-gray-500">Price: </span>
-                          <span className="font-semibold text-gray-900">
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-gray-900">
+                          <p className="font-semibold">
                             {formatGHS(product.price)}
-                          </span>
+                          </p>
                           {product.comparePrice && (
-                            <span className="text-gray-400 line-through ml-1">
+                            <p className="text-xs text-gray-400 line-through">
                               {formatGHS(product.comparePrice)}
-                            </span>
+                            </p>
                           )}
                         </div>
-                        <div>
-                          <span className="text-gray-500">Stock: </span>
-                          <span
-                            className={
-                              product.quantity === 0
-                                ? "text-red-500 font-semibold"
-                                : "text-gray-900"
-                            }
-                          >
-                            {product.quantity}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Sold: </span>
-                          <span className="text-gray-900">
-                            {product.soldCount}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Views: </span>
-                          <span className="text-gray-900">
-                            {product.viewCount}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
-                        <Link to={`/seller/products/${product.id}/edit`}>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="rounded-full"
-                          >
-                            <Edit2 className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                        </Link>
-                        <Link to={`/products/${product.slug}`}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="rounded-full"
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Button>
-                        </Link>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="rounded-full text-red-500 hover:text-red-700 hover:bg-red-50"
-                          onClick={() => handleDeleteProduct(product)}
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={
+                            product.quantity === 0
+                              ? "font-semibold text-red-500"
+                              : "text-gray-900"
+                          }
                         >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
+                          {product.quantity}
+                        </span>
+                      </TableCell>
+                      <TableCell>{product.soldCount || 0}</TableCell>
+                      <TableCell>{product.viewCount || 0}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 rounded-full"
+                              aria-label={`Open actions for ${product.name}`}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuItem
+                              onClick={() =>
+                                navigate(`/products/${product.slug}`)
+                              }
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              View
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                navigate(`/seller/products/${product.id}/edit`)
+                              }
+                            >
+                              <Edit2 className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-red-600 focus:text-red-600"
+                              onClick={() => handleDeleteProduct(product)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
 
