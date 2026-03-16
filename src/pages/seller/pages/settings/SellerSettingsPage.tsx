@@ -1,38 +1,42 @@
-import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Store,
-  Camera,
-  Save,
-  Image as ImageIcon,
-  Mail,
-  Phone,
-  MapPin,
-  Globe,
-  Clock,
-  MessageSquare,
-  Bell,
-  Lock,
-  Trash2,
   AlertTriangle,
+  Bell,
+  Camera,
+  Clock,
+  Globe,
+  Image as ImageIcon,
+  Lock,
+  Mail,
+  MapPin,
+  MessageSquare,
+  Phone,
+  Save,
+  Store,
+  Trash2,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import { Modal } from "@/components/shared/Modal";
+import {
+  CustomInputTextField,
+  CustomSelectField,
+  CustomTextareaField,
+} from "@/components/shared/text-field";
 import { Alert } from "@/components/ui/alert";
-import { CustomInputTextField, CustomSelectField, CustomTextareaField } from "@/components/shared/text-field";
-import { useAuthStore } from "@/stores";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PillSidebar } from "@/components/ui/pill-sidebar";
 import { useAutoResponder, useUpdateAutoResponder } from "@/hooks";
+import { useAuthStore } from "@/stores";
+import { SellerPageTemplate } from "../../components/SellerPageTemplate";
 
 // Mock store data
 const mockStoreData = {
   id: "store-1",
   storeName: "TechHub GH",
   storeSlug: "techhub-gh",
+  institution: "ug",
   description:
     "Your trusted source for premium electronics and gadgets. We offer authentic products with warranty and excellent customer service.",
   logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=200",
@@ -56,17 +60,41 @@ const INSTITUTION_OPTIONS = [
   { value: "ashesi", label: "Ashesi University" },
 ];
 
+type SettingsSection =
+  | "all"
+  | "branding"
+  | "contact"
+  | "automation"
+  | "notifications"
+  | "danger";
+
+const SECTION_OPTIONS = [
+  { key: "all", label: "All Settings" },
+  { key: "branding", label: "Store Branding" },
+  { key: "contact", label: "Contact Info" },
+  { key: "automation", label: "Auto-Responder" },
+  { key: "notifications", label: "Notifications" },
+  { key: "danger", label: "Danger Zone" },
+];
+
 export function SellerSettingsPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
-  const { data: autoResponder, isLoading: arLoading } = useAutoResponder();
+  const { data: autoResponder } = useAutoResponder();
   const updateAutoResponder = useUpdateAutoResponder();
 
   const [formData, setFormData] = useState(mockStoreData);
+  const [activeSection, setActiveSection] = useState<SettingsSection>("all");
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deactivateModalOpen, setDeactivateModalOpen] = useState(false);
+  const [notificationPrefs, setNotificationPrefs] = useState({
+    newOrder: true,
+    newMessage: true,
+    lowStock: true,
+    reviews: true,
+  });
 
   // Synchronize auto-responder data from backend
   useEffect(() => {
@@ -91,6 +119,11 @@ export function SellerSettingsPage() {
 
   const handleChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    setSaveSuccess(false);
+  };
+
+  const handleNotificationToggle = (key: keyof typeof notificationPrefs) => {
+    setNotificationPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
     setSaveSuccess(false);
   };
 
@@ -143,405 +176,446 @@ export function SellerSettingsPage() {
     navigate("/");
   };
 
-  return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Store Settings</h1>
-          <p className="text-muted-foreground">
-            Manage your store profile and preferences
+  const showSection = (section: Exclude<SettingsSection, "all">) =>
+    activeSection === "all" || activeSection === section;
+
+  const sidebar = (
+    <div className="hidden md:block space-y-6 xl:sticky xl:top-24">
+      <PillSidebar
+        options={SECTION_OPTIONS.map((option) => ({
+          key: option.key,
+          label: option.label,
+        }))}
+        activeKey={activeSection}
+        onChange={(key) => setActiveSection(key as SettingsSection)}
+      />
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-2xl bg-gray-50 p-3">
+          <p className="text-xs text-gray-500">Sections</p>
+          <p className="text-lg font-semibold text-gray-900">5</p>
+        </div>
+        <div className="rounded-2xl bg-gray-50 p-3">
+          <p className="text-xs text-gray-500">Alerts On</p>
+          <p className="text-lg font-semibold text-gray-900">
+            {Object.values(notificationPrefs).filter(Boolean).length}
           </p>
         </div>
-
-        <Button onClick={handleSave} disabled={isSaving} className="gap-2">
-          <Save className="h-4 w-4" />
-          {isSaving ? "Saving..." : "Save Changes"}
-        </Button>
       </div>
+    </div>
+  );
 
-      {saveSuccess && (
-        <Alert variant="success" className="mb-6">
-          Settings saved successfully!
-        </Alert>
-      )}
+  const headerActions = (
+    <Button
+      onClick={handleSave}
+      disabled={isSaving}
+      className="rounded-full bg-[#1C1C1E] text-white hover:bg-black"
+    >
+      <Save className="mr-2 h-4 w-4" />
+      {isSaving ? "Saving..." : "Save Changes"}
+    </Button>
+  );
 
-      <div className="space-y-6">
-        {/* Store Branding */}
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Store className="h-5 w-5" />
-              Store Branding
-            </h2>
+  return (
+    <>
+      <SellerPageTemplate
+        title="Store Settings"
+        description="Manage your store profile, customer communication, and account preferences"
+        headerActions={headerActions}
+        sidebar={sidebar}
+      >
+        {saveSuccess ? (
+          <Alert variant="success" className="mb-6">
+            Settings saved successfully!
+          </Alert>
+        ) : null}
 
-            {/* Banner */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium mb-2">
-                Store Banner
-              </label>
-              <div
-                className="relative h-40 rounded-lg bg-muted overflow-hidden cursor-pointer group"
-                onClick={() => bannerInputRef.current?.click()}
-              >
-                {formData.banner ? (
-                  <img
-                    src={formData.banner}
-                    alt="Store banner"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ImageIcon className="h-12 w-12 text-muted-foreground" />
+        <div className="space-y-6">
+          {showSection("branding") ? (
+            <Card className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
+              <CardHeader className="pb-0">
+                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                  <Store className="h-5 w-5" />
+                  Store Branding
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 md:p-8">
+                <div className="mb-6">
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Store Banner
+                  </label>
+                  <div
+                    className="group relative h-40 cursor-pointer overflow-hidden rounded-2xl bg-gray-100"
+                    onClick={() => bannerInputRef.current?.click()}
+                  >
+                    {formData.banner ? (
+                      <img
+                        src={formData.banner}
+                        alt="Store banner"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <ImageIcon className="h-12 w-12 text-gray-400" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+                      <Camera className="h-8 w-8 text-white" />
+                    </div>
                   </div>
-                )}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Camera className="h-8 w-8 text-white" />
-                </div>
-              </div>
-              <input
-                ref={bannerInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                title="Upload Store Banner"
-                onChange={(e) => handleImageUpload("banner", e)}
-              />
-              <p className="text-sm text-muted-foreground mt-1">
-                Recommended: 1200x300 pixels
-              </p>
-            </div>
-
-            {/* Logo */}
-            <div className="flex items-start gap-4 mb-6">
-              <div
-                className="relative w-24 h-24 rounded-lg bg-muted overflow-hidden cursor-pointer group flex-shrink-0"
-                onClick={() => logoInputRef.current?.click()}
-              >
-                {formData.logo ? (
-                  <img
-                    src={formData.logo}
-                    alt="Store logo"
-                    className="w-full h-full object-cover"
+                  <input
+                    ref={bannerInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    title="Upload Store Banner"
+                    onChange={(e) => handleImageUpload("banner", e)}
                   />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Store className="h-10 w-10 text-muted-foreground" />
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Camera className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <input
-                ref={logoInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                title="Upload Store Logo"
-                onChange={(e) => handleImageUpload("logo", e)}
-              />
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Store Logo
-                </label>
-                <p className="text-sm text-muted-foreground">
-                  Square image, at least 200x200 pixels
-                </p>
-              </div>
-            </div>
-
-            {/* Store Name */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Store Name
-                </label>
-                <CustomInputTextField
-                  value={formData.storeName}
-                  onChange={(e) => handleChange("storeName", e.target.value)}
-                  placeholder="Your store name"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Store URL
-                </label>
-                <div className="flex">
-                  <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 bg-muted text-sm text-muted-foreground">
-                    campuzon.com/store/
-                  </span>
-                  <CustomInputTextField
-                    value={formData.storeSlug}
-                    onChange={(e) =>
-                      handleChange(
-                        "storeSlug",
-                        e.target.value.toLowerCase().replace(/\s+/g, "-"),
-                      )
-                    }
-                    className="rounded-l-none"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <label className="block text-sm font-medium mb-1">
-                Store Description
-              </label>
-              <CustomTextareaField
-                value={formData.description}
-                onChange={(e) => handleChange("description", e.target.value)}
-                placeholder="Tell customers about your store..."
-                rows={4}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Contact Information */}
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Phone className="h-5 w-5" />
-              Contact Information
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  <Mail className="h-4 w-4 inline mr-1" />
-                  Email Address
-                </label>
-                <CustomInputTextField
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleChange("email", e.target.value)}
-                  placeholder="store@example.com"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  <Phone className="h-4 w-4 inline mr-1" />
-                  Phone Number
-                </label>
-                <CustomInputTextField
-                  type="tel"
-                  value={formData.phoneNumber}
-                  onChange={(e) => handleChange("phoneNumber", e.target.value)}
-                  placeholder="+233 XX XXX XXXX"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  <MapPin className="h-4 w-4 inline mr-1" />
-                  Location / Institution
-                </label>
-                <CustomSelectField
-                  value="ug"
-                  inputProps={{ onChange: (e) => handleChange("institution", e.target.value) }}
-                  options={INSTITUTION_OPTIONS}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  <Globe className="h-4 w-4 inline mr-1" />
-                  Website (Optional)
-                </label>
-                <CustomInputTextField
-                  type="url"
-                  value={formData.website}
-                  onChange={(e) => handleChange("website", e.target.value)}
-                  placeholder="https://yourwebsite.com"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1">
-                  <Clock className="h-4 w-4 inline mr-1" />
-                  Business Hours
-                </label>
-                <CustomInputTextField
-                  value={formData.businessHours}
-                  onChange={(e) =>
-                    handleChange("businessHours", e.target.value)
-                  }
-                  placeholder="Mon-Fri: 9AM-6PM, Sat: 10AM-4PM"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Auto-Responder */}
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              Auto-Responder
-            </h2>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Enable Auto-Responder</p>
-                  <p className="text-sm text-muted-foreground">
-                    Automatically reply to customer messages when you're away
+                  <p className="mt-1 text-xs text-gray-500">
+                    Recommended: 1200x300 pixels
                   </p>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
+
+                <div className="mb-6 flex items-start gap-4">
+                  <div
+                    className="group relative h-24 w-24 shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-gray-100"
+                    onClick={() => logoInputRef.current?.click()}
+                  >
+                    {formData.logo ? (
+                      <img
+                        src={formData.logo}
+                        alt="Store logo"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <Store className="h-10 w-10 text-gray-400" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+                      <Camera className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
                   <input
-                    type="checkbox"
-                    checked={formData.autoResponderEnabled}
-                    onChange={(e) =>
-                      handleChange("autoResponderEnabled", e.target.checked)
-                    }
-                    className="sr-only peer"
-                    title="Enable Auto-Responder"
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    title="Upload Store Logo"
+                    onChange={(e) => handleImageUpload("logo", e)}
                   />
-                  <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                </label>
-              </div>
-
-              {formData.autoResponderEnabled && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  className="space-y-4"
-                >
                   <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Bot Name
+                    <label className="block text-sm font-medium text-gray-700">
+                      Store Logo
                     </label>
-                    <CustomInputTextField
-                      value={formData.autoResponderName}
-                      onChange={(e) =>
-                        handleChange("autoResponderName", e.target.value)
-                      }
-                      placeholder="e.g., StoreBot"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Auto-Reply Message
-                    </label>
-                    <CustomTextareaField
-                      value={formData.autoResponderMessage}
-                      onChange={(e) =>
-                        handleChange("autoResponderMessage", e.target.value)
-                      }
-                      placeholder="Thanks for your message..."
-                      rows={3}
-                    />
-                  </div>
-                </motion.div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Notifications */}
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              Notifications
-            </h2>
-
-            <div className="space-y-4">
-              {[
-                {
-                  id: "newOrder",
-                  label: "New Order",
-                  description: "Get notified when you receive a new order",
-                },
-                {
-                  id: "newMessage",
-                  label: "New Message",
-                  description: "Get notified when a customer sends a message",
-                },
-                {
-                  id: "lowStock",
-                  label: "Low Stock Alert",
-                  description: "Get notified when product stock is low",
-                },
-                {
-                  id: "reviews",
-                  label: "New Reviews",
-                  description: "Get notified when customers leave reviews",
-                },
-              ].map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between"
-                >
-                  <div>
-                    <p className="font-medium">{item.label}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {item.description}
+                    <p className="text-sm text-gray-500">
+                      Square image, at least 200x200 pixels
                     </p>
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      defaultChecked
-                      className="sr-only peer"
-                      title={item.label}
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <CustomInputTextField
+                      label="Store Name"
+                      value={formData.storeName}
+                      onChange={(e) =>
+                        handleChange("storeName", e.target.value)
+                      }
+                      placeholder="Your store name"
                     />
-                    <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                  </label>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                      Store URL
+                    </label>
+                    <div className="flex">
+                      <span className="inline-flex items-center rounded-l-md border border-r-0 bg-gray-50 px-3 text-sm text-gray-500">
+                        campuzon.com/store/
+                      </span>
+                      <CustomInputTextField
+                        value={formData.storeSlug}
+                        onChange={(e) =>
+                          handleChange(
+                            "storeSlug",
+                            e.target.value.toLowerCase().replace(/\s+/g, "-"),
+                          )
+                        }
+                        className="rounded-l-none"
+                      />
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Danger Zone */}
-        <Card className="border-red-200 dark:border-red-900">
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-red-600">
-              <AlertTriangle className="h-5 w-5" />
-              Danger Zone
-            </h2>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-lg border border-red-200 dark:border-red-900">
-                <div>
-                  <p className="font-medium">Deactivate Store</p>
-                  <p className="text-sm text-muted-foreground">
-                    Temporarily hide your store from customers
-                  </p>
+                <div className="mt-4">
+                  <CustomTextareaField
+                    label="Store Description"
+                    value={formData.description}
+                    onChange={(e) =>
+                      handleChange("description", e.target.value)
+                    }
+                    placeholder="Tell customers about your store..."
+                    rows={4}
+                  />
                 </div>
-                <Button
-                  variant="outline"
-                  className="text-red-600 border-red-200 hover:bg-red-50"
-                  onClick={() => setDeactivateModalOpen(true)}
-                >
-                  <Lock className="h-4 w-4 mr-1" />
-                  Deactivate
-                </Button>
-              </div>
+              </CardContent>
+            </Card>
+          ) : null}
 
-              <div className="flex items-center justify-between p-4 rounded-lg border border-red-200 dark:border-red-900">
-                <div>
-                  <p className="font-medium">Delete Store</p>
-                  <p className="text-sm text-muted-foreground">
-                    Permanently delete your store and all data
-                  </p>
+          {showSection("contact") ? (
+            <Card className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
+              <CardHeader className="pb-0">
+                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                  <Phone className="h-5 w-5" />
+                  Contact Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 md:p-8">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <CustomInputTextField
+                      label="Email Address"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleChange("email", e.target.value)}
+                      placeholder="store@example.com"
+                    />
+                  </div>
+                  <div>
+                    <CustomInputTextField
+                      label="Phone Number"
+                      type="tel"
+                      value={formData.phoneNumber}
+                      onChange={(e) =>
+                        handleChange("phoneNumber", e.target.value)
+                      }
+                      placeholder="+233 XX XXX XXXX"
+                    />
+                  </div>
+                  <div>
+                    <CustomSelectField
+                      label="Location / Institution"
+                      labelPlacement="outside"
+                      value={formData.institution}
+                      inputProps={{
+                        onChange: (e) =>
+                          handleChange("institution", e.target.value),
+                      }}
+                      options={INSTITUTION_OPTIONS}
+                    />
+                  </div>
+                  <div>
+                    <CustomInputTextField
+                      label="Website (Optional)"
+                      type="url"
+                      value={formData.website}
+                      onChange={(e) => handleChange("website", e.target.value)}
+                      placeholder="https://yourwebsite.com"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <CustomInputTextField
+                      label="Business Hours"
+                      value={formData.businessHours}
+                      onChange={(e) =>
+                        handleChange("businessHours", e.target.value)
+                      }
+                      placeholder="Mon-Fri: 9AM-6PM, Sat: 10AM-4PM"
+                    />
+                  </div>
                 </div>
-                <Button
-                  variant="destructive"
-                  onClick={() => setDeleteModalOpen(true)}
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Delete
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              </CardContent>
+            </Card>
+          ) : null}
 
-      {/* Deactivate Modal */}
+          {showSection("automation") ? (
+            <Card className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
+              <CardHeader className="pb-0">
+                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                  <MessageSquare className="h-5 w-5" />
+                  Auto-Responder
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 md:p-8">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50/70 p-4">
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        Enable Auto-Responder
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Automatically reply to customer messages when you're
+                        away
+                      </p>
+                    </div>
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.autoResponderEnabled}
+                        onChange={(e) =>
+                          handleChange("autoResponderEnabled", e.target.checked)
+                        }
+                        className="peer sr-only"
+                        title="Enable Auto-Responder"
+                      />
+                      <div className="h-6 w-11 rounded-full bg-muted transition peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-['']"></div>
+                    </label>
+                  </div>
+
+                  {formData.autoResponderEnabled ? (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="space-y-4"
+                    >
+                      <div>
+                        <CustomInputTextField
+                          label="Bot Name"
+                          value={formData.autoResponderName}
+                          onChange={(e) =>
+                            handleChange("autoResponderName", e.target.value)
+                          }
+                          placeholder="e.g., StoreBot"
+                        />
+                      </div>
+                      <div>
+                        <CustomTextareaField
+                          label="Auto-Reply Message"
+                          value={formData.autoResponderMessage}
+                          onChange={(e) =>
+                            handleChange("autoResponderMessage", e.target.value)
+                          }
+                          placeholder="Thanks for your message..."
+                          rows={3}
+                        />
+                      </div>
+                    </motion.div>
+                  ) : null}
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {showSection("notifications") ? (
+            <Card className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
+              <CardHeader className="pb-0">
+                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                  <Bell className="h-5 w-5" />
+                  Notifications
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 md:p-8">
+                <div className="space-y-3">
+                  {[
+                    {
+                      id: "newOrder",
+                      label: "New Order",
+                      description: "Get notified when you receive a new order",
+                    },
+                    {
+                      id: "newMessage",
+                      label: "New Message",
+                      description:
+                        "Get notified when a customer sends a message",
+                    },
+                    {
+                      id: "lowStock",
+                      label: "Low Stock Alert",
+                      description: "Get notified when product stock is low",
+                    },
+                    {
+                      id: "reviews",
+                      label: "New Reviews",
+                      description: "Get notified when customers leave reviews",
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between rounded-2xl border border-gray-100 p-4"
+                    >
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {item.label}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {item.description}
+                        </p>
+                      </div>
+                      <label className="relative inline-flex cursor-pointer items-center">
+                        <input
+                          type="checkbox"
+                          checked={
+                            notificationPrefs[
+                              item.id as keyof typeof notificationPrefs
+                            ]
+                          }
+                          onChange={() =>
+                            handleNotificationToggle(
+                              item.id as keyof typeof notificationPrefs,
+                            )
+                          }
+                          className="peer sr-only"
+                          title={item.label}
+                        />
+                        <div className="h-6 w-11 rounded-full bg-muted transition peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-['']"></div>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {showSection("danger") ? (
+            <Card className="overflow-hidden rounded-3xl border border-red-200 bg-white shadow-sm">
+              <CardHeader className="pb-0">
+                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-red-600">
+                  <AlertTriangle className="h-5 w-5" />
+                  Danger Zone
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 md:p-8">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between rounded-2xl border border-red-200 p-4">
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        Deactivate Store
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Temporarily hide your store from customers
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="border-red-200 text-red-600 hover:bg-red-50"
+                      onClick={() => setDeactivateModalOpen(true)}
+                    >
+                      <Lock className="mr-1 h-4 w-4" />
+                      Deactivate
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-2xl border border-red-200 p-4">
+                    <div>
+                      <p className="font-medium text-gray-900">Delete Store</p>
+                      <p className="text-sm text-gray-500">
+                        Permanently delete your store and all data
+                      </p>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      onClick={() => setDeleteModalOpen(true)}
+                    >
+                      <Trash2 className="mr-1 h-4 w-4" />
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+        </div>
+      </SellerPageTemplate>
+
       <Modal
         isOpen={deactivateModalOpen}
         onClose={() => setDeactivateModalOpen(false)}
@@ -566,7 +640,6 @@ export function SellerSettingsPage() {
         </div>
       </Modal>
 
-      {/* Delete Modal */}
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
@@ -598,6 +671,6 @@ export function SellerSettingsPage() {
           </div>
         </div>
       </Modal>
-    </div>
+    </>
   );
 }

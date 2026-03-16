@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import {
   Package,
   Plus,
-  Search,
   Edit2,
   Trash2,
   Eye,
@@ -17,10 +16,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  CustomInputTextField,
-  CustomSelectField,
-} from "@/components/shared/text-field";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Modal } from "@/components/shared/Modal";
 import { useAuthStore } from "@/stores";
@@ -32,7 +27,10 @@ import {
   useCurrency,
 } from "@/hooks";
 import { Skeleton } from "@/components/shared/Skeleton";
-import { SellerPageTemplate } from "../../components/SellerPageTemplate";
+import {
+  SellerPageSearchFilters,
+  SellerPageTemplate,
+} from "../../components/SellerPageTemplate";
 import { PillSidebar } from "@/components/ui/pill-sidebar";
 
 const SORT_OPTIONS = [
@@ -234,36 +232,29 @@ export function SellerProductsPage() {
       title="Products"
       description={`Manage your store products (${(mockProducts || []).length} total)`}
       headerActions={
-        <Link to="/seller/products/new">
-          <Button className="gap-2 rounded-full bg-[#1C1C1E] text-white hover:bg-black">
-            <Plus className="h-4 w-4" />
-            Add Product
-          </Button>
-        </Link>
+        <div className="flex w-full flex-wrap items-center justify-end gap-2 md:w-auto md:flex-nowrap">
+          <SellerPageSearchFilters
+            searchValue={searchQuery}
+            onSearchChange={setSearchQuery}
+            searchPlaceholder="Search products..."
+            selectValue={sortBy}
+            onSelectChange={setSortBy}
+            selectPlaceholder="Sort by"
+            selectOptions={SORT_OPTIONS.map((option) => ({
+              value: option.value,
+              label: option.label,
+            }))}
+          />
+          <Link to="/seller/products/new">
+            <Button className="gap-2 rounded-full bg-[#1C1C1E] text-white hover:bg-black">
+              <Plus className="h-4 w-4" />
+              Add Product
+            </Button>
+          </Link>
+        </div>
       }
       sidebar={sidebar}
     >
-      {/* Search & Sort */}
-      <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <CustomInputTextField
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <CustomSelectField
-            value={sortBy}
-            inputProps={{ onChange: (e) => setSortBy(e.target.value) }}
-            options={SORT_OPTIONS}
-            className="w-full sm:w-48"
-          />
-        </div>
-      </div>
-
       {/* Bulk Actions */}
       {selectedProducts.length > 0 && (
         <motion.div
@@ -317,7 +308,7 @@ export function SellerProductsPage() {
                   </Button>
                 </Link>
               }
-            />{" "}
+            />
           </div>
         </div>
       ) : (
@@ -346,7 +337,7 @@ export function SellerProductsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <div className="rounded-3xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow p-4">
+                <div className="rounded-[28px] border border-gray-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
                   <div className="flex items-start gap-4">
                     {/* Checkbox */}
                     <input
@@ -358,7 +349,7 @@ export function SellerProductsPage() {
                     />
 
                     {/* Product Image */}
-                    <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
+                    <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-2xl border border-gray-100 bg-gray-100">
                       {product.thumbnail ? (
                         <img
                           src={product.thumbnail}
@@ -373,16 +364,16 @@ export function SellerProductsPage() {
                     </div>
 
                     {/* Product Info */}
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <Link
                             to={`/products/${product.slug}`}
-                            className="font-semibold text-gray-900 hover:text-emerald-600 transition-colors line-clamp-1"
+                            className="line-clamp-1 text-base font-semibold text-gray-900 transition-colors hover:text-emerald-600"
                           >
                             {product.name}
                           </Link>
-                          <p className="text-sm text-gray-500 line-clamp-1">
+                          <p className="mt-0.5 line-clamp-1 text-sm text-gray-500">
                             {product.description}
                           </p>
                         </div>
@@ -394,7 +385,7 @@ export function SellerProductsPage() {
                       </div>
 
                       {/* Stats Row */}
-                      <div className="flex flex-wrap items-center gap-4 mt-2 text-sm">
+                      <div className="mt-3 grid grid-cols-2 gap-3 rounded-2xl border border-gray-100 bg-gray-50/70 p-3 text-sm md:grid-cols-4">
                         <div>
                           <span className="text-gray-500">Price: </span>
                           <span className="font-semibold text-gray-900">
@@ -433,7 +424,7 @@ export function SellerProductsPage() {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center gap-2 mt-3">
+                      <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
                         <Link to={`/seller/products/${product.id}/edit`}>
                           <Button
                             variant="outline"

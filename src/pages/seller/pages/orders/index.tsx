@@ -10,9 +10,7 @@ import {
   MessageCircle,
   Package,
   Phone,
-  Search,
   Truck,
-  X,
   XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,17 +26,12 @@ import {
   useUpdateOrderStatus,
 } from "@/hooks";
 import { Skeleton } from "@/components/shared/Skeleton";
-import { SellerPageTemplate } from "@/pages/seller/components/SellerPageTemplate";
+import {
+  SellerPageSearchFilters,
+  SellerPageTemplate,
+} from "@/pages/seller/components/SellerPageTemplate";
 import { PillSidebar } from "@/components/ui/pill-sidebar";
 import { OrderCard } from "@/components/shared/OrderCard";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 // Mock orders data for seller
 const mockSellerOrders: Order[] = [];
@@ -135,7 +128,6 @@ export function SellerOrdersPage() {
   const { formatGHS } = useCurrency();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchExpanded, setSearchExpanded] = useState(false);
   const [mainFilter, setMainFilter] = useState<MainFilterKey>("all");
   const [extraFilter, setExtraFilter] = useState<ExtraFilterKey>("all");
   const [selectedOrder, setSelectedOrder] = useState<
@@ -152,30 +144,27 @@ export function SellerOrdersPage() {
 
   const effectiveFilter = extraFilter !== "all" ? extraFilter : mainFilter;
 
-  // Filter orders
   const filteredOrders = useMemo(() => {
     let orders = [...(storeOrders || [])];
 
-    // Filter by status
     if (effectiveFilter !== "all") {
-      orders = orders.filter((o) => o.status === effectiveFilter);
+      orders = orders.filter((order) => order.status === effectiveFilter);
     }
 
-    // Filter by search
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       orders = orders.filter(
-        (o) =>
-          o.orderNumber.toLowerCase().includes(query) ||
-          o.shippingAddress?.fullName?.toLowerCase().includes(query) ||
-          o.items?.some((item) =>
+        (order) =>
+          order.orderNumber.toLowerCase().includes(query) ||
+          order.shippingAddress?.fullName?.toLowerCase().includes(query) ||
+          order.items?.some((item) =>
             item.productName.toLowerCase().includes(query),
           ),
       );
     }
 
     return orders;
-  }, [storeOrders, searchQuery, effectiveFilter]);
+  }, [effectiveFilter, searchQuery, storeOrders]);
 
   const handleOrderAction = (
     order: (typeof mockSellerOrders)[0],
@@ -187,21 +176,23 @@ export function SellerOrdersPage() {
   };
 
   const confirmAction = async () => {
-    if (selectedOrder && actionType) {
-      const newStatus =
-        actionType === "ship"
-          ? "shipped"
-          : actionType === "complete"
-            ? "completed"
-            : "cancelled";
-      await updateStatus.mutateAsync({
-        id: selectedOrder.id,
-        status: newStatus as OrderStatus,
-      });
-      setActionModalOpen(false);
-      setSelectedOrder(null);
-      setActionType(null);
-    }
+    if (!selectedOrder || !actionType) return;
+
+    const newStatus =
+      actionType === "ship"
+        ? "shipped"
+        : actionType === "complete"
+          ? "completed"
+          : "cancelled";
+
+    await updateStatus.mutateAsync({
+      id: selectedOrder.id,
+      status: newStatus as OrderStatus,
+    });
+
+    setActionModalOpen(false);
+    setSelectedOrder(null);
+    setActionType(null);
   };
 
   const getActionLabel = () => {
@@ -217,7 +208,6 @@ export function SellerOrdersPage() {
     }
   };
 
-  // Stats
   const stats = useMemo(() => {
     const orders = storeOrders || [];
     const pending = orders.filter(
@@ -230,7 +220,6 @@ export function SellerOrdersPage() {
     const totalRevenue = orders
       .filter((o) => o.status !== "cancelled" && o.status !== "refunded")
       .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-
     return { pending, shipped, completed, totalRevenue };
   }, [storeOrders]);
 
@@ -250,7 +239,6 @@ export function SellerOrdersPage() {
     };
   }, [storeOrders]);
 
-  // Redirect if not authenticated or not a store owner
   if (!isAuthenticated || !user?.isOwner) {
     navigate("/login");
     return null;
@@ -271,8 +259,8 @@ export function SellerOrdersPage() {
           setMainFilter(key as MainFilterKey);
           setExtraFilter("all");
         }}
-        className="mb-4"
       />
+
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-2xl bg-gray-50 p-3">
           <p className="text-xs text-gray-500">Pending</p>
@@ -290,7 +278,7 @@ export function SellerOrdersPage() {
         </div>
         <div className="rounded-2xl bg-gray-50 p-3">
           <p className="text-xs text-gray-500">Revenue</p>
-          <p className="text-sm font-semibold text-gray-900 truncate">
+          <p className="truncate text-sm font-semibold text-gray-900">
             {formatGHS(stats.totalRevenue)}
           </p>
         </div>
@@ -299,66 +287,23 @@ export function SellerOrdersPage() {
   );
 
   const headerActions = (
-    <div className="flex w-full items-center justify-end gap-2 md:w-auto">
-      <div
-        className={`overflow-hidden transition-all duration-300 ${
-          searchExpanded ? "w-full sm:w-72" : "w-10"
-        }`}
-      >
-        {searchExpanded ? (
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              autoFocus
-              placeholder="Search orders..."
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              className="h-10 rounded-full pl-9 pr-10"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                setSearchExpanded(false);
-                setSearchQuery("");
-              }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              aria-label="Close search"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        ) : (
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => setSearchExpanded(true)}
-            className="h-10 w-10 rounded-full"
-            aria-label="Open search"
-          >
-            <Search className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-
-      <Select
-        value={extraFilter}
-        onValueChange={(value) => setExtraFilter(value as ExtraFilterKey)}
-      >
-        <SelectTrigger className="h-10 w-[180px] rounded-full">
-          <SelectValue placeholder="More filters" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">More Filters</SelectItem>
-          <SelectItem value="paid">Paid</SelectItem>
-          <SelectItem value="processing">Processing</SelectItem>
-          <SelectItem value="delivered">Delivered</SelectItem>
-          <SelectItem value="cancelled">Cancelled</SelectItem>
-          <SelectItem value="refunded">Refunded</SelectItem>
-          <SelectItem value="disputed">Disputed</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+    <SellerPageSearchFilters
+      searchValue={searchQuery}
+      onSearchChange={setSearchQuery}
+      searchPlaceholder="Search orders..."
+      selectValue={extraFilter}
+      onSelectChange={(value) => setExtraFilter(value as ExtraFilterKey)}
+      selectPlaceholder="More filters"
+      selectOptions={[
+        { value: "all", label: "More Filters" },
+        { value: "paid", label: "Paid" },
+        { value: "processing", label: "Processing" },
+        { value: "delivered", label: "Delivered" },
+        { value: "cancelled", label: "Cancelled" },
+        { value: "refunded", label: "Refunded" },
+        { value: "disputed", label: "Disputed" },
+      ]}
+    />
   );
 
   return (
@@ -368,7 +313,6 @@ export function SellerOrdersPage() {
       headerActions={headerActions}
       sidebar={sidebar}
     >
-      {/* Orders List */}
       {isLoading ? (
         <div className="space-y-6">
           {[1, 2, 3].map((i) => (
@@ -376,8 +320,8 @@ export function SellerOrdersPage() {
           ))}
         </div>
       ) : filteredOrders.length === 0 ? (
-        <div className="border border-gray-100 bg-white rounded-[28px] overflow-hidden shadow-sm">
-          <div className="text-center py-16 flex flex-col justify-center h-full items-center">
+        <div className="overflow-hidden rounded-[28px] border border-gray-100 bg-white shadow-sm">
+          <div className="flex h-full flex-col items-center justify-center py-16 text-center">
             <EmptyState
               icon={<Package className="h-16 w-16" />}
               title={
@@ -490,7 +434,6 @@ export function SellerOrdersPage() {
         </div>
       )}
 
-      {/* Action Confirmation Modal */}
       <Modal
         isOpen={actionModalOpen}
         onClose={() => setActionModalOpen(false)}

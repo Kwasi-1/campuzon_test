@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Icon } from "@iconify/react";
 
 export interface PillSidebarOption {
   key: string;
@@ -37,13 +38,22 @@ export function PillSidebar({
             }`}
           >
             <span className="font-medium text-[15px]">{opt.label}</span>
-            {typeof opt.count === "number" && (
+            {typeof opt.count === "number" ? (
               <span
                 className={`h-10 w-10 xl:w-12 xl:h-12 ml-3 flex items-center justify-center rounded-full text-xs font-bold ${
                   isActive ? "bg-white text-black" : "bg-gray-100 text-gray-600"
                 }`}
               >
                 {opt.count}
+              </span>
+            ) : (
+              <span
+                className={`h-10 w-10 xl:w-12 xl:h-12 ml-3 flex items-center justify-center rounded-full ${
+                  isActive ? "bg-white text-black" : "bg-gray-100 text-gray-600"
+                }`}
+                aria-hidden="true"
+              >
+                <Icon icon="solar:alt-arrow-right-linear" className="h-4 w-4" />
               </span>
             )}
           </button>

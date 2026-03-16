@@ -1,4 +1,19 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { Search, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+export interface SellerPageSelectOption {
+  value: string;
+  label: string;
+}
 
 interface SellerPageTemplateProps {
   title?: string;
@@ -35,6 +50,90 @@ export function SellerPageTemplate({
         {sidebar ? <aside className="xl:w-72 shrink-0">{sidebar}</aside> : null}
         <section className="flex-1 min-w-0">{children}</section>
       </div>
+    </div>
+  );
+}
+
+interface SellerPageSearchFiltersProps {
+  searchValue: string;
+  onSearchChange: (value: string) => void;
+  searchPlaceholder?: string;
+  selectValue: string;
+  onSelectChange: (value: string) => void;
+  selectOptions: SellerPageSelectOption[];
+  selectPlaceholder?: string;
+  className?: string;
+}
+
+export function SellerPageSearchFilters({
+  searchValue,
+  onSearchChange,
+  searchPlaceholder = "Search...",
+  selectValue,
+  onSelectChange,
+  selectOptions,
+  selectPlaceholder = "Filter",
+  className,
+}: SellerPageSearchFiltersProps) {
+  const [searchExpanded, setSearchExpanded] = useState(false);
+
+  return (
+    <div
+      className={`flex w-full items-center justify-end gap-2 md:w-auto ${className || ""}`}
+    >
+      <div
+        className={`overflow-hidden transition-all duration-300 ${
+          searchExpanded ? "w-full sm:w-72" : "w-10"
+        }`}
+      >
+        {searchExpanded ? (
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              autoFocus
+              placeholder={searchPlaceholder}
+              value={searchValue}
+              onChange={(event) => onSearchChange(event.target.value)}
+              className="h-10 rounded-full pl-9 pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setSearchExpanded(false);
+                onSearchChange("");
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              aria-label="Close search"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => setSearchExpanded(true)}
+            className="h-10 w-10 rounded-full"
+            aria-label="Open search"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
+      <Select value={selectValue} onValueChange={onSelectChange}>
+        <SelectTrigger className="h-10 w-[180px] rounded-full">
+          <SelectValue placeholder={selectPlaceholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {selectOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
