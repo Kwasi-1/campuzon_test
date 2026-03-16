@@ -300,7 +300,7 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="max-w7xl mx-auto md:px-4 lg:px-6 py-8 space-y-6">
+    <div className="max-w7xl mx-auto  py-8 space-y-6">
       {/* Page header */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
@@ -314,7 +314,7 @@ export function SettingsPage() {
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[420px_minmax(0,1fr)] gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[450px_minmax(0,1fr)] gap-6 items-start">
         <div className="space-y-6 lg:sticky lg:top-24">
           {/* ── ACCOUNT ─────────────────────────────────────────────────────── */}
           <Section title="Account" delay={0.05}>
@@ -582,7 +582,7 @@ export function SettingsPage() {
             <button
               onClick={handleLogout}
               type="button"
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-red-100 text-red-500 text-sm font-medium hover:bg-red-50 transition-colors"
+              className="hidden w-full lg:flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-red-100 text-red-500 text-sm font-medium hover:bg-red-50 transition-colors"
             >
               <LogOut className="h-4 w-4" strokeWidth={1.8} />
               Log Out
@@ -769,8 +769,24 @@ export function SettingsPage() {
         </div>
       </div>
 
+      {/* ── LOGOUT ───────────────────────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+      >
+        <button
+          onClick={handleLogout}
+          type="button"
+          className="flex w-full lg:hidden items-center justify-center gap-2 py-3.5 rounded-2xl border border-red-100 text-red-500 text-sm font-medium hover:bg-red-50 transition-colors"
+        >
+          <LogOut className="h-4 w-4" strokeWidth={1.8} />
+          Log Out
+        </button>
+      </motion.div>
+
       {/* App version */}
-      <p className="text-center text-xs text-gray-300 pb-4 lg:text-left">
+      <p className="text-center text-xs text-gray-300 pb-4">
         Campuzon v1.0.0 · © 2025
       </p>
     </div>

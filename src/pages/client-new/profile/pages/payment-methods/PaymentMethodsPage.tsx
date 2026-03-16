@@ -147,7 +147,7 @@ export function PaymentMethodsPage() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
+    <div className="py-8">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
         <div className="space-y-1">
