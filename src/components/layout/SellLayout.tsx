@@ -11,6 +11,8 @@ import {
   LogOut,
   ChevronDown,
   Store,
+  Menu,
+  X,
 } from "lucide-react";
 import { Toaster } from "react-hot-toast";
 import { useAuthStore } from "@/stores";
@@ -30,6 +32,7 @@ export function SellLayout() {
   const { user, logout } = useAuthStore();
   const { data: store } = useMyStore();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on outside click
@@ -48,6 +51,11 @@ export function SellLayout() {
     navigate("/");
   };
 
+  const closeAllMenus = () => {
+    setUserMenuOpen(false);
+    setMobileMenuOpen(false);
+  };
+
   const initials = user
     ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase()
     : "?";
@@ -55,11 +63,19 @@ export function SellLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-white text-foreground">
       {/* Seller Header */}
-      <header className="sticky top-0 z-40 w-full bg-white border-b border-gray-100">
+      <header className="sticky top-0 z-40 w-full bg-white border-b border-gray-100 shadow-sm">
         <div className="container mx-auto px-4 py-3">
           <div className="flex h-16 items-center justify-between gap-4">
             {/* Left: Back link + Logo + Store pill */}
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                className="inline-flex lg:hidden items-center justify-center rounded-full p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                aria-label="Open seller navigation"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+
               <Link
                 to="/"
                 className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors"
@@ -80,32 +96,6 @@ export function SellLayout() {
                   <span className="max-w-[160px] truncate">{store.name}</span>
                 </div>
               )}
-            </div>
-            {/* Nav Tabs */}
-            <div className=" border-gray-100">
-              <div className="container mx-auto px-4">
-                <nav
-                  className="flex items-center gap-1 overflow-x-auto scrollbar-hide"
-                  aria-label="Seller navigation"
-                >
-                  {NAV_LINKS.map(({ to, label, icon: Icon }) => (
-                    <NavLink
-                      key={to}
-                      to={to}
-                      className={({ isActive }) =>
-                        `flex items-center gap-2 whitespace-nowrap borde rounded-full px-4 py-3 text-sm font-medium transition-colors ${
-                          isActive
-                            ? "border-gray-200 text-gray-900 bg-muted/70"
-                            : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-800"
-                        }`
-                      }
-                    >
-                      <Icon className="h-4 w-4" />
-                      {label}
-                    </NavLink>
-                  ))}
-                </nav>
-              </div>
             </div>
 
             {/* Right: Notifications + User avatar */}
@@ -174,7 +164,7 @@ export function SellLayout() {
                     <div className="mt-1.5 px-2 space-y-0.5">
                       <Link
                         to="/"
-                        onClick={() => setUserMenuOpen(false)}
+                        onClick={closeAllMenus}
                         className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                       >
                         <ArrowLeft className="h-4 w-4 text-gray-400" />
@@ -182,7 +172,7 @@ export function SellLayout() {
                       </Link>
                       <Link
                         to="/seller/settings"
-                        onClick={() => setUserMenuOpen(false)}
+                        onClick={closeAllMenus}
                         className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                       >
                         <Settings className="h-4 w-4 text-gray-400" />
@@ -205,7 +195,79 @@ export function SellLayout() {
             </div>
           </div>
         </div>
+
+        {/* Desktop / Tablet Nav Tabs */}
+        <div className="hidden lg:block border-t border-gray-100">
+          <div className="container mx-auto px-4">
+            <nav
+              className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-2"
+              aria-label="Seller navigation"
+            >
+              {NAV_LINKS.map(({ to, label, icon: Icon }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className={({ isActive }) =>
+                    `flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2.5 text-sm font-medium transition-colors ${
+                      isActive
+                        ? "border-transparent text-gray-900 bg-muted/70"
+                        : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-800"
+                    }`
+                  }
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </NavLink>
+              ))}
+            </nav>
+          </div>
+        </div>
       </header>
+
+      {/* Mobile Navigation Drawer */}
+      {mobileMenuOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/30 lg:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <aside className="fixed left-0 top-0 z-50 h-full w-[280px] border-r border-gray-200 bg-white shadow-xl lg:hidden">
+            <div className="flex h-16 items-center justify-between border-b border-gray-100 px-4">
+              <div className="flex items-center gap-2">
+                <img src={logo} alt="Campuzon" className="h-6 w-auto" />
+                <span className="text-sm font-semibold text-gray-900">Seller Menu</span>
+              </div>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-full p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                aria-label="Close seller navigation"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <nav className="flex flex-col gap-1 px-3 py-3" aria-label="Mobile seller navigation">
+              {NAV_LINKS.map(({ to, label, icon: Icon }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                      isActive
+                        ? "bg-gray-900 text-white"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`
+                  }
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </NavLink>
+              ))}
+            </nav>
+          </aside>
+        </>
+      )}
 
       {/* Main Content */}
       <main className="flex-1">
