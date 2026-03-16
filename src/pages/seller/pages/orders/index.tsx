@@ -1,28 +1,25 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Package,
-  Search,
-  Clock,
-  CheckCircle,
-  XCircle,
   AlertCircle,
-  Truck,
+  CheckCircle,
+  Clock,
+  DollarSign,
   Eye,
   MessageCircle,
+  Package,
   Phone,
-  Calendar,
-  DollarSign,
+  Search,
+  Truck,
+  X,
+  XCircle,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CustomInputTextField } from "@/components/shared/text-field";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Modal } from "@/components/shared/Modal";
 import { useAuthStore } from "@/stores";
-import { formatRelativeTime } from "@/lib/utils";
 import type { Order, OrderStatus } from "@/types-new";
 import {
   useCurrency,
@@ -33,6 +30,15 @@ import {
 import { Skeleton } from "@/components/shared/Skeleton";
 import { SellerPageTemplate } from "@/pages/seller/components/SellerPageTemplate";
 import { PillSidebar } from "@/components/ui/pill-sidebar";
+import { OrderCard } from "@/components/shared/OrderCard";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Mock orders data for seller
 const mockSellerOrders: Order[] = [];
@@ -46,7 +52,20 @@ const STATUS_OPTIONS = [
   { value: "delivered", label: "Delivered" },
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
+  { value: "refunded", label: "Refunded" },
+  { value: "disputed", label: "Disputed" },
 ];
+
+const MAIN_FILTER_KEYS = ["all", "pending", "shipped", "completed"] as const;
+type MainFilterKey = (typeof MAIN_FILTER_KEYS)[number];
+type ExtraFilterKey =
+  | "all"
+  | "paid"
+  | "processing"
+  | "delivered"
+  | "cancelled"
+  | "refunded"
+  | "disputed";
 
 const getStatusConfig = (status: OrderStatus) => {
   switch (status) {
@@ -116,7 +135,9 @@ export function SellerOrdersPage() {
   const { formatGHS } = useCurrency();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const [mainFilter, setMainFilter] = useState<MainFilterKey>("all");
+  const [extraFilter, setExtraFilter] = useState<ExtraFilterKey>("all");
   const [selectedOrder, setSelectedOrder] = useState<
     (typeof mockSellerOrders)[0] | null
   >(null);
@@ -129,13 +150,15 @@ export function SellerOrdersPage() {
   const { data: storeOrders, isLoading } = useStoreOrders(store?.id || "");
   const updateStatus = useUpdateOrderStatus();
 
+  const effectiveFilter = extraFilter !== "all" ? extraFilter : mainFilter;
+
   // Filter orders
   const filteredOrders = useMemo(() => {
     let orders = [...(storeOrders || [])];
 
     // Filter by status
-    if (statusFilter !== "all") {
-      orders = orders.filter((o) => o.status === statusFilter);
+    if (effectiveFilter !== "all") {
+      orders = orders.filter((o) => o.status === effectiveFilter);
     }
 
     // Filter by search
@@ -152,7 +175,7 @@ export function SellerOrdersPage() {
     }
 
     return orders;
-  }, [storeOrders, searchQuery, statusFilter]);
+  }, [storeOrders, searchQuery, effectiveFilter]);
 
   const handleOrderAction = (
     order: (typeof mockSellerOrders)[0],
@@ -222,6 +245,8 @@ export function SellerOrdersPage() {
       delivered: orders.filter((o) => o.status === "delivered").length,
       completed: orders.filter((o) => o.status === "completed").length,
       cancelled: orders.filter((o) => o.status === "cancelled").length,
+      refunded: orders.filter((o) => o.status === "refunded").length,
+      disputed: orders.filter((o) => o.status === "disputed").length,
     };
   }, [storeOrders]);
 
@@ -234,13 +259,18 @@ export function SellerOrdersPage() {
   const sidebar = (
     <div className="space-y-6 xl:sticky xl:top-24">
       <PillSidebar
-        options={STATUS_OPTIONS.map((option) => ({
+        options={STATUS_OPTIONS.filter((option) =>
+          MAIN_FILTER_KEYS.includes(option.value as MainFilterKey),
+        ).map((option) => ({
           key: option.value,
           label: option.label,
           count: statusCounts[option.value as keyof typeof statusCounts] ?? 0,
         }))}
-        activeKey={statusFilter}
-        onChange={setStatusFilter}
+        activeKey={mainFilter}
+        onChange={(key) => {
+          setMainFilter(key as MainFilterKey);
+          setExtraFilter("all");
+        }}
         className="mb-4"
       />
       <div className="grid grid-cols-2 gap-2">
@@ -268,53 +298,103 @@ export function SellerOrdersPage() {
     </div>
   );
 
+  const headerActions = (
+    <div className="flex w-full items-center justify-end gap-2 md:w-auto">
+      <div
+        className={`overflow-hidden transition-all duration-300 ${
+          searchExpanded ? "w-full sm:w-72" : "w-10"
+        }`}
+      >
+        {searchExpanded ? (
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              autoFocus
+              placeholder="Search orders..."
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              className="h-10 rounded-full pl-9 pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setSearchExpanded(false);
+                setSearchQuery("");
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              aria-label="Close search"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => setSearchExpanded(true)}
+            className="h-10 w-10 rounded-full"
+            aria-label="Open search"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
+      <Select
+        value={extraFilter}
+        onValueChange={(value) => setExtraFilter(value as ExtraFilterKey)}
+      >
+        <SelectTrigger className="h-10 w-[180px] rounded-full">
+          <SelectValue placeholder="More filters" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">More Filters</SelectItem>
+          <SelectItem value="paid">Paid</SelectItem>
+          <SelectItem value="processing">Processing</SelectItem>
+          <SelectItem value="delivered">Delivered</SelectItem>
+          <SelectItem value="cancelled">Cancelled</SelectItem>
+          <SelectItem value="refunded">Refunded</SelectItem>
+          <SelectItem value="disputed">Disputed</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
   return (
     <SellerPageTemplate
       title="Orders"
       description={`Manage customer orders (${(storeOrders || []).length} total)`}
+      headerActions={headerActions}
       sidebar={sidebar}
     >
-      <Card className="mb-6 rounded-3xl border-gray-200/80">
-        <CardContent className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <CustomInputTextField
-              placeholder="Search orders..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Orders List */}
       {isLoading ? (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-48 w-full rounded-xl" />
+            <Skeleton key={i} className="h-[340px] w-full rounded-[28px]" />
           ))}
         </div>
       ) : filteredOrders.length === 0 ? (
         <div className="border border-gray-100 bg-white rounded-[28px] overflow-hidden shadow-sm">
-            <div className="text-center py-16 flex flex-col justify-center h-full items-center">
-        <EmptyState
-          icon={<Package className="h-16 w-16" />}
-          title={
-            searchQuery || statusFilter !== "all"
-              ? "No matching orders"
-              : "No orders yet"
-          }
-          description={
-            searchQuery || statusFilter !== "all"
-              ? "Try adjusting your search or filters"
-              : "Orders from customers will appear here"
-          }
-        />
-         </div>
+          <div className="text-center py-16 flex flex-col justify-center h-full items-center">
+            <EmptyState
+              icon={<Package className="h-16 w-16" />}
+              title={
+                searchQuery || effectiveFilter !== "all"
+                  ? "No matching orders"
+                  : "No orders yet"
+              }
+              description={
+                searchQuery || effectiveFilter !== "all"
+                  ? "Try adjusting your search or filters"
+                  : "Orders from customers will appear here"
+              }
+            />
+          </div>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {filteredOrders.map((order, index) => {
             const statusConfig = getStatusConfig(order.status);
             const StatusIcon = statusConfig.icon;
@@ -326,146 +406,84 @@ export function SellerOrdersPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <Card className="rounded-3xl border-gray-200/80 hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex flex-col md:flex-row md:items-start gap-4">
-                      {/* Order Info */}
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between gap-2 mb-3">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold">
-                                {order.orderNumber}
-                              </span>
-                              <Badge className={statusConfig.color}>
-                                <StatusIcon className="h-3 w-3 mr-1" />
-                                {statusConfig.label}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                              <Calendar className="h-3 w-3" />
-                              {formatRelativeTime(order.dateCreated)}
-                            </p>
-                          </div>
-                          <p className="text-lg font-bold text-primary">
-                            {formatGHS(order.totalAmount)}
-                          </p>
-                        </div>
+                <OrderCard
+                  order={order}
+                  formatAmount={formatGHS}
+                  statusBadge={
+                    <Badge className={statusConfig.color}>
+                      <StatusIcon className="mr-1 h-3 w-3" />
+                      {statusConfig.label}
+                    </Badge>
+                  }
+                  footerActions={
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <Link to={`/seller/orders/${order.id}`}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-full"
+                        >
+                          <Eye className="mr-1 h-4 w-4" />
+                          View
+                        </Button>
+                      </Link>
+                      <Link to={`/messages?order=${order.id}`}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="rounded-full"
+                        >
+                          <MessageCircle className="mr-1 h-4 w-4" />
+                          Chat
+                        </Button>
+                      </Link>
+                      <a href={`tel:${order.shippingAddress?.phone || ""}`}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="rounded-full"
+                        >
+                          <Phone className="mr-1 h-4 w-4" />
+                          Call
+                        </Button>
+                      </a>
 
-                        {/* Customer */}
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            <span className="font-medium text-primary">
-                              {order.shippingAddress?.fullName?.[0] || "U"}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-medium">
-                              {order.shippingAddress?.fullName || "Customer"}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {order.shippingAddress?.phone || "No phone"}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Items */}
-                        <div className="space-y-2">
-                          {order.items?.map((item, i) => (
-                            <div
-                              key={i}
-                              className="flex items-center gap-3 text-sm"
-                            >
-                              <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                                <Package className="h-6 w-6 text-muted-foreground" />
-                              </div>
-                              <div>
-                                <p className="font-medium">
-                                  {item.productName}
-                                </p>
-                                <p className="text-muted-foreground">
-                                  {item.quantity}x @ {formatGHS(item.unitPrice)}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Delivery Info */}
-                        <div className="mt-3 pt-3 border-t text-sm">
-                          <div className="flex items-center gap-2">
-                            <Truck className="h-4 w-4 text-muted-foreground" />
-                            <span>
-                              Deliver to: {order.shippingAddress?.addressLine1},{" "}
-                              {order.shippingAddress?.city}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex flex-row md:flex-col gap-2">
-                        <Link to={`/seller/orders/${order.id}`}>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Button>
-                        </Link>
-                        <Link to={`/messages?order=${order.id}`}>
-                          <Button variant="ghost" size="sm" className="w-full">
-                            <MessageCircle className="h-4 w-4 mr-1" />
-                            Chat
-                          </Button>
-                        </Link>
-                        <a href={`tel:${order.shippingAddress?.phone}`}>
-                          <Button variant="ghost" size="sm" className="w-full">
-                            <Phone className="h-4 w-4 mr-1" />
-                            Call
-                          </Button>
-                        </a>
-
-                        {/* Status Actions */}
-                        {(order.status === "paid" ||
-                          order.status === "processing") && (
-                          <Button
-                            size="sm"
-                            onClick={() => handleOrderAction(order, "ship")}
-                            className="w-full"
-                          >
-                            <Truck className="h-4 w-4 mr-1" />
-                            Ship
-                          </Button>
-                        )}
-                        {order.status === "delivered" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleOrderAction(order, "complete")}
-                            className="w-full text-green-600"
-                          >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Complete
-                          </Button>
-                        )}
-                        {order.status === "pending" && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleOrderAction(order, "cancel")}
-                            className="w-full text-red-600"
-                          >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Cancel
-                          </Button>
-                        )}
-                      </div>
+                      {(order.status === "paid" ||
+                        order.status === "processing") && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleOrderAction(order, "ship")}
+                          className="rounded-full"
+                        >
+                          <Truck className="mr-1 h-4 w-4" />
+                          Ship
+                        </Button>
+                      )}
+                      {order.status === "delivered" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleOrderAction(order, "complete")}
+                          className="rounded-full text-green-600"
+                        >
+                          <CheckCircle className="mr-1 h-4 w-4" />
+                          Complete
+                        </Button>
+                      )}
+                      {order.status === "pending" && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleOrderAction(order, "cancel")}
+                          className="rounded-full text-red-600"
+                        >
+                          <XCircle className="mr-1 h-4 w-4" />
+                          Cancel
+                        </Button>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
+                  }
+                />
               </motion.div>
             );
           })}
