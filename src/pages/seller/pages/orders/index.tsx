@@ -245,7 +245,7 @@ export function SellerOrdersPage() {
   }
 
   const sidebar = (
-    <div className="space-y-6 xl:sticky xl:top-24">
+    <div className="space-y-6 xl:sticky xl:top-32">
       <PillSidebar
         options={STATUS_OPTIONS.filter((option) =>
           MAIN_FILTER_KEYS.includes(option.value as MainFilterKey),

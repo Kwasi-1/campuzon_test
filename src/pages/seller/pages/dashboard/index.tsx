@@ -312,7 +312,7 @@ export function SellerDashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {quickActions.map((action) => (
             <Link
               key={action.label}
@@ -331,7 +331,7 @@ export function SellerDashboardPage() {
               )}
             </Link>
           ))}
-        </div>
+        </div> */}
 
         {/* Main Content Grid */}
         <div className="grid gap-6 lg:grid-cols-3">

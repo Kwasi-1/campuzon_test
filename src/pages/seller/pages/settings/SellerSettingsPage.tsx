@@ -180,7 +180,7 @@ export function SellerSettingsPage() {
     activeSection === "all" || activeSection === section;
 
   const sidebar = (
-    <div className="hidden md:block space-y-6 xl:sticky xl:top-24">
+    <div className="hidden md:block space-y-6 xl:sticky xl:top-32">
       <PillSidebar
         options={SECTION_OPTIONS.map((option) => ({
           key: option.key,
@@ -234,7 +234,7 @@ export function SellerSettingsPage() {
             <Card className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
               <CardHeader className="pb-0">
                 <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                  <Store className="h-5 w-5" />
+                  {/* <Store className="h-5 w-5" /> */}
                   Store Branding
                 </CardTitle>
               </CardHeader>
@@ -365,7 +365,6 @@ export function SellerSettingsPage() {
             <Card className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
               <CardHeader className="pb-0">
                 <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                  <Phone className="h-5 w-5" />
                   Contact Information
                 </CardTitle>
               </CardHeader>
@@ -431,7 +430,6 @@ export function SellerSettingsPage() {
             <Card className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
               <CardHeader className="pb-0">
                 <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                  <MessageSquare className="h-5 w-5" />
                   Auto-Responder
                 </CardTitle>
               </CardHeader>
@@ -499,7 +497,6 @@ export function SellerSettingsPage() {
             <Card className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
               <CardHeader className="pb-0">
                 <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                  <Bell className="h-5 w-5" />
                   Notifications
                 </CardTitle>
               </CardHeader>
@@ -569,13 +566,12 @@ export function SellerSettingsPage() {
             <Card className="overflow-hidden rounded-3xl border border-red-200 bg-white shadow-sm">
               <CardHeader className="pb-0">
                 <CardTitle className="flex items-center gap-2 text-lg font-semibold text-red-600">
-                  <AlertTriangle className="h-5 w-5" />
                   Danger Zone
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 md:p-8">
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between rounded-2xl border border-red-200 p-4">
+                  <div className="flex items-center justify-between rounded-xl border border-red-200 p-4">
                     <div>
                       <p className="font-medium text-gray-900">
                         Deactivate Store
@@ -594,7 +590,7 @@ export function SellerSettingsPage() {
                     </Button>
                   </div>
 
-                  <div className="flex items-center justify-between rounded-2xl border border-red-200 p-4">
+                  <div className="flex items-center justify-between rounded-xl border border-red-200 p-4">
                     <div>
                       <p className="font-medium text-gray-900">Delete Store</p>
                       <p className="text-sm text-gray-500">

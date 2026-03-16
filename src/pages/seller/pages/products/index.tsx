@@ -194,7 +194,7 @@ export function SellerProductsPage() {
   };
 
   const sidebar = (
-    <div className="space-y-6 xl:sticky xl:top-24">
+    <div className="space-y-6 xl:sticky xl:top-32">
       <PillSidebar
         options={[
           { key: "all", label: "All Products", count: statusCounts.all },
