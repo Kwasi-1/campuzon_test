@@ -11,10 +11,6 @@ import {
   Building2,
   Loader2,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -175,19 +171,59 @@ export function AddressesPage() {
     return null;
   }
 
+  const defaultAddress = addresses.find((address) => address.isDefault);
+  const hallCount = addresses.filter(
+    (address) => address.type === "hall",
+  ).length;
+  const homeCount = addresses.filter(
+    (address) => address.type === "home",
+  ).length;
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">My Addresses</h1>
-          <p className="text-muted-foreground">
+    <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 space-y-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
+            Saved Addresses
+          </h1>
+          <p className="text-sm text-gray-500">
             Manage your delivery addresses
           </p>
         </div>
-        <Button onClick={handleOpenAddModal}>
+        <Button
+          onClick={handleOpenAddModal}
+          className="rounded-full h-11 px-5 bg-[#1C1C1E] hover:bg-black text-white"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Address
         </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
+          <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
+            Total Addresses
+          </p>
+          <p className="text-2xl font-bold text-gray-900 mt-1">
+            {addresses.length}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
+          <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
+            Default Address
+          </p>
+          <p className="text-sm font-semibold text-gray-900 mt-2 truncate">
+            {defaultAddress?.label || "Not set"}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
+          <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
+            Address Mix
+          </p>
+          <p className="text-sm font-semibold text-gray-900 mt-2">
+            Hall {hallCount} · Home {homeCount}
+          </p>
+        </div>
       </div>
 
       {addresses.length === 0 ? (
@@ -195,7 +231,14 @@ export function AddressesPage() {
           icon={<MapPin className="h-16 w-16" />}
           title="No addresses saved"
           description="Add a delivery address to make checkout faster"
-          action={<Button onClick={handleOpenAddModal}>Add Address</Button>}
+          action={
+            <Button
+              onClick={handleOpenAddModal}
+              className="rounded-full px-6 bg-[#1C1C1E] hover:bg-black text-white"
+            >
+              Add Address
+            </Button>
+          }
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
@@ -206,12 +249,18 @@ export function AddressesPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <Card className={address.isDefault ? "border-primary" : ""}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
+              <div
+                className={`bg-white border rounded-[24px] overflow-hidden shadow-sm ${
+                  address.isDefault
+                    ? "border-[#1C1C1E]/25 ring-1 ring-[#1C1C1E]/10"
+                    : "border-gray-100"
+                }`}
+              >
+                <div className="p-5 md:p-6">
+                  <div className="flex items-start justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        className={`w-11 h-11 rounded-2xl flex items-center justify-center ${
                           address.type === "hall"
                             ? "bg-blue-100 text-blue-600"
                             : address.type === "home"
@@ -225,71 +274,75 @@ export function AddressesPage() {
                           <Home className="h-5 w-5" />
                         )}
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{address.label}</h3>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold text-gray-900 truncate">
+                            {address.label}
+                          </h3>
                           {address.isDefault && (
-                            <Badge variant="default" className="text-xs">
+                            <Badge className="text-[11px] rounded-full bg-[#1C1C1E] text-white hover:bg-black">
                               Default
                             </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-gray-500">
                           {address.type === "hall"
                             ? "Campus Hall"
-                            : "Home Address"}
+                            : address.type === "home"
+                              ? "Home Address"
+                              : "Other Address"}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-start gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                      <span className="text-sm">{address.fullAddress}</span>
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-2 text-sm text-gray-700">
+                      <MapPin className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                      <span>{address.fullAddress}</span>
                     </div>
                     {address.phone && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">
-                          Phone:
-                        </span>
-                        <span className="text-sm">{address.phone}</span>
-                      </div>
+                      <p className="text-sm text-gray-500">
+                        Phone: {address.phone}
+                      </p>
                     )}
                   </div>
+                </div>
 
-                  <div className="flex items-center gap-2 pt-4 border-t">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(address)}
-                    >
-                      <Edit2 className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                    {!address.isDefault && (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleSetDefault(address.id)}
-                        >
-                          <Check className="h-4 w-4 mr-1" />
-                          Set Default
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                          onClick={() => handleDelete(address.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                <div className="flex items-center gap-2 px-5 md:px-6 py-3 border-t border-gray-100 bg-[#F7F7F8]">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full border-gray-200"
+                    onClick={() => handleEdit(address)}
+                  >
+                    <Edit2 className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                  {!address.isDefault && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full border-gray-200"
+                        onClick={() => handleSetDefault(address.id)}
+                      >
+                        <Check className="h-4 w-4 mr-1" />
+                        Set Default
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="rounded-full text-red-500 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => handleDelete(address.id)}
+                        aria-label={`Delete ${address.label}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
             </motion.div>
           ))}
         </div>
@@ -307,16 +360,21 @@ export function AddressesPage() {
         <div className="space-y-4">
           {/* Address Type */}
           <div>
-            <label className="block text-sm font-medium mb-2">
+            <label className="block text-sm font-medium mb-2 text-gray-700">
               Address Type
             </label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {(["hall", "home", "other"] as const).map((type) => (
                 <Button
                   key={type}
                   type="button"
-                  variant={formData.type === type ? "default" : "outline"}
+                  variant="outline"
                   size="sm"
+                  className={`rounded-full ${
+                    formData.type === type
+                      ? "bg-[#1C1C1E] text-white border-[#1C1C1E] hover:bg-black"
+                      : "border-gray-200"
+                  }`}
                   onClick={() => setFormData({ ...formData, type })}
                 >
                   {type === "hall" && <Building2 className="h-4 w-4 mr-1" />}
@@ -330,13 +388,16 @@ export function AddressesPage() {
 
           {/* Label */}
           <div>
-            <label className="block text-sm font-medium mb-2">Label</label>
+            <label className="block text-sm font-medium mb-2 text-gray-700">
+              Label
+            </label>
             <Input
               placeholder="e.g., My Hall, Office"
               value={formData.label}
               onChange={(e) =>
                 setFormData({ ...formData, label: e.target.value })
               }
+              className="h-11 rounded-xl"
             />
           </div>
 
@@ -344,7 +405,7 @@ export function AddressesPage() {
           {formData.type === "hall" ? (
             <>
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 text-gray-700">
                   Hall Name
                 </label>
                 <Input
@@ -353,10 +414,11 @@ export function AddressesPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, hall: e.target.value })
                   }
+                  className="h-11 rounded-xl"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 text-gray-700">
                   Room Number
                 </label>
                 <Input
@@ -365,12 +427,13 @@ export function AddressesPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, room: e.target.value })
                   }
+                  className="h-11 rounded-xl"
                 />
               </div>
             </>
           ) : (
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-medium mb-2 text-gray-700">
                 Full Address
               </label>
               <Input
@@ -379,13 +442,14 @@ export function AddressesPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, fullAddress: e.target.value })
                 }
+                className="h-11 rounded-xl"
               />
             </div>
           )}
 
           {/* Phone */}
           <div>
-            <label className="block text-sm font-medium mb-2">
+            <label className="block text-sm font-medium mb-2 text-gray-700">
               Phone Number
             </label>
             <Input
@@ -394,6 +458,7 @@ export function AddressesPage() {
               onChange={(e) =>
                 setFormData({ ...formData, phone: e.target.value })
               }
+              className="h-11 rounded-xl"
             />
           </div>
 
@@ -407,13 +472,16 @@ export function AddressesPage() {
               }
               className="rounded border-input"
             />
-            <span className="text-sm">Set as default address</span>
+            <span className="text-sm text-gray-700">
+              Set as default address
+            </span>
           </label>
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-4">
             <Button
               variant="outline"
+              className="rounded-full"
               onClick={() => {
                 setShowAddModal(false);
                 resetForm();
@@ -430,6 +498,7 @@ export function AddressesPage() {
                   : !formData.fullAddress) ||
                 isLoading
               }
+              className="rounded-full bg-[#1C1C1E] hover:bg-black text-white"
             >
               {isLoading ? (
                 <>

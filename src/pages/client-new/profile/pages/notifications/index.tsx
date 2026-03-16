@@ -14,13 +14,9 @@ import {
   Clock,
   Settings,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/shared/EmptyState";  
+import { EmptyState } from "@/components/shared/EmptyState";
 import { useAuthStore } from "@/stores";
 import { formatRelativeTime } from "@/lib/utils";
 import type { Notification, NotificationType } from "@/types-new";
@@ -176,54 +172,100 @@ export function NotificationsPage() {
     return null;
   }
 
-  return (
-    <div className="container mx-auto px-4 py-8">
+  const readCount = notifications.length - unreadCount;
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Notifications</h1>
-          <p className="text-muted-foreground">
+  return (
+    <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
+            Notifications
+          </h1>
+          <p className="text-sm text-gray-500">
             {unreadCount > 0
               ? `${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}`
               : "All caught up!"}
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex border border-border rounded-lg p-1">
-            <Button
-              variant={filter === "all" ? "default" : "ghost"}
-              size="sm"
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex rounded-full border border-gray-200 bg-white p-1">
+            <button
+              type="button"
               onClick={() => setFilter("all")}
+              className={`h-8 px-4 rounded-full text-sm font-medium transition-colors ${
+                filter === "all"
+                  ? "bg-[#1C1C1E] text-white"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
             >
               All
-            </Button>
-            <Button
-              variant={filter === "unread" ? "default" : "ghost"}
-              size="sm"
+            </button>
+            <button
+              type="button"
               onClick={() => setFilter("unread")}
+              className={`h-8 px-4 rounded-full text-sm font-medium transition-colors inline-flex items-center ${
+                filter === "unread"
+                  ? "bg-[#1C1C1E] text-white"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
             >
               Unread
               {unreadCount > 0 && (
-                <Badge variant="secondary" className="ml-1">
+                <Badge
+                  variant="secondary"
+                  className={`ml-1 h-5 px-1.5 ${
+                    filter === "unread"
+                      ? "bg-white text-[#1C1C1E]"
+                      : "bg-gray-100 text-gray-700"
+                  }`}
+                >
                   {unreadCount}
                 </Badge>
               )}
-            </Button>
+            </button>
           </div>
 
           {unreadCount > 0 && (
-            <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full border-gray-200"
+              onClick={handleMarkAllAsRead}
+            >
               <CheckCheck className="h-4 w-4 mr-1" />
               Mark all read
             </Button>
           )}
 
           <Link to="/settings/notifications">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="rounded-full">
               <Settings className="h-4 w-4" />
             </Button>
           </Link>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
+          <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
+            Total Notifications
+          </p>
+          <p className="text-2xl font-bold text-gray-900 mt-1">
+            {notifications.length}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
+          <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
+            Unread
+          </p>
+          <p className="text-2xl font-bold text-gray-900 mt-1">{unreadCount}</p>
+        </div>
+        <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
+          <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
+            Read
+          </p>
+          <p className="text-2xl font-bold text-gray-900 mt-1">{readCount}</p>
         </div>
       </div>
 
@@ -240,14 +282,18 @@ export function NotificationsPage() {
           }
           action={
             filter === "unread" ? (
-              <Button variant="outline" onClick={() => setFilter("all")}>
+              <Button
+                variant="outline"
+                onClick={() => setFilter("all")}
+                className="rounded-full"
+              >
                 View All
               </Button>
             ) : undefined
           }
         />
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {filteredNotifications.map((notification, index) => {
             const Icon = getNotificationIcon(notification.type);
             const link = getNotificationLink(notification);
@@ -259,82 +305,84 @@ export function NotificationsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.03 }}
               >
-                <Card
-                  className={`hover:shadow-md transition-all ${
-                    !notification.isRead ? "border-primary/50 bg-primary/5" : ""
+                <div
+                  className={`bg-white border rounded-[24px] overflow-hidden shadow-sm transition-all ${
+                    !notification.isRead
+                      ? "border-[#1C1C1E]/25 ring-1 ring-[#1C1C1E]/10"
+                      : "border-gray-100"
                   }`}
                 >
-                  <CardContent className="p-4">
+                  <div className="p-5 md:p-6">
                     <div className="flex items-start gap-4">
-                      {/* Icon */}
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${getNotificationColor(
+                        className={`w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 ${getNotificationColor(
                           notification.type,
                         )}`}
                       >
-                        <Icon className="h-5 w-5" />
+                        <Icon className="h-5 w-5" strokeWidth={2} />
                       </div>
 
-                      {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p
-                              className={`font-medium ${
-                                !notification.isRead
-                                  ? "text-foreground"
-                                  : "text-muted-foreground"
-                              }`}
-                            >
+                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-gray-900 truncate">
                               {notification.title}
                             </p>
-                            <p className="text-sm text-muted-foreground mt-0.5">
+                            <p className="text-sm text-gray-500 mt-0.5">
                               {notification.message}
                             </p>
                           </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
+                          <div className="flex items-center gap-2 flex-shrink-0 text-xs text-gray-400">
+                            <Clock className="h-3 w-3" />
+                            <span className="whitespace-nowrap">
                               {formatRelativeTime(notification.dateCreated)}
                             </span>
                             {!notification.isRead && (
-                              <div className="w-2 h-2 rounded-full bg-primary" />
+                              <div className="w-2 h-2 rounded-full bg-[#1C1C1E]" />
                             )}
                           </div>
                         </div>
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-2 mt-3">
-                          {link && (
-                            <Link to={link}>
-                              <Button size="sm" variant="outline">
-                                View
-                              </Button>
-                            </Link>
-                          )}
-                          {!notification.isRead && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleMarkAsRead(notification.id)}
-                            >
-                              <Check className="h-4 w-4 mr-1" />
-                              Mark as read
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-muted-foreground hover:text-red-500"
-                            onClick={() => handleDelete(notification.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+
+                  <div className="px-5 md:px-6 py-3 border-t border-gray-100 bg-[#F7F7F8] flex flex-wrap items-center gap-2 justify-between">
+                    <div className="flex items-center gap-2">
+                      {link && (
+                        <Link to={link}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="rounded-full border-gray-200"
+                          >
+                            View
+                          </Button>
+                        </Link>
+                      )}
+                      {!notification.isRead && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="rounded-full"
+                          onClick={() => handleMarkAsRead(notification.id)}
+                        >
+                          <Check className="h-4 w-4 mr-1" />
+                          Mark as read
+                        </Button>
+                      )}
+                    </div>
+
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="rounded-full text-gray-500 hover:text-red-500 hover:bg-red-50"
+                      onClick={() => handleDelete(notification.id)}
+                      aria-label={`Delete ${notification.title}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               </motion.div>
             );
           })}
@@ -342,7 +390,12 @@ export function NotificationsPage() {
           {/* Clear All */}
           {notifications.length > 0 && (
             <div className="text-center pt-4">
-              <Button variant="ghost" size="sm" onClick={handleClearAll}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-full text-gray-500 hover:text-red-500"
+                onClick={handleClearAll}
+              >
                 <Trash2 className="h-4 w-4 mr-1" />
                 Clear All Notifications
               </Button>
