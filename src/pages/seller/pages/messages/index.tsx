@@ -502,7 +502,7 @@ export function SellerMessagesPage() {
               <div className="mb-4 flex items-center justify-between gap-3">
                 <h2 className="text-2xl font-bold">Messages</h2>
                 {unreadCount > 0 ? (
-                  <Badge variant="default" className="h-6 min-w-6 px-2">
+                  <Badge variant="outline" className="h-6 min-w-6 px-2">
                     {unreadCount >= 100 ? "99+" : unreadCount}
                   </Badge>
                 ) : null}
@@ -568,7 +568,7 @@ export function SellerMessagesPage() {
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
-                          <h3 className="min-w-0 flex-1 truncate font-semibold text-foreground">
+                          <h3 className="min-w-0 flex-1 truncate font-medium text-foreground">
                             {conversation.customer.name}
                           </h3>
                           <span className="max-w-[96px] truncate whitespace-nowrap text-right text-xs text-muted-foreground">

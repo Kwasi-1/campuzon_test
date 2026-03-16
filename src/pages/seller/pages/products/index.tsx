@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Modal } from "@/components/shared/Modal";
+import { AddProductModal } from "@/components/modals";
 import { useAuthStore } from "@/stores";
 import type { Product, ProductStatus } from "@/types-new";
 import {
@@ -89,6 +90,7 @@ export function SellerProductsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
@@ -245,12 +247,13 @@ export function SellerProductsPage() {
               label: option.label,
             }))}
           />
-          <Link to="/seller/products/new">
-            <Button className="gap-2 rounded-full bg-[#1C1C1E] text-white hover:bg-black">
-              <Plus className="h-4 w-4" />
-              Add Product
-            </Button>
-          </Link>
+          <Button
+            className="gap-2 rounded-full bg-[#1C1C1E] text-white hover:bg-black"
+            onClick={() => setIsAddProductOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Add Product
+          </Button>
         </div>
       }
       sidebar={sidebar}
@@ -301,12 +304,13 @@ export function SellerProductsPage() {
                   : "Add your first product to start selling"
               }
               action={
-                <Link to="/seller/products/new">
-                  <Button className="gap-2 rounded-full bg-[#1C1C1E] text-white hover:bg-black">
-                    <Plus className="h-4 w-4" />
-                    Add Product
-                  </Button>
-                </Link>
+                <Button
+                  className="gap-2 rounded-full bg-[#1C1C1E] text-white hover:bg-black"
+                  onClick={() => setIsAddProductOpen(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Product
+                </Button>
               }
             />
           </div>
@@ -462,6 +466,11 @@ export function SellerProductsPage() {
           })}
         </div>
       )}
+
+      <AddProductModal
+        isOpen={isAddProductOpen}
+        onClose={() => setIsAddProductOpen(false)}
+      />
 
       {/* Delete Confirmation Modal */}
       <Modal

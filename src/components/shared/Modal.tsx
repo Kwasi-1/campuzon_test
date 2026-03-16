@@ -1,7 +1,7 @@
-import { Fragment, useEffect } from 'react';
-import { X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { Fragment, useEffect } from "react";
+import { X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 interface ModalProps {
@@ -10,18 +10,19 @@ interface ModalProps {
   title?: string;
   description?: string;
   children: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  size?: "sm" | "md" | "lg" | "xl" | "full";
+  placement?: "center" | "right" | "fullscreen";
   showCloseButton?: boolean;
-  closeOnOverlayClick?: boolean;
+  outsideClick?: boolean;
   footer?: React.ReactNode;
 }
 
 const sizeClasses = {
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-lg',
-  xl: 'max-w-xl',
-  full: 'max-w-4xl',
+  sm: "max-w-sm",
+  md: "max-w-md",
+  lg: "max-w-lg",
+  xl: "max-w-xl",
+  full: "max-w-4xl",
 };
 
 export function Modal({
@@ -30,33 +31,34 @@ export function Modal({
   title,
   description,
   children,
-  size = 'lg',
+  size = "lg",
+  placement = "center",
   showCloseButton = true,
-  closeOnOverlayClick = true,
+  outsideClick = true,
   footer,
 }: ModalProps) {
   // Handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === "Escape" && isOpen) {
         onClose();
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
 
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [isOpen]);
 
@@ -70,22 +72,52 @@ export function Modal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
-            onClick={closeOnOverlayClick ? onClose : undefined}
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
             aria-hidden="true"
           />
 
           {/* Modal */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className={cn(
+              "fixed inset-0 z-50 flex",
+              placement === "center" && "items-center justify-center p-4",
+              placement === "right" && "items-stretch justify-end p-0",
+              placement === "fullscreen" && "items-stretch justify-stretch p-0",
+            )}
+            onClick={outsideClick ? onClose : undefined}
+          >
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
+              initial={
+                placement === "right"
+                  ? { opacity: 1, x: 420 }
+                  : placement === "fullscreen"
+                    ? { opacity: 1, y: 20 }
+                    : { opacity: 0, scale: 0.95, y: 20 }
+              }
+              animate={
+                placement === "right"
+                  ? { opacity: 1, x: 0 }
+                  : placement === "fullscreen"
+                    ? { opacity: 1, y: 0 }
+                    : { opacity: 1, scale: 1, y: 0 }
+              }
+              exit={
+                placement === "right"
+                  ? { opacity: 1, x: 420 }
+                  : placement === "fullscreen"
+                    ? { opacity: 1, y: 20 }
+                    : { opacity: 0, scale: 0.95, y: 20 }
+              }
+              transition={{ duration: 0.2, ease: "easeOut" }}
               className={cn(
-                'relative w-full bg-background rounded-[20px] shadow-2xl',
-                'max-h-[90vh] overflow-hidden flex flex-col',
-                sizeClasses[size]
+                "relative bg-background shadow-2xl overflow-hidden flex flex-col",
+                placement === "center" && "w-full max-h-[90vh] rounded-[20px]",
+                placement === "center" && sizeClasses[size],
+                placement === "right" &&
+                  "h-screen w-full rounded-none border-l border-border",
+                placement === "right" && sizeClasses[size],
+                placement === "fullscreen" &&
+                  "h-screen w-screen max-w-none rounded-none",
               )}
               onClick={(e) => e.stopPropagation()}
             >

@@ -40,12 +40,12 @@ export function ConversationsSidebar({
       <div className="sticky top-0 z-30 bg-background">
         <div className="p-4 border-b border-border">
           <div className="mb-4 flex items-center justify-between gap-3">
-            <h1 className="text-2xl font-bold">Messages</h1>
-            {/* {totalUnread > 0 && (
-              <Badge variant="default" className="h-6 min-w-6 px-2">
+            <h1 className="text-2xl font-semibold">Messages</h1>
+            {totalUnread > 0 && (
+              <Badge variant="outline" className="h-6 min-w-6 px-2">
                 {totalUnread >= 100 ? "99+" : totalUnread}
               </Badge>
-            )} */}
+            )}
           </div>
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -99,7 +99,7 @@ export function ConversationsSidebar({
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <h3 className="font-semibold text-foreground truncate flex-1 min-w-0">
+                      <h3 className="font-medium text-foreground truncate flex-1 min-w-0">
                         {conv.store.name}
                       </h3>
                       {conv.lastMessageAt && (

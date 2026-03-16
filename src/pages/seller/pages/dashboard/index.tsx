@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Package,
@@ -15,8 +15,6 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  Store,
-  MessageCircle,
   Star,
   Users,
   Calendar,
@@ -33,6 +31,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/shared/Skeleton";
+import { AddProductModal, WithdrawFundsModal } from "@/components/modals";
 import { useAuthStore } from "@/stores";
 import {
   useMyStore,
@@ -116,6 +115,7 @@ const statusConfig = {
 
 export function SellerDashboardPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, isAuthenticated } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -127,6 +127,22 @@ export function SellerDashboardPage() {
     store?.id || "",
   );
   const { data: wallet, isLoading: walletLoading } = useWallet();
+
+  const activeModal = searchParams.get("modal");
+  const isAddProductOpen = activeModal === "add-product";
+  const isWithdrawOpen = activeModal === "withdraw-funds";
+
+  const openModal = (modal: "add-product" | "withdraw-funds") => {
+    const next = new URLSearchParams(searchParams);
+    next.set("modal", modal);
+    setSearchParams(next);
+  };
+
+  const closeModal = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("modal");
+    setSearchParams(next);
+  };
 
   // Redirect if not authenticated or not a store owner
   if (!isAuthenticated || !user) {
@@ -201,34 +217,6 @@ export function SellerDashboardPage() {
     },
   ];
 
-  const quickActions = [
-    {
-      label: "Add Product",
-      icon: Plus,
-      path: "/seller/products/new",
-      color: "bg-primary text-white",
-    },
-    {
-      label: "View Orders",
-      icon: ShoppingCart,
-      path: "/seller/orders",
-      color: "bg-muted",
-    },
-    {
-      label: "Messages",
-      icon: MessageCircle,
-      path: "/seller/messages",
-      color: "bg-muted",
-      badge: "3",
-    },
-    {
-      label: "Store Settings",
-      icon: Store,
-      path: "/seller/settings",
-      color: "bg-muted",
-    },
-  ];
-
   const cardClassName = "rounded-3xl border border-gray-100 bg-white shadow-sm";
 
   return (
@@ -245,7 +233,7 @@ export function SellerDashboardPage() {
             variant="outline"
             size="sm"
             className="hidden rounded-full sm:flex"
-            onClick={() => navigate("/seller/wallet")}
+            onClick={() => openModal("withdraw-funds")}
           >
             <DollarSign className="mr-2 h-4 w-4" />
             Withdraw Funds
@@ -253,7 +241,7 @@ export function SellerDashboardPage() {
           <Button
             size="sm"
             className="rounded-full"
-            onClick={() => navigate("/seller/products/new")}
+            onClick={() => openModal("add-product")}
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Product
@@ -677,6 +665,9 @@ export function SellerDashboardPage() {
           </Card>
         </div>
       </motion.div>
+
+      <AddProductModal isOpen={isAddProductOpen} onClose={closeModal} />
+      <WithdrawFundsModal isOpen={isWithdrawOpen} onClose={closeModal} />
     </SellerPageTemplate>
   );
 }
