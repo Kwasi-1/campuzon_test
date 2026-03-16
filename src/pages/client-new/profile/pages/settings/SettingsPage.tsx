@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -34,10 +34,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import api, { extractData, extractError } from "@/lib/api";
 import { useAuthStore, useUIStore } from "@/stores";
 
 // ── 2FA mock flag ────────────────────────────────────────────────────────────
-const USE_MOCK_2FA = true;
+const USE_MOCK_2FA = false;
 const mockTOTPSetup = {
   secret: "JBSWY3DPEHPK3PXP",
   qrCode:
@@ -58,6 +59,17 @@ interface TOTPSetupData {
   secret: string;
   qrCode: string;
   backupCodes: string[];
+}
+
+interface BackendTOTPSetupData {
+  secret: string;
+  provisioningUri: string;
+}
+
+interface TwoFAStatusData {
+  twoFactorEnabled: boolean;
+  isRequired: boolean;
+  hasPendingSetup: boolean;
 }
 
 // ── Toggle component ─────────────────────────────────────────────────────────
@@ -171,7 +183,8 @@ function LinkArrow() {
 
 export function SettingsPage() {
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout, updateProfile } = useAuthStore();
+  const { user, isAuthenticated, logout, updateProfile, fetchProfile } =
+    useAuthStore();
   const { theme, setTheme } = useUIStore();
 
   // ── Notification & Privacy toggles ──────────────────────────────────────
@@ -195,14 +208,36 @@ export function SettingsPage() {
   const [verifyCode, setVerifyCode] = useState("");
   const [showBackupCodes, setShowBackupCodes] = useState(false);
   const [copiedSecret, setCopiedSecret] = useState(false);
+  const [disableCode, setDisableCode] = useState("");
+  const [disablePassword, setDisablePassword] = useState("");
+  const [twoFAStatus, setTwoFAStatus] = useState<TwoFAStatusData | null>(null);
 
   const isEnabled = user?.twoFactorEnabled ?? false;
   const currentMethod = user?.twoFactorMethod ?? "none";
+  const isTwoFARequired = twoFAStatus?.isRequired ?? user?.isOwner ?? false;
+
+  const fetchTwoFAStatus = async () => {
+    try {
+      const response = await api.get("/user/me/2fa/status");
+      const status = extractData<TwoFAStatusData>(response);
+      setTwoFAStatus(status);
+    } catch {
+      // Non-blocking; status endpoint is optional UI enhancement.
+      setTwoFAStatus(null);
+    }
+  };
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    void fetchTwoFAStatus();
+  }, [isAuthenticated]);
 
   const reset2FAState = () => {
     setTotpSetup(null);
     setVerifyCode("");
     setShowBackupCodes(false);
+    setDisableCode("");
+    setDisablePassword("");
     setTwoFAError(null);
     setTwoFASuccess(null);
   };
@@ -210,18 +245,23 @@ export function SettingsPage() {
   const handleSetupTOTP = async () => {
     setTwoFALoading(true);
     setTwoFAError(null);
-    await new Promise((r) => setTimeout(r, 400));
+    await new Promise((r) => setTimeout(r, 250));
     if (USE_MOCK_2FA) {
       setTotpSetup(mockTOTPSetup);
     } else {
       try {
-        const api = (await import("@/lib/api")).default;
-        const { extractData } = await import("@/lib/api");
         const res = await api.post("/user/me/2fa/setup");
-        setTotpSetup(extractData<TOTPSetupData>(res));
+        const setup = extractData<BackendTOTPSetupData>(res);
+        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
+          setup.provisioningUri,
+        )}`;
+        setTotpSetup({
+          secret: setup.secret,
+          qrCode: qrCodeUrl,
+          backupCodes: [],
+        });
       } catch (err: unknown) {
-        const e = err as { message?: string };
-        setTwoFAError(e.message ?? "Failed to start setup");
+        setTwoFAError(extractError(err));
       }
     }
     setTwoFALoading(false);
@@ -234,30 +274,38 @@ export function SettingsPage() {
     }
     setTwoFALoading(true);
     setTwoFAError(null);
-    await new Promise((r) => setTimeout(r, 400));
+    await new Promise((r) => setTimeout(r, 250));
     if (USE_MOCK_2FA) {
       await updateProfile({ twoFactorEnabled: true, twoFactorMethod: "totp" });
       setTwoFASuccess("Authenticator app enabled.");
       setShowBackupCodes(true);
     } else {
       try {
-        const api = (await import("@/lib/api")).default;
         await api.post("/user/me/2fa/confirm", { code: verifyCode });
-        await updateProfile({
-          twoFactorEnabled: true,
-          twoFactorMethod: "totp",
-        });
+        await fetchProfile();
+        await fetchTwoFAStatus();
         setTwoFASuccess("Authenticator app enabled.");
-        setShowBackupCodes(true);
+        setShowBackupCodes(false);
+        setTotpSetup(null);
       } catch (err: unknown) {
-        const e = err as { message?: string };
-        setTwoFAError(e.message ?? "Invalid code");
+        setTwoFAError(extractError(err));
       }
     }
     setTwoFALoading(false);
   };
 
   const handleDisable2FA = async () => {
+    if (!USE_MOCK_2FA) {
+      if (disableCode.length !== 6) {
+        setTwoFAError("Enter a valid 6-digit authenticator code");
+        return;
+      }
+      if (!disablePassword.trim()) {
+        setTwoFAError("Password is required to disable 2FA");
+        return;
+      }
+    }
+
     if (
       !confirm(
         "Disable two-factor authentication? This will make your account less secure.",
@@ -266,24 +314,23 @@ export function SettingsPage() {
       return;
     setTwoFALoading(true);
     setTwoFAError(null);
-    await new Promise((r) => setTimeout(r, 400));
+    await new Promise((r) => setTimeout(r, 250));
     if (USE_MOCK_2FA) {
       await updateProfile({ twoFactorEnabled: false, twoFactorMethod: "none" });
       setTwoFASuccess("Two-factor authentication disabled.");
       reset2FAState();
     } else {
       try {
-        const api = (await import("@/lib/api")).default;
-        await api.post("/user/me/2fa/disable");
-        await updateProfile({
-          twoFactorEnabled: false,
-          twoFactorMethod: "none",
+        await api.post("/user/me/2fa/disable", {
+          code: disableCode,
+          password: disablePassword,
         });
+        await fetchProfile();
+        await fetchTwoFAStatus();
         setTwoFASuccess("Two-factor authentication disabled.");
         reset2FAState();
       } catch (err: unknown) {
-        const e = err as { message?: string };
-        setTwoFAError(e.message ?? "Failed to disable 2FA");
+        setTwoFAError(extractError(err));
       }
     }
     setTwoFALoading(false);
@@ -526,53 +573,89 @@ export function SettingsPage() {
                       )}
 
                       {/* ── Backup codes ── */}
-                      {showBackupCodes && totpSetup?.backupCodes && (
-                        <div className="space-y-3">
-                          <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 rounded-xl px-3 py-2.5">
-                            <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-                            <span>
-                              Save these backup codes in a safe place — you will
-                              need them if you lose access to your app.
-                            </span>
+                      {showBackupCodes &&
+                        (totpSetup?.backupCodes?.length ?? 0) > 0 && (
+                          <div className="space-y-3">
+                            <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 rounded-xl px-3 py-2.5">
+                              <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                              <span>
+                                Save these backup codes in a safe place — you
+                                will need them if you lose access to your app.
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-4 gap-1.5">
+                              {totpSetup.backupCodes.map((code, i) => (
+                                <div
+                                  key={i}
+                                  className="bg-gray-50 rounded-lg py-1.5 text-center font-mono text-xs text-gray-600"
+                                >
+                                  {code}
+                                </div>
+                              ))}
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full rounded-xl text-xs border-gray-200"
+                              onClick={() => {
+                                setShowBackupCodes(false);
+                                setTotpSetup(null);
+                                setShow2FA(false);
+                              }}
+                            >
+                              Done
+                            </Button>
                           </div>
-                          <div className="grid grid-cols-4 gap-1.5">
-                            {totpSetup.backupCodes.map((code, i) => (
-                              <div
-                                key={i}
-                                className="bg-gray-50 rounded-lg py-1.5 text-center font-mono text-xs text-gray-600"
-                              >
-                                {code}
-                              </div>
-                            ))}
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="w-full rounded-xl text-xs border-gray-200"
-                            onClick={() => {
-                              setShowBackupCodes(false);
-                              setTotpSetup(null);
-                              setShow2FA(false);
-                            }}
-                          >
-                            Done
-                          </Button>
-                        </div>
-                      )}
+                        )}
 
                       {/* ── Disable 2FA ── */}
                       {isEnabled && !totpSetup && !showBackupCodes && (
-                        <button
-                          onClick={handleDisable2FA}
-                          disabled={twoFALoading}
-                          type="button"
-                          className="text-xs text-red-500 hover:text-red-600 underline underline-offset-2 disabled:opacity-50"
-                        >
-                          {twoFALoading && (
-                            <Loader2 className="h-3 w-3 inline mr-1 animate-spin" />
+                        <div className="space-y-2 rounded-xl border border-red-100 bg-red-50/40 p-3">
+                          {isTwoFARequired && (
+                            <p className="text-xs text-red-600">
+                              2FA is required for store owners and cannot be
+                              disabled.
+                            </p>
                           )}
-                          Disable two-factor authentication
-                        </button>
+                          <label className="text-xs font-medium text-gray-600 block">
+                            Authenticator Code
+                          </label>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={6}
+                            value={disableCode}
+                            onChange={(e) =>
+                              setDisableCode(e.target.value.replace(/\D/g, ""))
+                            }
+                            placeholder="000000"
+                            className="w-full h-10 px-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                          />
+
+                          <label className="text-xs font-medium text-gray-600 block">
+                            Account Password
+                          </label>
+                          <input
+                            type="password"
+                            value={disablePassword}
+                            onChange={(e) => setDisablePassword(e.target.value)}
+                            placeholder="Enter your password"
+                            className="w-full h-10 px-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                          />
+
+                          <Button
+                            onClick={handleDisable2FA}
+                            disabled={twoFALoading || isTwoFARequired}
+                            type="button"
+                            variant="outline"
+                            className="h-9 rounded-xl border-red-200 text-red-600 hover:bg-red-50"
+                          >
+                            {twoFALoading && (
+                              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                            )}
+                            Disable two-factor authentication
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </motion.div>

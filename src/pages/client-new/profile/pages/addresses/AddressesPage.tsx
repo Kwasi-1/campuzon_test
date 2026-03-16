@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -14,50 +14,26 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Modal } from "@/components/shared/Modal";
+import { Skeleton } from "@/components/shared/Skeleton";
 import { useAuthStore } from "@/stores";
-
-interface Address {
-  id: string;
-  label: string;
-  fullAddress: string;
-  hall?: string;
-  room?: string;
-  phone?: string;
-  isDefault: boolean;
-  type: "hall" | "home" | "other";
-}
-
-// Mock addresses
-const mockAddresses: Address[] = [
-  {
-    id: "addr-1",
-    label: "My Hall",
-    fullAddress: "Legon Hall, Room A101",
-    hall: "Legon Hall",
-    room: "A101",
-    phone: "+233 24 123 4567",
-    isDefault: true,
-    type: "hall",
-  },
-  {
-    id: "addr-2",
-    label: "Home",
-    fullAddress: "15 Independence Avenue, Accra",
-    phone: "+233 20 987 6543",
-    isDefault: false,
-    type: "home",
-  },
-];
+import profileAddressesService, {
+  type ProfileAddress,
+} from "@/services/profileAddressesService";
 
 export function AddressesPage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
-  const [addresses, setAddresses] = useState<Address[]>(mockAddresses);
+  const [addresses, setAddresses] = useState<ProfileAddress[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+  const [editingAddress, setEditingAddress] = useState<ProfileAddress | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "hall" | "home" | "other">(
     "all",
   );
@@ -91,7 +67,26 @@ export function AddressesPage() {
     setShowAddModal(true);
   };
 
-  const handleEdit = (address: Address) => {
+  const loadAddresses = async () => {
+    setError(null);
+    setIsPageLoading(true);
+    try {
+      const items = await profileAddressesService.getAddresses();
+      setAddresses(items);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to load addresses");
+      setAddresses([]);
+    } finally {
+      setIsPageLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    void loadAddresses();
+  }, [isAuthenticated]);
+
+  const handleEdit = (address: ProfileAddress) => {
     setFormData({
       label: address.label,
       fullAddress: address.fullAddress,
@@ -107,32 +102,10 @@ export function AddressesPage() {
 
   const handleSave = async () => {
     setIsLoading(true);
+    setError(null);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    if (editingAddress) {
-      // Update existing
-      setAddresses((prev) =>
-        prev.map((addr) =>
-          addr.id === editingAddress.id
-            ? {
-                ...addr,
-                ...formData,
-                fullAddress:
-                  formData.type === "hall"
-                    ? `${formData.hall}, Room ${formData.room}`
-                    : formData.fullAddress,
-              }
-            : formData.isDefault
-              ? { ...addr, isDefault: false }
-              : addr,
-        ),
-      );
-    } else {
-      // Add new
-      const newAddress: Address = {
-        id: `addr-${Date.now()}`,
+    try {
+      const payload = {
         label: formData.label,
         fullAddress:
           formData.type === "hall"
@@ -144,29 +117,44 @@ export function AddressesPage() {
         type: formData.type,
         isDefault: formData.isDefault,
       };
-      setAddresses((prev) =>
-        formData.isDefault
-          ? [...prev.map((a) => ({ ...a, isDefault: false })), newAddress]
-          : [...prev, newAddress],
+
+      const next = editingAddress
+        ? await profileAddressesService.updateAddress(
+            editingAddress.id,
+            payload,
+          )
+        : await profileAddressesService.createAddress(payload);
+
+      setAddresses(next);
+      setShowAddModal(false);
+      resetForm();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to save address");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setError(null);
+    try {
+      const next = await profileAddressesService.deleteAddress(id);
+      setAddresses(next);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to delete address");
+    }
+  };
+
+  const handleSetDefault = async (id: string) => {
+    setError(null);
+    try {
+      const next = await profileAddressesService.setDefaultAddress(id);
+      setAddresses(next);
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Failed to set default address",
       );
     }
-
-    setIsLoading(false);
-    setShowAddModal(false);
-    resetForm();
-  };
-
-  const handleDelete = (id: string) => {
-    setAddresses((prev) => prev.filter((addr) => addr.id !== id));
-  };
-
-  const handleSetDefault = (id: string) => {
-    setAddresses((prev) =>
-      prev.map((addr) => ({
-        ...addr,
-        isDefault: addr.id === id,
-      })),
-    );
   };
 
   if (!isAuthenticated) {
@@ -249,7 +237,32 @@ export function AddressesPage() {
 
         {/* Addresses List */}
         <div className="flex-1">
-          {filteredAddresses.length === 0 ? (
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              {error}
+            </Alert>
+          )}
+
+          {isPageLoading ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="rounded-[24px] border border-gray-100 bg-white p-5 md:p-6 shadow-sm"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <Skeleton className="h-11 w-11 rounded-2xl" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-28 rounded" />
+                      <Skeleton className="h-3 w-24 rounded" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-4 w-full rounded" />
+                  <Skeleton className="h-4 w-2/3 rounded mt-2" />
+                </div>
+              ))}
+            </div>
+          ) : filteredAddresses.length === 0 ? (
             <EmptyState
               icon={<MapPin className="h-16 w-16" />}
               title="No addresses saved"

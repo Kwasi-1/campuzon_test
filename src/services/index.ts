@@ -52,3 +52,7 @@ export type {
 
 // Export saved items (wishlist/shopping list) service
 export { default as savedItemsService } from './savedItemsService';
+
+// Export profile addresses service
+export { default as profileAddressesService } from './profileAddressesService';
+export type { ProfileAddress, AddressType } from './profileAddressesService';

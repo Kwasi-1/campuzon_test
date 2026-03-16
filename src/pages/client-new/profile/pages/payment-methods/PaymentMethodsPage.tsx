@@ -253,7 +253,7 @@ export function PaymentMethodsPage() {
                   transition={{ delay: index * 0.05 }}
                 >
                   <div
-                    className={`bg-white border rounded-[28px] overflow-hidden shadow-sm ${
+                    className={`bg-white border rounded-3xl overflow-hidden shadow-sm ${
                       method.isDefault
                         ? "border-[#1C1C1E]/30 ring-1 ring-[#1C1C1E]/10"
                         : "border-gray-100"
