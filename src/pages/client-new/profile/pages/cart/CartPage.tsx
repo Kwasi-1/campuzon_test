@@ -45,7 +45,7 @@ export function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="bg-[#f7f7f7] min-h-screen">
+      <div className="min-h-screen">
         <div className="container mx-auto px-4 py-16">
           <EmptyState
             icon={<ShoppingBag className="h-16 w-16" />}

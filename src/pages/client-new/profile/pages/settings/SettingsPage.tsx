@@ -112,7 +112,7 @@ function Section({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.3 }}
     >
-      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1 px-1">
+      <p className="text-xs md:text-sm font-semibold uppercase tracking-wider text-gray-400 mb-1 px-1">
         {title}
       </p>
       <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden divide-y divide-gray-50">
@@ -135,17 +135,20 @@ function Row({
   right: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3.5 gap-4">
+    <div className="flex items-center justify-between px-4 py-3.5 md:py-4 gap-4">
       <div className="flex items-center gap-3 min-w-0">
         <span className="flex-shrink-0 w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center">
-          <Icon className="h-4 w-4 text-gray-500" strokeWidth={1.8} />
+          <Icon
+            className="h-4 w-4 md:h-[18px] md:w-[18px] text-gray-500"
+            strokeWidth={1.8}
+          />
         </span>
         <div className="min-w-0">
-          <p className="text-sm font-medium text-gray-900 leading-tight">
+          <p className="text-sm md:text-base font-medium text-gray-900 leading-tight">
             {label}
           </p>
           {description && (
-            <p className="text-xs text-gray-400 mt-0.5 leading-tight truncate">
+            <p className="text-xs md:text-sm text-gray-400 mt-0.5 leading-tight truncate">
               {description}
             </p>
           )}
@@ -158,7 +161,12 @@ function Row({
 
 // ── Chevron right link ───────────────────────────────────────────────────────
 function LinkArrow() {
-  return <ChevronRight className="h-4 w-4 text-gray-300" strokeWidth={2} />;
+  return (
+    <ChevronRight
+      className="h-4 w-4 md:h-5 md:w-5 text-gray-300"
+      strokeWidth={2}
+    />
+  );
 }
 
 export function SettingsPage() {
@@ -300,16 +308,16 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="max-w7xl mx-auto  py-8 space-y-6">
+    <div className="max-w7xl mx-auto py-8 space-y-6">
       {/* Page header */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
+        <h1 className="text-2xl md:text-3xl lg:text-[2rem] font-semibold text-gray-900 tracking-tight">
           Settings
         </h1>
-        <p className="text-sm text-gray-400 mt-0.5">
+        <p className="text-sm md:text-base text-gray-400 mt-0.5">
           Manage your account & preferences
         </p>
       </motion.div>
@@ -385,7 +393,7 @@ export function SettingsPage() {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs text-gray-400 mt-0.5 leading-tight">
+                      <p className="text-xs md:text-sm text-gray-400 mt-0.5 leading-tight">
                         {isEnabled
                           ? `Active via ${currentMethod === "totp" ? "authenticator app" : "OTP"}`
                           : "Add an extra layer of security"}
@@ -425,7 +433,7 @@ export function SettingsPage() {
                       {/* ── Not yet set up ── */}
                       {!isEnabled && !totpSetup && !showBackupCodes && (
                         <div className="space-y-2">
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs md:text-sm text-gray-400">
                             Use an authenticator app (Google Authenticator,
                             Authy, etc.) to generate login codes.
                           </p>
@@ -452,7 +460,7 @@ export function SettingsPage() {
                               alt="QR code"
                               className="h-36 w-36 rounded-lg"
                             />
-                            <p className="text-xs text-gray-400 text-center">
+                            <p className="text-xs md:text-sm text-gray-400 text-center">
                               Scan with your authenticator app
                             </p>
                           </div>
@@ -474,7 +482,7 @@ export function SettingsPage() {
                             </button>
                           </div>
                           <div>
-                            <label className="text-xs font-medium text-gray-600 block mb-1.5">
+                            <label className="text-xs md:text-sm font-medium text-gray-600 block mb-1.5">
                               Enter the 6-digit code from your app
                             </label>
                             <div className="flex gap-2">

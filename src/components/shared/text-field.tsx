@@ -5,7 +5,7 @@ import { Spinner } from "@nextui-org/react";
 import { Select, SelectItem } from "@nextui-org/select";
 import { Autocomplete, AutocompleteItem } from "@nextui-org/autocomplete";
 import { format } from "date-fns";
-import  _, { isEmpty } from "lodash";
+import _, { isEmpty } from "lodash";
 import { CalendarIcon } from "lucide-react";
 import React, {
   FC,
@@ -159,6 +159,7 @@ interface CustomInputTextFieldProps extends InputHTMLAttributes<HTMLInputElement
     disabled?: boolean;
   } & Record<string, any>;
   startContent?: React.ReactNode;
+  endContent?: React.ReactNode;
   isClearabe?: boolean;
   onClear?: () => void;
 }
@@ -178,6 +179,7 @@ export const CustomInputTextField = (props: CustomInputTextFieldProps) => {
     height = "h-[3.5rem]",
     labelPlacement = "outside",
     startContent,
+    endContent,
     isClearabe = false,
     onClear,
     onKeyDown,
@@ -247,7 +249,8 @@ export const CustomInputTextField = (props: CustomInputTextFieldProps) => {
             {...(inputProps ?? {})}
             className={cn(
               "w-full bg-primary-gray/20 dark:bg-secondary-black border border-gray-200 dark:border-[#F5F5F580] rounded-md",
-              startContent ? "pl-9 pr-3" : "px-3",
+              startContent ? "pl-9" : "pl-3",
+              endContent || isClearabe || error ? "pr-10" : "pr-3",
               shouldFloat ? "pt-6 pb-2" : "py-3",
               "focus:border-primary-green focus:ring-1 focus:ring-primary-green outline-none focus:outline-none",
               "disabled:cursor-not-allowed disabled:opacity-50",
@@ -268,6 +271,7 @@ export const CustomInputTextField = (props: CustomInputTextFieldProps) => {
 
           {/* End content */}
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            {endContent}
             {isClearabe && value && (
               <button
                 type="button"
@@ -335,7 +339,8 @@ export const CustomInputTextField = (props: CustomInputTextFieldProps) => {
           {...(inputProps ?? {})}
           className={cn(
             "w-full bg-primary-gray/20 dark:bg-secondary-black border border-gray-200 dark:border-[#F5F5F580] rounded-md",
-            startContent ? "pl-9 pr-3" : "px-3",
+            startContent ? "pl-9" : "pl-3",
+            endContent || isClearabe || error ? "pr-10" : "pr-3",
             "py-3",
             "focus:border-primary-green focus:ring-1 focus:ring-primary-green outline-none focus:outline-none",
             "disabled:cursor-not-allowed disabled:opacity-50",
@@ -347,6 +352,7 @@ export const CustomInputTextField = (props: CustomInputTextFieldProps) => {
 
         {/* End content */}
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          {endContent}
           {isClearabe && value && (
             <button
               type="button"

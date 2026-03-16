@@ -3,7 +3,16 @@ import { Link, useNavigate } from "react-router-dom";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Mail, Lock, User, Phone, Loader2, Building } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  User,
+  Phone,
+  Loader2,
+  Building,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AuthPage } from "@/components/auth-page";
@@ -53,6 +62,8 @@ export function RegisterPage() {
   const navigate = useNavigate();
   const { register: registerUser, isLoading } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -66,9 +77,12 @@ export function RegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     setError(null);
     try {
-      const selectedInstitution = mockInstitutions.find(i => i.id === data.institutionID);
-      const institutionName = selectedInstitution?.name || "Unknown Institution";
-      
+      const selectedInstitution = mockInstitutions.find(
+        (i) => i.id === data.institutionID,
+      );
+      const institutionName =
+        selectedInstitution?.name || "Unknown Institution";
+
       await registerUser({
         firstName: data.firstName,
         lastName: data.lastName,
@@ -156,9 +170,23 @@ export function RegisterPage() {
 
         <CustomInputTextField
           label="Password"
-          type="password"
+          type={showPassword ? "text" : "password"}
           placeholder="••••••••"
           startContent={<Lock className="h-4 w-4" />}
+          endContent={
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="text-gray-500 hover:text-gray-700"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          }
           error={errors.password?.message}
           labelPlacement="outside"
           inputProps={register("password")}
@@ -166,9 +194,27 @@ export function RegisterPage() {
 
         <CustomInputTextField
           label="Confirm Password"
-          type="password"
+          type={showConfirmPassword ? "text" : "password"}
           placeholder="••••••••"
           startContent={<Lock className="h-4 w-4" />}
+          endContent={
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((prev) => !prev)}
+              className="text-gray-500 hover:text-gray-700"
+              aria-label={
+                showConfirmPassword
+                  ? "Hide confirm password"
+                  : "Show confirm password"
+              }
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          }
           error={errors.confirmPassword?.message}
           labelPlacement="outside"
           inputProps={register("confirmPassword")}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -15,77 +15,13 @@ import {
   Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { Skeleton } from "@/components/shared/Skeleton";
 import { useAuthStore } from "@/stores";
+import { api, extractData, extractError } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/utils";
 import type { Notification, NotificationType } from "@/types-new";
-
-// Mock notifications
-const mockNotifications: Notification[] = [
-  {
-    id: "notif-1",
-    title: "Order Delivered",
-    message:
-      "Your order CPZ-ABC123 has been delivered. Please confirm receipt to release payment to the seller.",
-    type: "order",
-    referenceType: "order",
-    referenceID: "order-1",
-    isRead: false,
-    dateCreated: "2024-12-29T10:00:00Z",
-  },
-  {
-    id: "notif-2",
-    title: "New Message",
-    message: "TechHub UG sent you a message about your order.",
-    type: "chat",
-    referenceType: "conversation",
-    referenceID: "conv-1",
-    isRead: false,
-    dateCreated: "2024-12-29T09:30:00Z",
-  },
-  {
-    id: "notif-3",
-    title: "Payment Successful",
-    message:
-      "Your payment of GHS 5,775.00 for order CPZ-ABC123 was successful.",
-    type: "payment",
-    referenceType: "order",
-    referenceID: "order-1",
-    isRead: true,
-    dateCreated: "2024-12-28T14:00:00Z",
-  },
-  {
-    id: "notif-4",
-    title: "Price Drop Alert",
-    message: "AirPods Pro you saved is now 10% off! Limited time offer.",
-    type: "promo",
-    referenceType: "product",
-    referenceID: "prod-2",
-    isRead: true,
-    dateCreated: "2024-12-27T10:00:00Z",
-  },
-  {
-    id: "notif-5",
-    title: "Order Confirmed",
-    message: "Your order CPZ-DEF456 has been confirmed and is being processed.",
-    type: "order",
-    referenceType: "order",
-    referenceID: "order-2",
-    isRead: true,
-    dateCreated: "2024-12-26T15:00:00Z",
-  },
-  {
-    id: "notif-6",
-    title: "Welcome to Campuzon!",
-    message:
-      "Thank you for joining our campus marketplace. Start exploring products now!",
-    type: "system",
-    referenceType: null,
-    referenceID: null,
-    isRead: true,
-    dateCreated: "2024-12-20T09:00:00Z",
-  },
-];
 
 const getNotificationIcon = (type: NotificationType) => {
   switch (type) {
@@ -139,9 +75,10 @@ const getNotificationLink = (notification: Notification): string | null => {
 export function NotificationsPage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
-  const [notifications, setNotifications] =
-    useState<Notification[]>(mockNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -152,22 +89,81 @@ export function NotificationsPage() {
         ? notifications.filter((n) => !n.isRead)
         : notifications.filter((n) => n.isRead);
 
-  const handleMarkAsRead = (id: string) => {
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const loadNotifications = async () => {
+      setError(null);
+      setIsLoading(true);
+
+      try {
+        const response = await api.get("/notifications", {
+          params: { page: 1, per_page: 200 },
+        });
+        const data = extractData<
+          { notifications?: Notification[] } | Notification[]
+        >(response);
+        const items = Array.isArray(data) ? data : data.notifications || [];
+        setNotifications(items);
+      } catch (err: unknown) {
+        setError(extractError(err));
+        setNotifications([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadNotifications();
+  }, [isAuthenticated]);
+
+  const handleMarkAsRead = async (id: string) => {
+    const previous = notifications;
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
     );
+
+    try {
+      await api.post(`/notifications/${id}/read`);
+    } catch (err: unknown) {
+      setNotifications(previous);
+      setError(extractError(err));
+    }
   };
 
-  const handleMarkAllAsRead = () => {
+  const handleMarkAllAsRead = async () => {
+    const previous = notifications;
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+
+    try {
+      await api.post("/notifications/read-all");
+    } catch (err: unknown) {
+      setNotifications(previous);
+      setError(extractError(err));
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    const previous = notifications;
     setNotifications((prev) => prev.filter((n) => n.id !== id));
+
+    try {
+      await api.delete(`/notifications/${id}`);
+    } catch (err: unknown) {
+      setNotifications(previous);
+      setError(extractError(err));
+    }
   };
 
-  const handleClearAll = () => {
+  const handleClearAll = async () => {
+    const previous = notifications;
     setNotifications([]);
+
+    try {
+      await api.delete("/notifications/clear", { params: { all: true } });
+    } catch (err: unknown) {
+      setNotifications(previous);
+      setError(extractError(err));
+    }
   };
 
   if (!isAuthenticated) {
@@ -258,7 +254,31 @@ export function NotificationsPage() {
 
         {/* Notifications List */}
         <div className="flex-1">
-          {filteredNotifications.length === 0 ? (
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              {error}
+            </Alert>
+          )}
+
+          {isLoading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-white border border-gray-100 rounded-[24px] p-5 md:p-6 shadow-sm"
+                >
+                  <div className="flex items-start gap-4">
+                    <Skeleton className="h-11 w-11 rounded-2xl" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-40 rounded" />
+                      <Skeleton className="h-4 w-full rounded" />
+                      <Skeleton className="h-4 w-3/4 rounded" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredNotifications.length === 0 ? (
             <EmptyState
               icon={<Bell className="h-16 w-16" />}
               title={
@@ -357,7 +377,9 @@ export function NotificationsPage() {
                               size="sm"
                               variant="ghost"
                               className="rounded-full"
-                              onClick={() => handleMarkAsRead(notification.id)}
+                              onClick={() => {
+                                void handleMarkAsRead(notification.id);
+                              }}
                             >
                               <Check className="h-4 w-4 mr-1" />
                               Mark as read
@@ -369,7 +391,9 @@ export function NotificationsPage() {
                           size="sm"
                           variant="ghost"
                           className="rounded-full text-gray-500 hover:text-red-500 hover:bg-red-50"
-                          onClick={() => handleDelete(notification.id)}
+                          onClick={() => {
+                            void handleDelete(notification.id);
+                          }}
                           aria-label={`Delete ${notification.title}`}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -387,7 +411,9 @@ export function NotificationsPage() {
                     variant="ghost"
                     size="sm"
                     className="rounded-full text-gray-500 hover:text-red-500"
-                    onClick={handleClearAll}
+                    onClick={() => {
+                      void handleClearAll();
+                    }}
                   >
                     <Trash2 className="h-4 w-4 mr-1" />
                     Clear All Notifications
