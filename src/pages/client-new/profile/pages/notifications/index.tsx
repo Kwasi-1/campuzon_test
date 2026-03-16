@@ -15,7 +15,6 @@ import {
   Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useAuthStore } from "@/stores";
 import { formatRelativeTime } from "@/lib/utils";
@@ -142,12 +141,16 @@ export function NotificationsPage() {
   const { isAuthenticated } = useAuthStore();
   const [notifications, setNotifications] =
     useState<Notification[]>(mockNotifications);
-  const [filter, setFilter] = useState<"all" | "unread">("all");
+  const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const filteredNotifications =
-    filter === "all" ? notifications : notifications.filter((n) => !n.isRead);
+    filter === "all"
+      ? notifications
+      : filter === "unread"
+        ? notifications.filter((n) => !n.isRead)
+        : notifications.filter((n) => n.isRead);
 
   const handleMarkAsRead = (id: string) => {
     setNotifications((prev) =>
@@ -174,9 +177,20 @@ export function NotificationsPage() {
 
   const readCount = notifications.length - unreadCount;
 
+  const sidebarCategories: {
+    key: "all" | "unread" | "read";
+    label: string;
+    count: number;
+  }[] = [
+    { key: "all", label: "All Notifications", count: notifications.length },
+    { key: "unread", label: "Unread", count: unreadCount },
+    { key: "read", label: "Read", count: readCount },
+  ];
+
   return (
-    <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div className="space-y-1">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
             Notifications
@@ -188,44 +202,7 @@ export function NotificationsPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-full border border-gray-200 bg-white p-1">
-            <button
-              type="button"
-              onClick={() => setFilter("all")}
-              className={`h-8 px-4 rounded-full text-sm font-medium transition-colors ${
-                filter === "all"
-                  ? "bg-[#1C1C1E] text-white"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              All
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter("unread")}
-              className={`h-8 px-4 rounded-full text-sm font-medium transition-colors inline-flex items-center ${
-                filter === "unread"
-                  ? "bg-[#1C1C1E] text-white"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Unread
-              {unreadCount > 0 && (
-                <Badge
-                  variant="secondary"
-                  className={`ml-1 h-5 px-1.5 ${
-                    filter === "unread"
-                      ? "bg-white text-[#1C1C1E]"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  {unreadCount}
-                </Badge>
-              )}
-            </button>
-          </div>
-
+        <div className="flex items-center gap-2">
           {unreadCount > 0 && (
             <Button
               variant="outline"
@@ -237,7 +214,6 @@ export function NotificationsPage() {
               Mark all read
             </Button>
           )}
-
           <Link to="/settings/notifications">
             <Button variant="ghost" size="sm" className="rounded-full">
               <Settings className="h-4 w-4" />
@@ -246,163 +222,182 @@ export function NotificationsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
-          <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
-            Total Notifications
-          </p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">
-            {notifications.length}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
-          <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
-            Unread
-          </p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{unreadCount}</p>
-        </div>
-        <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
-          <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
-            Read
-          </p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{readCount}</p>
-        </div>
-      </div>
-
-      {filteredNotifications.length === 0 ? (
-        <EmptyState
-          icon={<Bell className="h-16 w-16" />}
-          title={
-            filter === "unread" ? "No unread notifications" : "No notifications"
-          }
-          description={
-            filter === "unread"
-              ? "You've read all your notifications"
-              : "You'll receive notifications about orders, messages, and updates here"
-          }
-          action={
-            filter === "unread" ? (
-              <Button
-                variant="outline"
-                onClick={() => setFilter("all")}
-                className="rounded-full"
-              >
-                View All
-              </Button>
-            ) : undefined
-          }
-        />
-      ) : (
-        <div className="space-y-4">
-          {filteredNotifications.map((notification, index) => {
-            const Icon = getNotificationIcon(notification.type);
-            const link = getNotificationLink(notification);
-
-            return (
-              <motion.div
-                key={notification.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.03 }}
-              >
-                <div
-                  className={`bg-white border rounded-[24px] overflow-hidden shadow-sm transition-all ${
-                    !notification.isRead
-                      ? "border-[#1C1C1E]/25 ring-1 ring-[#1C1C1E]/10"
-                      : "border-gray-100"
+      {/* Body: sidebar + content */}
+      <div className="flex flex-col xl:flex-row gap-8 pb-12">
+        {/* Sidebar Filters */}
+        <div className="xl:w-64 shrink-0">
+          <div className="flex xl:flex-col gap-3 overflow-x-auto xl:overflow-visible pb-2 xl:pb-0 scrollbar-hide xl:sticky xl:top-24">
+            {sidebarCategories.map((cat) => {
+              const isActive = filter === cat.key;
+              return (
+                <button
+                  key={cat.key}
+                  type="button"
+                  onClick={() => setFilter(cat.key)}
+                  className={`flex items-center justify-between pl-5 pr-[2px] py-[3px] xl:py-1 xl:pr-1 rounded-full transition-all shrink-0 xl:shrink-auto whitespace-nowrap xl:whitespace-normal border shadow-sm ${
+                    isActive
+                      ? "bg-[#1C1C1E] text-white border-[#1C1C1E]"
+                      : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                   }`}
                 >
-                  <div className="p-5 md:p-6">
-                    <div className="flex items-start gap-4">
-                      <div
-                        className={`w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 ${getNotificationColor(
-                          notification.type,
-                        )}`}
-                      >
-                        <Icon className="h-5 w-5" strokeWidth={2} />
-                      </div>
+                  <span className="font-medium text-[15px]">{cat.label}</span>
+                  <span
+                    className={`h-10 w-10 xl:w-12 xl:h-12 ml-3 flex items-center justify-center rounded-full text-xs font-bold ${
+                      isActive
+                        ? "bg-white text-black"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {cat.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="font-semibold text-gray-900 truncate">
-                              {notification.title}
-                            </p>
-                            <p className="text-sm text-gray-500 mt-0.5">
-                              {notification.message}
-                            </p>
+        {/* Notifications List */}
+        <div className="flex-1">
+          {filteredNotifications.length === 0 ? (
+            <EmptyState
+              icon={<Bell className="h-16 w-16" />}
+              title={
+                filter !== "all"
+                  ? `No ${filter} notifications`
+                  : "No notifications"
+              }
+              description={
+                filter === "unread"
+                  ? "You've read all your notifications"
+                  : filter === "read"
+                    ? "You haven't read any notifications yet"
+                    : "You'll receive notifications about orders, messages, and updates here"
+              }
+              action={
+                filter !== "all" ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => setFilter("all")}
+                    className="rounded-full"
+                  >
+                    View All
+                  </Button>
+                ) : undefined
+              }
+            />
+          ) : (
+            <div className="space-y-4">
+              {filteredNotifications.map((notification, index) => {
+                const Icon = getNotificationIcon(notification.type);
+                const link = getNotificationLink(notification);
+
+                return (
+                  <motion.div
+                    key={notification.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                  >
+                    <div
+                      className={`bg-white border rounded-[24px] overflow-hidden shadow-sm transition-all ${
+                        !notification.isRead
+                          ? "border-[#1C1C1E]/25 ring-1 ring-[#1C1C1E]/10"
+                          : "border-gray-100"
+                      }`}
+                    >
+                      <div className="p-5 md:p-6">
+                        <div className="flex items-start gap-4">
+                          <div
+                            className={`w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 ${getNotificationColor(
+                              notification.type,
+                            )}`}
+                          >
+                            <Icon className="h-5 w-5" strokeWidth={2} />
                           </div>
-                          <div className="flex items-center gap-2 flex-shrink-0 text-xs text-gray-400">
-                            <Clock className="h-3 w-3" />
-                            <span className="whitespace-nowrap">
-                              {formatRelativeTime(notification.dateCreated)}
-                            </span>
-                            {!notification.isRead && (
-                              <div className="w-2 h-2 rounded-full bg-[#1C1C1E]" />
-                            )}
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="font-semibold text-gray-900 truncate">
+                                  {notification.title}
+                                </p>
+                                <p className="text-sm text-gray-500 mt-0.5">
+                                  {notification.message}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0 text-xs text-gray-400">
+                                <Clock className="h-3 w-3" />
+                                <span className="whitespace-nowrap">
+                                  {formatRelativeTime(notification.dateCreated)}
+                                </span>
+                                {!notification.isRead && (
+                                  <div className="w-2 h-2 rounded-full bg-[#1C1C1E]" />
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <div className="px-5 md:px-6 py-3 border-t border-gray-100 bg-[#F7F7F8] flex flex-wrap items-center gap-2 justify-between">
-                    <div className="flex items-center gap-2">
-                      {link && (
-                        <Link to={link}>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="rounded-full border-gray-200"
-                          >
-                            View
-                          </Button>
-                        </Link>
-                      )}
-                      {!notification.isRead && (
+                      <div className="px-5 md:px-6 py-3 border-t border-gray-100 bg-[#F7F7F8] flex flex-wrap items-center gap-2 justify-between">
+                        <div className="flex items-center gap-2">
+                          {link && (
+                            <Link to={link}>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="rounded-full border-gray-200"
+                              >
+                                View
+                              </Button>
+                            </Link>
+                          )}
+                          {!notification.isRead && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="rounded-full"
+                              onClick={() => handleMarkAsRead(notification.id)}
+                            >
+                              <Check className="h-4 w-4 mr-1" />
+                              Mark as read
+                            </Button>
+                          )}
+                        </div>
+
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="rounded-full"
-                          onClick={() => handleMarkAsRead(notification.id)}
+                          className="rounded-full text-gray-500 hover:text-red-500 hover:bg-red-50"
+                          onClick={() => handleDelete(notification.id)}
+                          aria-label={`Delete ${notification.title}`}
                         >
-                          <Check className="h-4 w-4 mr-1" />
-                          Mark as read
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      )}
+                      </div>
                     </div>
+                  </motion.div>
+                );
+              })}
 
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="rounded-full text-gray-500 hover:text-red-500 hover:bg-red-50"
-                      onClick={() => handleDelete(notification.id)}
-                      aria-label={`Delete ${notification.title}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+              {/* Clear All */}
+              {notifications.length > 0 && (
+                <div className="text-center pt-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-full text-gray-500 hover:text-red-500"
+                    onClick={handleClearAll}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Clear All Notifications
+                  </Button>
                 </div>
-              </motion.div>
-            );
-          })}
-
-          {/* Clear All */}
-          {notifications.length > 0 && (
-            <div className="text-center pt-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="rounded-full text-gray-500 hover:text-red-500"
-                onClick={handleClearAll}
-              >
-                <Trash2 className="h-4 w-4 mr-1" />
-                Clear All Notifications
-              </Button>
+              )}
             </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

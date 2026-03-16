@@ -58,6 +58,9 @@ export function AddressesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [filter, setFilter] = useState<"all" | "hall" | "home" | "other">(
+    "all",
+  );
 
   // Form state
   const [formData, setFormData] = useState({
@@ -171,17 +174,28 @@ export function AddressesPage() {
     return null;
   }
 
-  const defaultAddress = addresses.find((address) => address.isDefault);
-  const hallCount = addresses.filter(
-    (address) => address.type === "hall",
-  ).length;
-  const homeCount = addresses.filter(
-    (address) => address.type === "home",
-  ).length;
+  const hallCount = addresses.filter((a) => a.type === "hall").length;
+  const homeCount = addresses.filter((a) => a.type === "home").length;
+  const otherCount = addresses.filter((a) => a.type === "other").length;
+
+  const filteredAddresses =
+    filter === "all" ? addresses : addresses.filter((a) => a.type === filter);
+
+  const sidebarCategories: {
+    key: "all" | "hall" | "home" | "other";
+    label: string;
+    count: number;
+  }[] = [
+    { key: "all", label: "All Addresses", count: addresses.length },
+    { key: "hall", label: "Hall", count: hallCount },
+    { key: "home", label: "Home", count: homeCount },
+    { key: "other", label: "Other", count: otherCount },
+  ];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
         <div className="space-y-1">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
             Saved Addresses
@@ -199,154 +213,179 @@ export function AddressesPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
-          <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
-            Total Addresses
-          </p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">
-            {addresses.length}
-          </p>
+      {/* Body: sidebar + content */}
+      <div className="flex flex-col xl:flex-row gap-8 pb-12">
+        {/* Sidebar Filters */}
+        <div className="xl:w-64 shrink-0">
+          <div className="flex xl:flex-col gap-3 overflow-x-auto xl:overflow-visible pb-2 xl:pb-0 scrollbar-hide xl:sticky xl:top-24">
+            {sidebarCategories.map((cat) => {
+              const isActive = filter === cat.key;
+              return (
+                <button
+                  key={cat.key}
+                  type="button"
+                  onClick={() => setFilter(cat.key)}
+                  className={`flex items-center justify-between pl-5 pr-[2px] py-[3px] xl:py-1 xl:pr-1 rounded-full transition-all shrink-0 xl:shrink-auto whitespace-nowrap xl:whitespace-normal border shadow-sm ${
+                    isActive
+                      ? "bg-[#1C1C1E] text-white border-[#1C1C1E]"
+                      : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  <span className="font-medium text-[15px]">{cat.label}</span>
+                  <span
+                    className={`h-10 w-10 xl:w-12 xl:h-12 ml-3 flex items-center justify-center rounded-full text-xs font-bold ${
+                      isActive
+                        ? "bg-white text-black"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {cat.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
-          <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
-            Default Address
-          </p>
-          <p className="text-sm font-semibold text-gray-900 mt-2 truncate">
-            {defaultAddress?.label || "Not set"}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
-          <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
-            Address Mix
-          </p>
-          <p className="text-sm font-semibold text-gray-900 mt-2">
-            Hall {hallCount} · Home {homeCount}
-          </p>
-        </div>
-      </div>
 
-      {addresses.length === 0 ? (
-        <EmptyState
-          icon={<MapPin className="h-16 w-16" />}
-          title="No addresses saved"
-          description="Add a delivery address to make checkout faster"
-          action={
-            <Button
-              onClick={handleOpenAddModal}
-              className="rounded-full px-6 bg-[#1C1C1E] hover:bg-black text-white"
-            >
-              Add Address
-            </Button>
-          }
-        />
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {addresses.map((address, index) => (
-            <motion.div
-              key={address.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <div
-                className={`bg-white border rounded-[24px] overflow-hidden shadow-sm ${
-                  address.isDefault
-                    ? "border-[#1C1C1E]/25 ring-1 ring-[#1C1C1E]/10"
-                    : "border-gray-100"
-                }`}
-              >
-                <div className="p-5 md:p-6">
-                  <div className="flex items-start justify-between gap-3 mb-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className={`w-11 h-11 rounded-2xl flex items-center justify-center ${
-                          address.type === "hall"
-                            ? "bg-blue-100 text-blue-600"
-                            : address.type === "home"
-                              ? "bg-green-100 text-green-600"
-                              : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {address.type === "hall" ? (
-                          <Building2 className="h-5 w-5" />
-                        ) : (
-                          <Home className="h-5 w-5" />
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-semibold text-gray-900 truncate">
-                            {address.label}
-                          </h3>
-                          {address.isDefault && (
-                            <Badge className="text-[11px] rounded-full bg-[#1C1C1E] text-white hover:bg-black">
-                              Default
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-500">
-                          {address.type === "hall"
-                            ? "Campus Hall"
-                            : address.type === "home"
-                              ? "Home Address"
-                              : "Other Address"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-start gap-2 text-sm text-gray-700">
-                      <MapPin className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                      <span>{address.fullAddress}</span>
-                    </div>
-                    {address.phone && (
-                      <p className="text-sm text-gray-500">
-                        Phone: {address.phone}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 px-5 md:px-6 py-3 border-t border-gray-100 bg-[#F7F7F8]">
+        {/* Addresses List */}
+        <div className="flex-1">
+          {filteredAddresses.length === 0 ? (
+            <EmptyState
+              icon={<MapPin className="h-16 w-16" />}
+              title="No addresses saved"
+              description={
+                filter !== "all"
+                  ? `No ${filter} addresses saved`
+                  : "Add a delivery address to make checkout faster"
+              }
+              action={
+                filter === "all" ? (
+                  <Button
+                    onClick={handleOpenAddModal}
+                    className="rounded-full px-6 bg-[#1C1C1E] hover:bg-black text-white"
+                  >
+                    Add Address
+                  </Button>
+                ) : (
                   <Button
                     variant="outline"
-                    size="sm"
-                    className="rounded-full border-gray-200"
-                    onClick={() => handleEdit(address)}
+                    onClick={() => setFilter("all")}
+                    className="rounded-full"
                   >
-                    <Edit2 className="h-4 w-4 mr-1" />
-                    Edit
+                    View All
                   </Button>
-                  {!address.isDefault && (
-                    <>
+                )
+              }
+            />
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {filteredAddresses.map((address, index) => (
+                <motion.div
+                  key={address.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <div
+                    className={`bg-white border rounded-[24px] overflow-hidden shadow-sm ${
+                      address.isDefault
+                        ? "border-[#1C1C1E]/25 ring-1 ring-[#1C1C1E]/10"
+                        : "border-gray-100"
+                    }`}
+                  >
+                    <div className="p-5 md:p-6">
+                      <div className="flex items-start justify-between gap-3 mb-4">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div
+                            className={`w-11 h-11 rounded-2xl flex items-center justify-center ${
+                              address.type === "hall"
+                                ? "bg-blue-100 text-blue-600"
+                                : address.type === "home"
+                                  ? "bg-green-100 text-green-600"
+                                  : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
+                            {address.type === "hall" ? (
+                              <Building2 className="h-5 w-5" />
+                            ) : (
+                              <Home className="h-5 w-5" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-semibold text-gray-900 truncate">
+                                {address.label}
+                              </h3>
+                              {address.isDefault && (
+                                <Badge className="text-[11px] rounded-full bg-[#1C1C1E] text-white hover:bg-black">
+                                  Default
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-500">
+                              {address.type === "hall"
+                                ? "Campus Hall"
+                                : address.type === "home"
+                                  ? "Home Address"
+                                  : "Other Address"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2 text-sm text-gray-700">
+                          <MapPin className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                          <span>{address.fullAddress}</span>
+                        </div>
+                        {address.phone && (
+                          <p className="text-sm text-gray-500">
+                            Phone: {address.phone}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 px-5 md:px-6 py-3 border-t border-gray-100 bg-[#F7F7F8]">
                       <Button
                         variant="outline"
                         size="sm"
                         className="rounded-full border-gray-200"
-                        onClick={() => handleSetDefault(address.id)}
+                        onClick={() => handleEdit(address)}
                       >
-                        <Check className="h-4 w-4 mr-1" />
-                        Set Default
+                        <Edit2 className="h-4 w-4 mr-1" />
+                        Edit
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="rounded-full text-red-500 hover:text-red-600 hover:bg-red-50"
-                        onClick={() => handleDelete(address.id)}
-                        aria-label={`Delete ${address.label}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          ))}
+                      {!address.isDefault && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-full border-gray-200"
+                            onClick={() => handleSetDefault(address.id)}
+                          >
+                            <Check className="h-4 w-4 mr-1" />
+                            Set Default
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="rounded-full text-red-500 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => handleDelete(address.id)}
+                            aria-label={`Delete ${address.label}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Add/Edit Modal */}
       <Modal

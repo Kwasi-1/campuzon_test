@@ -62,6 +62,7 @@ export function PaymentMethodsPage() {
   const [addType, setAddType] = useState<"mobile_money" | "card">(
     "mobile_money",
   );
+  const [filter, setFilter] = useState<"all" | "mobile_money" | "card">("all");
 
   // Form state
   const [formData, setFormData] = useState({
@@ -125,17 +126,30 @@ export function PaymentMethodsPage() {
     return null;
   }
 
-  const defaultMethod = paymentMethods.find((method) => method.isDefault);
   const mobileMoneyCount = paymentMethods.filter(
-    (method) => method.type === "mobile_money",
+    (m) => m.type === "mobile_money",
   ).length;
-  const cardCount = paymentMethods.filter(
-    (method) => method.type === "card",
-  ).length;
+  const cardCount = paymentMethods.filter((m) => m.type === "card").length;
+
+  const filteredMethods =
+    filter === "all"
+      ? paymentMethods
+      : paymentMethods.filter((m) => m.type === filter);
+
+  const sidebarCategories: {
+    key: "all" | "mobile_money" | "card";
+    label: string;
+    count: number;
+  }[] = [
+    { key: "all", label: "All Methods", count: paymentMethods.length },
+    { key: "mobile_money", label: "Mobile Money", count: mobileMoneyCount },
+    { key: "card", label: "Cards", count: cardCount },
+  ];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
         <div className="space-y-1">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
             Payment Methods
@@ -151,35 +165,8 @@ export function PaymentMethodsPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
-          <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
-            Total Methods
-          </p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">
-            {paymentMethods.length}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
-          <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
-            Default Method
-          </p>
-          <p className="text-sm font-semibold text-gray-900 mt-2 truncate">
-            {defaultMethod?.provider || "Not set"}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
-          <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
-            Method Mix
-          </p>
-          <p className="text-sm font-semibold text-gray-900 mt-2">
-            Mobile Money {mobileMoneyCount} · Cards {cardCount}
-          </p>
-        </div>
-      </div>
-
       {/* Security Notice */}
-      <Alert className="border-emerald-100 bg-emerald-50/70 rounded-2xl px-4 py-3">
+      <Alert className="border-emerald-100 bg-emerald-50/70 rounded-2xl px-4 py-3 mb-6">
         <Shield className="h-4 w-4 text-green-600" />
         <div>
           <p className="font-medium text-emerald-800">
@@ -192,120 +179,172 @@ export function PaymentMethodsPage() {
         </div>
       </Alert>
 
-      {paymentMethods.length === 0 ? (
-        <EmptyState
-          icon={<CreditCard className="h-16 w-16" />}
-          title="No payment methods"
-          description="Add a payment method to make checkout faster"
-          action={
-            <Button
-              onClick={() => setShowAddModal(true)}
-              className="rounded-full px-6 bg-[#1C1C1E] hover:bg-black text-white"
-            >
-              Add Payment Method
-            </Button>
-          }
-        />
-      ) : (
-        <div className="space-y-5">
-          {paymentMethods.map((method, index) => (
-            <motion.div
-              key={method.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <div
-                className={`bg-white border rounded-[28px] overflow-hidden shadow-sm ${
-                  method.isDefault
-                    ? "border-[#1C1C1E]/30 ring-1 ring-[#1C1C1E]/10"
-                    : "border-gray-100"
-                }`}
-              >
-                <div className="p-5 md:p-6 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div
-                      className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 ${
-                        method.type === "mobile_money"
-                          ? "bg-yellow-100"
-                          : "bg-gray-100"
-                      }`}
-                    >
-                      {method.type === "mobile_money" ? (
-                        getProviderIcon(method.provider)
-                      ) : (
-                        <CreditCard className="h-6 w-6 text-gray-600" />
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-gray-900 truncate">
-                          {method.provider}
-                        </h3>
-                        {method.isDefault && (
-                          <Badge className="text-[11px] rounded-full bg-[#1C1C1E] text-white hover:bg-black">
-                            Default
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-500 mt-0.5">
-                        {method.type === "mobile_money" ? (
-                          <>Ending in •••• {method.last4}</>
-                        ) : (
-                          <>
-                            •••• {method.last4}
-                            {method.expiryMonth && method.expiryYear && (
+      {/* Body: sidebar + content */}
+      <div className="flex flex-col xl:flex-row gap-8 pb-12">
+        {/* Sidebar Filters */}
+        <div className="xl:w-64 shrink-0">
+          <div className="flex xl:flex-col gap-3 overflow-x-auto xl:overflow-visible pb-2 xl:pb-0 scrollbar-hide xl:sticky xl:top-24">
+            {sidebarCategories.map((cat) => {
+              const isActive = filter === cat.key;
+              return (
+                <button
+                  key={cat.key}
+                  type="button"
+                  onClick={() => setFilter(cat.key)}
+                  className={`flex items-center justify-between pl-5 pr-[2px] py-[3px] xl:py-1 xl:pr-1 rounded-full transition-all shrink-0 xl:shrink-auto whitespace-nowrap xl:whitespace-normal border shadow-sm ${
+                    isActive
+                      ? "bg-[#1C1C1E] text-white border-[#1C1C1E]"
+                      : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  <span className="font-medium text-[15px]">{cat.label}</span>
+                  <span
+                    className={`h-10 w-10 xl:w-12 xl:h-12 ml-3 flex items-center justify-center rounded-full text-xs font-bold ${
+                      isActive
+                        ? "bg-white text-black"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {cat.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Payment Methods List */}
+        <div className="flex-1">
+          {filteredMethods.length === 0 ? (
+            <EmptyState
+              icon={<CreditCard className="h-16 w-16" />}
+              title="No payment methods"
+              description={
+                filter !== "all"
+                  ? `No ${filter === "mobile_money" ? "mobile money" : "card"} methods added`
+                  : "Add a payment method to make checkout faster"
+              }
+              action={
+                filter === "all" ? (
+                  <Button
+                    onClick={() => setShowAddModal(true)}
+                    className="rounded-full px-6 bg-[#1C1C1E] hover:bg-black text-white"
+                  >
+                    Add Payment Method
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => setFilter("all")}
+                    className="rounded-full"
+                  >
+                    View All
+                  </Button>
+                )
+              }
+            />
+          ) : (
+            <div className="space-y-5">
+              {filteredMethods.map((method, index) => (
+                <motion.div
+                  key={method.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <div
+                    className={`bg-white border rounded-[28px] overflow-hidden shadow-sm ${
+                      method.isDefault
+                        ? "border-[#1C1C1E]/30 ring-1 ring-[#1C1C1E]/10"
+                        : "border-gray-100"
+                    }`}
+                  >
+                    <div className="p-5 md:p-6 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div
+                          className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 ${
+                            method.type === "mobile_money"
+                              ? "bg-yellow-100"
+                              : "bg-gray-100"
+                          }`}
+                        >
+                          {method.type === "mobile_money" ? (
+                            getProviderIcon(method.provider)
+                          ) : (
+                            <CreditCard className="h-6 w-6 text-gray-600" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-semibold text-gray-900 truncate">
+                              {method.provider}
+                            </h3>
+                            {method.isDefault && (
+                              <Badge className="text-[11px] rounded-full bg-[#1C1C1E] text-white hover:bg-black">
+                                Default
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-500 mt-0.5">
+                            {method.type === "mobile_money" ? (
+                              <>Ending in •••• {method.last4}</>
+                            ) : (
                               <>
-                                {" "}
-                                · Expires {method.expiryMonth}/
-                                {method.expiryYear}
+                                •••• {method.last4}
+                                {method.expiryMonth && method.expiryYear && (
+                                  <>
+                                    {" "}
+                                    · Expires {method.expiryMonth}/
+                                    {method.expiryYear}
+                                  </>
+                                )}
                               </>
                             )}
-                          </>
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-end md:self-auto">
+                        {!method.isDefault && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-full border-gray-200"
+                            onClick={() => handleSetDefault(method.id)}
+                          >
+                            <Check className="h-4 w-4 mr-1" />
+                            Set Default
+                          </Button>
                         )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="rounded-full text-red-500 hover:text-red-600 hover:bg-red-50"
+                          onClick={() => handleDelete(method.id)}
+                          aria-label={`Delete ${method.provider}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="px-5 md:px-6 py-3 bg-[#F7F7F8] border-t border-gray-100 flex items-center justify-between">
+                      <p className="text-xs font-medium text-gray-500">
+                        {method.type === "mobile_money"
+                          ? "Mobile Money"
+                          : "Card Payment"}
+                      </p>
+                      <p className="text-xs font-semibold text-gray-700">
+                        ID: {method.id}
                       </p>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-2 self-end md:self-auto">
-                    {!method.isDefault && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-full border-gray-200"
-                        onClick={() => handleSetDefault(method.id)}
-                      >
-                        <Check className="h-4 w-4 mr-1" />
-                        Set Default
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="rounded-full text-red-500 hover:text-red-600 hover:bg-red-50"
-                      onClick={() => handleDelete(method.id)}
-                      aria-label={`Delete ${method.provider}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="px-5 md:px-6 py-3 bg-[#F7F7F8] border-t border-gray-100 flex items-center justify-between">
-                  <p className="text-xs font-medium text-gray-500">
-                    {method.type === "mobile_money"
-                      ? "Mobile Money"
-                      : "Card Payment"}
-                  </p>
-                  <p className="text-xs font-semibold text-gray-700">
-                    ID: {method.id}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Add Payment Method Modal */}
       <Modal
