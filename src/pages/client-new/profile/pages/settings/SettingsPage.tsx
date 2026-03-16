@@ -300,7 +300,7 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="max-w-xl mx-auto px4 py-8 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 lg:px-6 py-8 space-y-6">
       {/* Page header */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
@@ -314,432 +314,463 @@ export function SettingsPage() {
         </p>
       </motion.div>
 
-      {/* ── ACCOUNT ─────────────────────────────────────────────────────── */}
-      <Section title="Account" delay={0.05}>
-        <Link to="/profile">
-          <Row
-            icon={User}
-            label="Edit Profile"
-            description="Name, photo, and personal info"
-            right={<LinkArrow />}
-          />
-        </Link>
-        <Link to="/addresses">
-          <Row
-            icon={MapPin}
-            label="Addresses"
-            description="Manage delivery addresses"
-            right={<LinkArrow />}
-          />
-        </Link>
-        <Link to="/payments">
-          <Row
-            icon={CreditCard}
-            label="Payment Methods"
-            description="Saved cards and mobile money"
-            right={<LinkArrow />}
-          />
-        </Link>
-      </Section>
-
-      {/* ── SECURITY ─────────────────────────────────────────────────────── */}
-      <Section title="Security" delay={0.1}>
-        {/* Change password */}
-        <Link to="/profile?tab=password">
-          <Row
-            icon={KeyRound}
-            label="Change Password"
-            description="Update your account password"
-            right={<LinkArrow />}
-          />
-        </Link>
-
-        {/* 2FA row — tap to expand */}
-        <div>
-          <button
-            className="w-full text-left"
-            onClick={() => {
-              setShow2FA((v) => !v);
-              reset2FAState();
-            }}
-          >
-            <div className="flex items-center justify-between px-4 py-3.5 gap-4">
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="flex-shrink-0 w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center">
-                  <Shield className="h-4 w-4 text-gray-500" strokeWidth={1.8} />
-                </span>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-gray-900 leading-tight">
-                      Two-Factor Authentication
-                    </p>
-                    {isEnabled && (
-                      <Badge className="text-[10px] px-1.5 py-0 h-4 bg-emerald-50 text-emerald-600 border-emerald-100 font-medium">
-                        ON
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-400 mt-0.5 leading-tight">
-                    {isEnabled
-                      ? `Active via ${currentMethod === "totp" ? "authenticator app" : "OTP"}`
-                      : "Add an extra layer of security"}
-                  </p>
-                </div>
-              </div>
-              <ChevronDown
-                className={`h-4 w-4 text-gray-300 transition-transform duration-200 ${show2FA ? "rotate-180" : ""}`}
-                strokeWidth={2}
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)] gap-6 items-start">
+        <div className="space-y-6 lg:sticky lg:top-24">
+          {/* ── ACCOUNT ─────────────────────────────────────────────────────── */}
+          <Section title="Account" delay={0.05}>
+            <Link to="/profile">
+              <Row
+                icon={User}
+                label="Edit Profile"
+                description="Name, photo, and personal info"
+                right={<LinkArrow />}
               />
-            </div>
-          </button>
+            </Link>
+            <Link to="/addresses">
+              <Row
+                icon={MapPin}
+                label="Addresses"
+                description="Manage delivery addresses"
+                right={<LinkArrow />}
+              />
+            </Link>
+            <Link to="/payments">
+              <Row
+                icon={CreditCard}
+                label="Payment Methods"
+                description="Saved cards and mobile money"
+                right={<LinkArrow />}
+              />
+            </Link>
+          </Section>
 
-          {/* Inline 2FA panel */}
-          <AnimatePresence>
-            {show2FA && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25 }}
-                className="overflow-hidden"
+          {/* ── SECURITY ─────────────────────────────────────────────────────── */}
+          <Section title="Security" delay={0.1}>
+            {/* Change password */}
+            <Link to="/profile?tab=password">
+              <Row
+                icon={KeyRound}
+                label="Change Password"
+                description="Update your account password"
+                right={<LinkArrow />}
+              />
+            </Link>
+
+            {/* 2FA row — tap to expand */}
+            <div>
+              <button
+                className="w-full text-left"
+                type="button"
+                onClick={() => {
+                  setShow2FA((v) => !v);
+                  reset2FAState();
+                }}
               >
-                <div className="px-4 pb-4 pt-1 space-y-3 border-t border-gray-50">
-                  {twoFAError && (
-                    <Alert variant="destructive" className="py-2 text-sm">
-                      {twoFAError}
-                    </Alert>
-                  )}
-                  {twoFASuccess && (
-                    <div className="flex items-center gap-2 text-sm text-emerald-600 bg-emerald-50 rounded-xl px-3 py-2">
-                      <Check className="h-4 w-4 flex-shrink-0" />
-                      {twoFASuccess}
-                    </div>
-                  )}
-
-                  {/* ── Not yet set up ── */}
-                  {!isEnabled && !totpSetup && !showBackupCodes && (
-                    <div className="space-y-2">
-                      <p className="text-xs text-gray-400">
-                        Use an authenticator app (Google Authenticator, Authy,
-                        etc.) to generate login codes.
-                      </p>
-                      <Button
-                        size="sm"
-                        className="rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs"
-                        onClick={handleSetupTOTP}
-                        disabled={twoFALoading}
-                      >
-                        {twoFALoading && (
-                          <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                        )}
-                        Set up authenticator
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* ── QR / verify flow ── */}
-                  {totpSetup && !showBackupCodes && (
-                    <div className="space-y-3">
-                      <div className="flex flex-col items-center gap-3 bg-gray-50 rounded-xl p-4">
-                        <img
-                          src={totpSetup.qrCode}
-                          alt="QR code"
-                          className="h-36 w-36 rounded-lg"
-                        />
-                        <p className="text-xs text-gray-400 text-center">
-                          Scan with your authenticator app
+                <div className="flex items-center justify-between px-4 py-3.5 gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="flex-shrink-0 w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center">
+                      <Shield
+                        className="h-4 w-4 text-gray-500"
+                        strokeWidth={1.8}
+                      />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-gray-900 leading-tight">
+                          Two-Factor Authentication
                         </p>
+                        {isEnabled && (
+                          <Badge className="text-[10px] px-1.5 py-0 h-4 bg-emerald-50 text-emerald-600 border-emerald-100 font-medium">
+                            ON
+                          </Badge>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
-                        <code className="flex-1 text-xs font-mono text-gray-600 break-all">
-                          {totpSetup.secret}
-                        </code>
-                        <button
-                          onClick={copySecret}
-                          className="flex-shrink-0 text-gray-400 hover:text-gray-600"
-                        >
-                          {copiedSecret ? (
-                            <Check className="h-3.5 w-3.5 text-emerald-500" />
-                          ) : (
-                            <Copy className="h-3.5 w-3.5" />
-                          )}
-                        </button>
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-gray-600 block mb-1.5">
-                          Enter the 6-digit code from your app
-                        </label>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            maxLength={6}
-                            value={verifyCode}
-                            onChange={(e) =>
-                              setVerifyCode(e.target.value.replace(/\D/g, ""))
-                            }
-                            placeholder="000000"
-                            className="flex-1 h-10 px-3 text-center text-lg font-mono tracking-widest rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                          />
+                      <p className="text-xs text-gray-400 mt-0.5 leading-tight">
+                        {isEnabled
+                          ? `Active via ${currentMethod === "totp" ? "authenticator app" : "OTP"}`
+                          : "Add an extra layer of security"}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronDown
+                    className={`h-4 w-4 text-gray-300 transition-transform duration-200 ${show2FA ? "rotate-180" : ""}`}
+                    strokeWidth={2}
+                  />
+                </div>
+              </button>
+
+              {/* Inline 2FA panel */}
+              <AnimatePresence>
+                {show2FA && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 pb-4 pt-1 space-y-3 border-t border-gray-50">
+                      {twoFAError && (
+                        <Alert variant="destructive" className="py-2 text-sm">
+                          {twoFAError}
+                        </Alert>
+                      )}
+                      {twoFASuccess && (
+                        <div className="flex items-center gap-2 text-sm text-emerald-600 bg-emerald-50 rounded-xl px-3 py-2">
+                          <Check className="h-4 w-4 flex-shrink-0" />
+                          {twoFASuccess}
+                        </div>
+                      )}
+
+                      {/* ── Not yet set up ── */}
+                      {!isEnabled && !totpSetup && !showBackupCodes && (
+                        <div className="space-y-2">
+                          <p className="text-xs text-gray-400">
+                            Use an authenticator app (Google Authenticator,
+                            Authy, etc.) to generate login codes.
+                          </p>
                           <Button
                             size="sm"
-                            className="h-10 px-4 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs"
-                            onClick={handleVerifyTOTP}
-                            disabled={twoFALoading || verifyCode.length !== 6}
+                            className="rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs"
+                            onClick={handleSetupTOTP}
+                            disabled={twoFALoading}
                           >
-                            {twoFALoading ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              "Verify"
+                            {twoFALoading && (
+                              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
                             )}
+                            Set up authenticator
                           </Button>
                         </div>
-                      </div>
-                      <button
-                        onClick={() => setTotpSetup(null)}
-                        className="text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2"
-                      >
-                        Cancel setup
-                      </button>
-                    </div>
-                  )}
-
-                  {/* ── Backup codes ── */}
-                  {showBackupCodes && totpSetup?.backupCodes && (
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 rounded-xl px-3 py-2.5">
-                        <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-                        <span>
-                          Save these backup codes in a safe place — you will
-                          need them if you lose access to your app.
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-4 gap-1.5">
-                        {totpSetup.backupCodes.map((code, i) => (
-                          <div
-                            key={i}
-                            className="bg-gray-50 rounded-lg py-1.5 text-center font-mono text-xs text-gray-600"
-                          >
-                            {code}
-                          </div>
-                        ))}
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full rounded-xl text-xs border-gray-200"
-                        onClick={() => {
-                          setShowBackupCodes(false);
-                          setTotpSetup(null);
-                          setShow2FA(false);
-                        }}
-                      >
-                        Done
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* ── Disable 2FA ── */}
-                  {isEnabled && !totpSetup && !showBackupCodes && (
-                    <button
-                      onClick={handleDisable2FA}
-                      disabled={twoFALoading}
-                      className="text-xs text-red-500 hover:text-red-600 underline underline-offset-2 disabled:opacity-50"
-                    >
-                      {twoFALoading && (
-                        <Loader2 className="h-3 w-3 inline mr-1 animate-spin" />
                       )}
-                      Disable two-factor authentication
-                    </button>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </Section>
 
-      {/* ── NOTIFICATIONS ────────────────────────────────────────────────── */}
-      <Section title="Notifications" delay={0.15}>
-        <Row
-          icon={Bell}
-          label="Order Updates"
-          description="Status changes on your orders"
-          right={
-            <Toggle
-              checked={notifs.orders}
-              onChange={() => setNotifs((p) => ({ ...p, orders: !p.orders }))}
-            />
-          }
-        />
-        <Row
-          icon={Mail}
-          label="Messages"
-          description="New messages from sellers"
-          right={
-            <Toggle
-              checked={notifs.messages}
-              onChange={() =>
-                setNotifs((p) => ({ ...p, messages: !p.messages }))
-              }
-            />
-          }
-        />
-        <Row
-          icon={Bell}
-          label="Promotions"
-          description="Deals, discounts, and offers"
-          right={
-            <Toggle
-              checked={notifs.promotions}
-              onChange={() =>
-                setNotifs((p) => ({ ...p, promotions: !p.promotions }))
-              }
-            />
-          }
-        />
-        {/* Push notifications — placeholder for future browser/FCM activation */}
-        <div>
-          <Row
-            icon={Smartphone}
-            label="Push Notifications"
-            description={
-              notifs.push
-                ? "Enabled on this device"
-                : "Get alerts even when the app is closed"
-            }
-            right={
-              <Toggle
-                checked={notifs.push}
-                onChange={() => setNotifs((p) => ({ ...p, push: !p.push }))}
-              />
-            }
-          />
-          <AnimatePresence>
-            {notifs.push && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden"
-              >
-                <div className="mx-4 mb-3 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2.5 text-xs text-gray-500">
-                  <Check className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
-                  Push notification activation coming soon — we will prompt you
-                  to allow browser permissions when ready.
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </Section>
+                      {/* ── QR / verify flow ── */}
+                      {totpSetup && !showBackupCodes && (
+                        <div className="space-y-3">
+                          <div className="flex flex-col items-center gap-3 bg-gray-50 rounded-xl p-4">
+                            <img
+                              src={totpSetup.qrCode}
+                              alt="QR code"
+                              className="h-36 w-36 rounded-lg"
+                            />
+                            <p className="text-xs text-gray-400 text-center">
+                              Scan with your authenticator app
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
+                            <code className="flex-1 text-xs font-mono text-gray-600 break-all">
+                              {totpSetup.secret}
+                            </code>
+                            <button
+                              onClick={copySecret}
+                              type="button"
+                              className="flex-shrink-0 text-gray-400 hover:text-gray-600"
+                              aria-label="Copy authenticator secret"
+                            >
+                              {copiedSecret ? (
+                                <Check className="h-3.5 w-3.5 text-emerald-500" />
+                              ) : (
+                                <Copy className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-600 block mb-1.5">
+                              Enter the 6-digit code from your app
+                            </label>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                maxLength={6}
+                                value={verifyCode}
+                                onChange={(e) =>
+                                  setVerifyCode(
+                                    e.target.value.replace(/\D/g, ""),
+                                  )
+                                }
+                                placeholder="000000"
+                                className="flex-1 h-10 px-3 text-center text-lg font-mono tracking-widest rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                              />
+                              <Button
+                                size="sm"
+                                className="h-10 px-4 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs"
+                                onClick={handleVerifyTOTP}
+                                disabled={
+                                  twoFALoading || verifyCode.length !== 6
+                                }
+                              >
+                                {twoFALoading ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  "Verify"
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setTotpSetup(null)}
+                            type="button"
+                            className="text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2"
+                          >
+                            Cancel setup
+                          </button>
+                        </div>
+                      )}
 
-      {/* ── APPEARANCE ───────────────────────────────────────────────────── */}
-      <Section title="Appearance" delay={0.2}>
-        <Row
-          icon={theme === "dark" ? Moon : Sun}
-          label="Theme"
-          description="Light, dark, or match system"
-          right={
-            <Select
-              value={theme}
-              onValueChange={(v) => setTheme(v as "light" | "dark" | "system")}
+                      {/* ── Backup codes ── */}
+                      {showBackupCodes && totpSetup?.backupCodes && (
+                        <div className="space-y-3">
+                          <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 rounded-xl px-3 py-2.5">
+                            <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                            <span>
+                              Save these backup codes in a safe place — you will
+                              need them if you lose access to your app.
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-4 gap-1.5">
+                            {totpSetup.backupCodes.map((code, i) => (
+                              <div
+                                key={i}
+                                className="bg-gray-50 rounded-lg py-1.5 text-center font-mono text-xs text-gray-600"
+                              >
+                                {code}
+                              </div>
+                            ))}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full rounded-xl text-xs border-gray-200"
+                            onClick={() => {
+                              setShowBackupCodes(false);
+                              setTotpSetup(null);
+                              setShow2FA(false);
+                            }}
+                          >
+                            Done
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* ── Disable 2FA ── */}
+                      {isEnabled && !totpSetup && !showBackupCodes && (
+                        <button
+                          onClick={handleDisable2FA}
+                          disabled={twoFALoading}
+                          type="button"
+                          className="text-xs text-red-500 hover:text-red-600 underline underline-offset-2 disabled:opacity-50"
+                        >
+                          {twoFALoading && (
+                            <Loader2 className="h-3 w-3 inline mr-1 animate-spin" />
+                          )}
+                          Disable two-factor authentication
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </Section>
+
+          {/* ── LOGOUT ───────────────────────────────────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+          >
+            <button
+              onClick={handleLogout}
+              type="button"
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-red-100 text-red-500 text-sm font-medium hover:bg-red-50 transition-colors"
             >
-              <SelectTrigger className="w-28 h-8 text-xs rounded-xl border-gray-200 focus:ring-gray-900">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="light">Light</SelectItem>
-                <SelectItem value="dark">Dark</SelectItem>
-                <SelectItem value="system">System</SelectItem>
-              </SelectContent>
-            </Select>
-          }
-        />
-        <Row
-          icon={Globe}
-          label="Language"
-          description="Display language"
-          right={
-            <Select defaultValue="en">
-              <SelectTrigger className="w-28 h-8 text-xs rounded-xl border-gray-200 focus:ring-gray-900">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="en">English</SelectItem>
-                <SelectItem value="fr">French</SelectItem>
-              </SelectContent>
-            </Select>
-          }
-        />
-      </Section>
+              <LogOut className="h-4 w-4" strokeWidth={1.8} />
+              Log Out
+            </button>
+          </motion.div>
+        </div>
 
-      {/* ── PRIVACY ──────────────────────────────────────────────────────── */}
-      <Section title="Privacy" delay={0.25}>
-        <Row
-          icon={Lock}
-          label="Show Online Status"
-          description="Let sellers see when you're active"
-          right={
-            <Toggle
-              checked={privacy.showOnline}
-              onChange={() =>
-                setPrivacy((p) => ({ ...p, showOnline: !p.showOnline }))
+        <div className="space-y-6">
+          {/* ── NOTIFICATIONS ────────────────────────────────────────────────── */}
+          <Section title="Notifications" delay={0.15}>
+            <Row
+              icon={Bell}
+              label="Order Updates"
+              description="Status changes on your orders"
+              right={
+                <Toggle
+                  checked={notifs.orders}
+                  onChange={() =>
+                    setNotifs((p) => ({ ...p, orders: !p.orders }))
+                  }
+                />
               }
             />
-          }
-        />
-        <Row
-          icon={Lock}
-          label="Show Last Seen"
-          description="Display your last activity time"
-          right={
-            <Toggle
-              checked={privacy.showLastSeen}
-              onChange={() =>
-                setPrivacy((p) => ({ ...p, showLastSeen: !p.showLastSeen }))
+            <Row
+              icon={Mail}
+              label="Messages"
+              description="New messages from sellers"
+              right={
+                <Toggle
+                  checked={notifs.messages}
+                  onChange={() =>
+                    setNotifs((p) => ({ ...p, messages: !p.messages }))
+                  }
+                />
               }
             />
-          }
-        />
-      </Section>
+            <Row
+              icon={Bell}
+              label="Promotions"
+              description="Deals, discounts, and offers"
+              right={
+                <Toggle
+                  checked={notifs.promotions}
+                  onChange={() =>
+                    setNotifs((p) => ({ ...p, promotions: !p.promotions }))
+                  }
+                />
+              }
+            />
+            {/* Push notifications — placeholder for future browser/FCM activation */}
+            <div>
+              <Row
+                icon={Smartphone}
+                label="Push Notifications"
+                description={
+                  notifs.push
+                    ? "Enabled on this device"
+                    : "Get alerts even when the app is closed"
+                }
+                right={
+                  <Toggle
+                    checked={notifs.push}
+                    onChange={() => setNotifs((p) => ({ ...p, push: !p.push }))}
+                  />
+                }
+              />
+              <AnimatePresence>
+                {notifs.push && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mx-4 mb-3 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2.5 text-xs text-gray-500">
+                      <Check className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                      Push notification activation coming soon — we will prompt
+                      you to allow browser permissions when ready.
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </Section>
 
-      {/* ── SUPPORT ──────────────────────────────────────────────────────── */}
-      <Section title="Support" delay={0.3}>
-        <Link to="/help">
-          <Row
-            icon={HelpCircle}
-            label="Help Center"
-            description="FAQs and support articles"
-            right={<LinkArrow />}
-          />
-        </Link>
-        <Link to="/terms">
-          <Row icon={FileText} label="Terms of Service" right={<LinkArrow />} />
-        </Link>
-        <Link to="/privacy">
-          <Row icon={FileText} label="Privacy Policy" right={<LinkArrow />} />
-        </Link>
-      </Section>
+          {/* ── APPEARANCE ───────────────────────────────────────────────────── */}
+          <Section title="Appearance" delay={0.2}>
+            <Row
+              icon={theme === "dark" ? Moon : Sun}
+              label="Theme"
+              description="Light, dark, or match system"
+              right={
+                <Select
+                  value={theme}
+                  onValueChange={(v) =>
+                    setTheme(v as "light" | "dark" | "system")
+                  }
+                >
+                  <SelectTrigger className="w-28 h-8 text-xs rounded-xl border-gray-200 focus:ring-gray-900">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="light">Light</SelectItem>
+                    <SelectItem value="dark">Dark</SelectItem>
+                    <SelectItem value="system">System</SelectItem>
+                  </SelectContent>
+                </Select>
+              }
+            />
+            <Row
+              icon={Globe}
+              label="Language"
+              description="Display language"
+              right={
+                <Select defaultValue="en">
+                  <SelectTrigger className="w-28 h-8 text-xs rounded-xl border-gray-200 focus:ring-gray-900">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="fr">French</SelectItem>
+                  </SelectContent>
+                </Select>
+              }
+            />
+          </Section>
 
-      {/* ── LOGOUT ───────────────────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35 }}
-      >
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-red-100 text-red-500 text-sm font-medium hover:bg-red-50 transition-colors"
-        >
-          <LogOut className="h-4 w-4" strokeWidth={1.8} />
-          Log Out
-        </button>
-      </motion.div>
+          {/* ── PRIVACY ──────────────────────────────────────────────────────── */}
+          <Section title="Privacy" delay={0.25}>
+            <Row
+              icon={Lock}
+              label="Show Online Status"
+              description="Let sellers see when you're active"
+              right={
+                <Toggle
+                  checked={privacy.showOnline}
+                  onChange={() =>
+                    setPrivacy((p) => ({ ...p, showOnline: !p.showOnline }))
+                  }
+                />
+              }
+            />
+            <Row
+              icon={Lock}
+              label="Show Last Seen"
+              description="Display your last activity time"
+              right={
+                <Toggle
+                  checked={privacy.showLastSeen}
+                  onChange={() =>
+                    setPrivacy((p) => ({ ...p, showLastSeen: !p.showLastSeen }))
+                  }
+                />
+              }
+            />
+          </Section>
+
+          {/* ── SUPPORT ──────────────────────────────────────────────────────── */}
+          <Section title="Support" delay={0.3}>
+            <Link to="/help">
+              <Row
+                icon={HelpCircle}
+                label="Help Center"
+                description="FAQs and support articles"
+                right={<LinkArrow />}
+              />
+            </Link>
+            <Link to="/terms">
+              <Row
+                icon={FileText}
+                label="Terms of Service"
+                right={<LinkArrow />}
+              />
+            </Link>
+            <Link to="/privacy">
+              <Row
+                icon={FileText}
+                label="Privacy Policy"
+                right={<LinkArrow />}
+              />
+            </Link>
+          </Section>
+        </div>
+      </div>
 
       {/* App version */}
-      <p className="text-center text-xs text-gray-300 pb-4">
+      <p className="text-center text-xs text-gray-300 pb-4 lg:text-left">
         Campuzon v1.0.0 · © 2025
       </p>
     </div>
