@@ -30,7 +30,7 @@ export function Modal({
   title,
   description,
   children,
-  size = 'md',
+  size = 'lg',
   showCloseButton = true,
   closeOnOverlayClick = true,
   footer,
@@ -83,7 +83,7 @@ export function Modal({
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
               className={cn(
-                'relative w-full bg-background rounded-xl shadow-2xl',
+                'relative w-full bg-background rounded-[20px] shadow-2xl',
                 'max-h-[90vh] overflow-hidden flex flex-col',
                 sizeClasses[size]
               )}

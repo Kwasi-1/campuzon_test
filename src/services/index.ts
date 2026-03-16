@@ -56,3 +56,10 @@ export { default as savedItemsService } from './savedItemsService';
 // Export profile addresses service
 export { default as profileAddressesService } from './profileAddressesService';
 export type { ProfileAddress, AddressType } from './profileAddressesService';
+
+// Export profile payment methods service
+export { default as profilePaymentMethodsService } from './profilePaymentMethodsService';
+export type {
+  ProfilePaymentMethod,
+  PaymentMethodType,
+} from './profilePaymentMethodsService';

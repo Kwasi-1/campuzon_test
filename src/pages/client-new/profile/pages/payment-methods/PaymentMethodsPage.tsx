@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -16,36 +16,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Modal } from "@/components/shared/Modal";
+import { Skeleton } from "@/components/shared/Skeleton";
 import { useAuthStore } from "@/stores";
-
-interface PaymentMethod {
-  id: string;
-  type: "mobile_money" | "card";
-  provider: string;
-  last4: string;
-  isDefault: boolean;
-  expiryMonth?: number;
-  expiryYear?: number;
-  holderName?: string;
-}
-
-// Mock payment methods
-const mockPaymentMethods: PaymentMethod[] = [
-  {
-    id: "pm-1",
-    type: "mobile_money",
-    provider: "MTN Mobile Money",
-    last4: "4567",
-    isDefault: true,
-  },
-  {
-    id: "pm-2",
-    type: "mobile_money",
-    provider: "Vodafone Cash",
-    last4: "8901",
-    isDefault: false,
-  },
-];
+import profilePaymentMethodsService, {
+  type ProfilePaymentMethod,
+} from "@/services/profilePaymentMethodsService";
 
 const MOBILE_MONEY_PROVIDERS = [
   { id: "mtn", name: "MTN Mobile Money", icon: "🟡" },
@@ -56,13 +31,17 @@ const MOBILE_MONEY_PROVIDERS = [
 export function PaymentMethodsPage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
-  const [paymentMethods, setPaymentMethods] =
-    useState<PaymentMethod[]>(mockPaymentMethods);
+  const [paymentMethods, setPaymentMethods] = useState<ProfilePaymentMethod[]>(
+    [],
+  );
   const [showAddModal, setShowAddModal] = useState(false);
   const [addType, setAddType] = useState<"mobile_money" | "card">(
     "mobile_money",
   );
   const [filter, setFilter] = useState<"all" | "mobile_money" | "card">("all");
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -79,39 +58,81 @@ export function PaymentMethodsPage() {
     });
   };
 
-  const handleAdd = () => {
-    const provider = MOBILE_MONEY_PROVIDERS.find(
-      (p) => p.id === formData.provider,
-    );
-    const newMethod: PaymentMethod = {
-      id: `pm-${Date.now()}`,
-      type: "mobile_money",
-      provider: provider?.name || "Mobile Money",
-      last4: formData.phoneNumber.slice(-4),
-      isDefault: formData.isDefault,
-    };
+  const loadPaymentMethods = async () => {
+    setError(null);
+    setIsPageLoading(true);
 
-    setPaymentMethods((prev) =>
-      formData.isDefault
-        ? [...prev.map((m) => ({ ...m, isDefault: false })), newMethod]
-        : [...prev, newMethod],
-    );
-
-    setShowAddModal(false);
-    resetForm();
+    try {
+      const items = await profilePaymentMethodsService.getPaymentMethods();
+      setPaymentMethods(items);
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Failed to load payment methods",
+      );
+      setPaymentMethods([]);
+    } finally {
+      setIsPageLoading(false);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setPaymentMethods((prev) => prev.filter((m) => m.id !== id));
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    void loadPaymentMethods();
+  }, [isAuthenticated]);
+
+  const handleAdd = async () => {
+    setError(null);
+    setIsSaving(true);
+
+    try {
+      if (addType !== "mobile_money") {
+        setIsSaving(false);
+        return;
+      }
+
+      const next = await profilePaymentMethodsService.createMobileMoneyMethod({
+        providerId: formData.provider,
+        phoneNumber: formData.phoneNumber,
+        isDefault: formData.isDefault,
+      });
+
+      setPaymentMethods(next);
+      setShowAddModal(false);
+      resetForm();
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Failed to add payment method",
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleSetDefault = (id: string) => {
-    setPaymentMethods((prev) =>
-      prev.map((m) => ({
-        ...m,
-        isDefault: m.id === id,
-      })),
-    );
+  const handleDelete = async (id: string) => {
+    setError(null);
+    try {
+      const next = await profilePaymentMethodsService.deletePaymentMethod(id);
+      setPaymentMethods(next);
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Failed to delete payment method",
+      );
+    }
+  };
+
+  const handleSetDefault = async (id: string) => {
+    setError(null);
+    try {
+      const next =
+        await profilePaymentMethodsService.setDefaultPaymentMethod(id);
+      setPaymentMethods(next);
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to set default payment method",
+      );
+    }
   };
 
   const getProviderIcon = (provider: string) => {
@@ -215,7 +236,30 @@ export function PaymentMethodsPage() {
 
         {/* Payment Methods List */}
         <div className="flex-1">
-          {filteredMethods.length === 0 ? (
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              {error}
+            </Alert>
+          )}
+
+          {isPageLoading ? (
+            <div className="space-y-5">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="rounded-3xl border border-gray-100 bg-white p-5 md:p-6 shadow-sm"
+                >
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-12 w-12 rounded-2xl" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-40 rounded" />
+                      <Skeleton className="h-3 w-28 rounded" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredMethods.length === 0 ? (
             <EmptyState
               icon={<CreditCard className="h-16 w-16" />}
               title="No payment methods"
@@ -253,7 +297,7 @@ export function PaymentMethodsPage() {
                   transition={{ delay: index * 0.05 }}
                 >
                   <div
-                    className={`bg-white border rounded-3xl overflow-hidden shadow-sm ${
+                    className={`bg-card border rounded-3xl overflow-hidden shadow-sm ${
                       method.isDefault
                         ? "border-[#1C1C1E]/30 ring-1 ring-[#1C1C1E]/10"
                         : "border-gray-100"
@@ -310,7 +354,9 @@ export function PaymentMethodsPage() {
                             variant="outline"
                             size="sm"
                             className="rounded-full border-gray-200"
-                            onClick={() => handleSetDefault(method.id)}
+                            onClick={() => {
+                              void handleSetDefault(method.id);
+                            }}
                           >
                             <Check className="h-4 w-4 mr-1" />
                             Set Default
@@ -320,7 +366,9 @@ export function PaymentMethodsPage() {
                           variant="ghost"
                           size="sm"
                           className="rounded-full text-red-500 hover:text-red-600 hover:bg-red-50"
-                          onClick={() => handleDelete(method.id)}
+                          onClick={() => {
+                            void handleDelete(method.id);
+                          }}
                           aria-label={`Delete ${method.provider}`}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -458,10 +506,10 @@ export function PaymentMethodsPage() {
                 </Button>
                 <Button
                   onClick={handleAdd}
-                  disabled={!formData.phoneNumber}
+                  disabled={!formData.phoneNumber || isSaving}
                   className="rounded-full bg-[#1C1C1E] hover:bg-black text-white"
                 >
-                  Add Payment Method
+                  {isSaving ? "Saving..." : "Add Payment Method"}
                 </Button>
               </div>
             </>
