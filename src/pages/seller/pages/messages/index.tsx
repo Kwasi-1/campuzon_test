@@ -477,6 +477,7 @@ export function SellerMessagesPage() {
 
   return (
     <SellerPageTemplate
+      messagesPadding="true"
       // title="Messages"
       // description={
       //   unreadCount > 0 ? (
@@ -491,7 +492,7 @@ export function SellerMessagesPage() {
       //   )
       // }
     >
-      <div className="flex h-[calc(100vh-16rem)] min-h-[500px] w-full overflow-hidden rounded-xl border bg-background shadow-sm md:min-h-[600px]">
+      <div className="flex h-[calc(100vh-7rem)] md:h-[calc(100vh-16rem)] -mb-10 -mt-2 md:mb-auto md:mt-auto min-h-[500px] w-full overflow-hidden md:rounded-xl md:border bg-background md:shadow-sm md:min-h-[600px]">
         <div
           className={`w-full border-border md:flex md:min-w-[320px] md:max-w-[350px] md:flex-col md:border-r lg:min-w-[400px] lg:max-w-[450px] ${
             selectedConversationId ? "hidden md:flex" : "flex flex-col"
@@ -500,7 +501,7 @@ export function SellerMessagesPage() {
           <div className="sticky top-0 z-30 bg-background">
             <div className="border-b border-border p-4">
               <div className="mb-4 flex items-center justify-between gap-3">
-                <h2 className="text-2xl font-bold">Messages</h2>
+                <h2 className="text-2xl font-semibold">Messages</h2>
                 {unreadCount > 0 ? (
                   <Badge variant="outline" className="h-6 min-w-6 px-2">
                     {unreadCount >= 100 ? "99+" : unreadCount}
@@ -593,7 +594,7 @@ export function SellerMessagesPage() {
                         </div>
 
                         <div className="mt-1 flex items-center justify-between gap-2">
-                          <p className="max-w-[220px] min-w-0 flex-1 truncate text-sm text-muted-foreground">
+                          <p className={` min-w-0 flex-1 truncate text-sm text-muted-foreground ${conversation.unreadCount > 0 ? "max-w-[180px] md:max-w-[190px] lg:max-w-[220px]" : "max-w-[220px]"}`}>
                             {conversation.lastMessage.isFromCustomer
                               ? ""
                               : "You: "}

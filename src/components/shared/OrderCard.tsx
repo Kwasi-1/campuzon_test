@@ -40,7 +40,7 @@ export function OrderCard({
   });
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-[28px] border border-gray-100 bg-white shadow-sm">
+    <div className="flex flex-col overflow-hidden rounded md:rounded-3xl border border-gray-100 bg-white shadow-sm">
       <div className="flex flex-col gap-6 p-6 md:p-8">
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
@@ -94,7 +94,7 @@ export function OrderCard({
               key={item.id || index}
               className="flex items-center gap-4 rounded-2xl border border-gray-100/60 bg-gray-50/50 p-3"
             >
-              <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-gray-100 bg-gray-100 shadow-sm">
+              <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg md:rounded-xl border border-gray-100 bg-gray-100 shadow-sm">
                 <img
                   src={item.productImage || "/placeholder-product.jpg"}
                   alt={item.productName}
@@ -123,7 +123,7 @@ export function OrderCard({
         </div>
       </div>
 
-      <div className="mt-auto flex flex-col justify-between gap-4 bg-[#F3F3F3] p-6 md:flex-row md:items-center md:px-8 md:py-5">
+      <div className="mt-auto flex flex-col justify-between gap-4 bg-muted/50 p-6 md:flex-row md:items-center md:px-8 md:py-5">
         <div className="flex items-baseline gap-2">
           <p className="text-base font-bold text-gray-900">
             Total: {formatAmount(order.totalAmount || 0)}

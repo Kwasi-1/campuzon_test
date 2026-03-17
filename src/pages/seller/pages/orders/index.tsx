@@ -25,6 +25,7 @@ import {
   useStoreOrders,
   useUpdateOrderStatus,
 } from "@/hooks";
+import { mockOrders } from "@/lib/mockData";
 import { Skeleton } from "@/components/shared/Skeleton";
 import {
   SellerPageSearchFilters,
@@ -33,8 +34,61 @@ import {
 import { PillSidebar } from "@/components/ui/pill-sidebar";
 import { OrderCard } from "@/components/shared/OrderCard";
 
-// Mock orders data for seller
-const mockSellerOrders: Order[] = [];
+const USE_PREVIEW_MOCK_DATA = true;
+
+function createPreviewOrders(): Order[] {
+  const previewStatuses: OrderStatus[] = [
+    "pending",
+    "paid",
+    "processing",
+    "shipped",
+    "delivered",
+    "completed",
+    "cancelled",
+    "refunded",
+  ];
+
+  return Array.from({ length: 8 }, (_, index) => {
+    const source = mockOrders[index % mockOrders.length];
+    const status = previewStatuses[index % previewStatuses.length];
+    const createdAt = new Date(Date.now() - index * 18 * 60 * 60 * 1000);
+
+    return {
+      ...source,
+      id: `preview-order-${index + 1}`,
+      orderNumber: `ORD-2026-${String(index + 1).padStart(4, "0")}`,
+      status,
+      totalAmount: source.totalAmount + index * 22.5,
+      subtotal: source.subtotal + index * 18,
+      dateCreated: createdAt.toISOString(),
+      paidAt:
+        status === "pending" || status === "cancelled"
+          ? null
+          : new Date(createdAt.getTime() + 60 * 60 * 1000).toISOString(),
+      shippedAt: ["shipped", "delivered", "completed"].includes(status)
+        ? new Date(createdAt.getTime() + 24 * 60 * 60 * 1000).toISOString()
+        : null,
+      deliveredAt: ["delivered", "completed"].includes(status)
+        ? new Date(createdAt.getTime() + 48 * 60 * 60 * 1000).toISOString()
+        : null,
+      completedAt:
+        status === "completed"
+          ? new Date(createdAt.getTime() + 52 * 60 * 60 * 1000).toISOString()
+          : null,
+      deliveryAddress:
+        source.deliveryAddress ||
+        `Block ${String.fromCharCode(65 + index)}, Campus Hostel`,
+      shippingAddress: {
+        fullName: `Student Buyer ${index + 1}`,
+        phone: `+233 24 ${String(100000 + index).slice(-6)}`,
+        addressLine1: `Room ${100 + index}, Block ${String.fromCharCode(65 + index)}`,
+        city: "Accra",
+        region: "Greater Accra",
+      },
+      buyerNote: index % 3 === 0 ? "Please call on arrival" : source.buyerNote,
+    };
+  });
+}
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All Orders" },
@@ -126,26 +180,34 @@ export function SellerOrdersPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
   const { formatGHS } = useCurrency();
+  const [previewOrders, setPreviewOrders] = useState<Order[]>(() =>
+    createPreviewOrders(),
+  );
 
   const [searchQuery, setSearchQuery] = useState("");
   const [mainFilter, setMainFilter] = useState<MainFilterKey>("all");
   const [extraFilter, setExtraFilter] = useState<ExtraFilterKey>("all");
-  const [selectedOrder, setSelectedOrder] = useState<
-    (typeof mockSellerOrders)[0] | null
-  >(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [actionModalOpen, setActionModalOpen] = useState(false);
   const [actionType, setActionType] = useState<
     "ship" | "complete" | "cancel" | null
   >(null);
 
   const { data: store } = useMyStore();
-  const { data: storeOrders, isLoading } = useStoreOrders(store?.id || "");
+  const { data: apiOrders, isLoading: ordersLoading } = useStoreOrders(
+    store?.id || "",
+  );
   const updateStatus = useUpdateOrderStatus();
+  const storeOrders = useMemo(
+    () => (USE_PREVIEW_MOCK_DATA ? previewOrders : apiOrders || []),
+    [previewOrders, apiOrders],
+  );
+  const isLoading = USE_PREVIEW_MOCK_DATA ? false : ordersLoading;
 
   const effectiveFilter = extraFilter !== "all" ? extraFilter : mainFilter;
 
   const filteredOrders = useMemo(() => {
-    let orders = [...(storeOrders || [])];
+    let orders = [...storeOrders];
 
     if (effectiveFilter !== "all") {
       orders = orders.filter((order) => order.status === effectiveFilter);
@@ -167,7 +229,7 @@ export function SellerOrdersPage() {
   }, [effectiveFilter, searchQuery, storeOrders]);
 
   const handleOrderAction = (
-    order: (typeof mockSellerOrders)[0],
+    order: Order,
     action: "ship" | "complete" | "cancel",
   ) => {
     setSelectedOrder(order);
@@ -185,10 +247,20 @@ export function SellerOrdersPage() {
           ? "completed"
           : "cancelled";
 
-    await updateStatus.mutateAsync({
-      id: selectedOrder.id,
-      status: newStatus as OrderStatus,
-    });
+    if (USE_PREVIEW_MOCK_DATA) {
+      setPreviewOrders((prev) =>
+        prev.map((order) =>
+          order.id === selectedOrder.id
+            ? { ...order, status: newStatus as OrderStatus }
+            : order,
+        ),
+      );
+    } else {
+      await updateStatus.mutateAsync({
+        id: selectedOrder.id,
+        status: newStatus as OrderStatus,
+      });
+    }
 
     setActionModalOpen(false);
     setSelectedOrder(null);
@@ -209,7 +281,7 @@ export function SellerOrdersPage() {
   };
 
   const stats = useMemo(() => {
-    const orders = storeOrders || [];
+    const orders = storeOrders;
     const pending = orders.filter(
       (o) => o.status === "pending" || o.status === "paid",
     ).length;
@@ -224,7 +296,7 @@ export function SellerOrdersPage() {
   }, [storeOrders]);
 
   const statusCounts = useMemo(() => {
-    const orders = storeOrders || [];
+    const orders = storeOrders;
     return {
       all: orders.length,
       pending: orders.filter((o) => o.status === "pending").length,
@@ -245,7 +317,7 @@ export function SellerOrdersPage() {
   }
 
   const sidebar = (
-    <div className="space-y-6 xl:sticky xl:top-32">
+    <div className="space-y-4 md:space-y-6 xl:sticky xl:top-48">
       <PillSidebar
         options={STATUS_OPTIONS.filter((option) =>
           MAIN_FILTER_KEYS.includes(option.value as MainFilterKey),
@@ -261,8 +333,8 @@ export function SellerOrdersPage() {
         }}
       />
 
-      <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-2xl bg-gray-50 p-3">
+      <div className="grid grid-cols-1 gap-2">
+        {/* <div className="rounded-2xl bg-gray-50 p-3">
           <p className="text-xs text-gray-500">Pending</p>
           <p className="text-lg font-semibold text-gray-900">{stats.pending}</p>
         </div>
@@ -275,8 +347,8 @@ export function SellerOrdersPage() {
           <p className="text-lg font-semibold text-gray-900">
             {stats.completed}
           </p>
-        </div>
-        <div className="rounded-2xl bg-gray-50 p-3">
+        </div> */}
+        <div className="rounded-md md:rounded-2xl bg-gray-50 p-3">
           <p className="text-xs text-gray-500">Revenue</p>
           <p className="truncate text-sm font-semibold text-gray-900">
             {formatGHS(stats.totalRevenue)}
@@ -309,7 +381,7 @@ export function SellerOrdersPage() {
   return (
     <SellerPageTemplate
       title="Orders"
-      description={`Manage customer orders (${(storeOrders || []).length} total)`}
+      description={`Manage customer orders (${storeOrders.length} total)`}
       headerActions={headerActions}
       sidebar={sidebar}
     >
@@ -320,7 +392,7 @@ export function SellerOrdersPage() {
           ))}
         </div>
       ) : filteredOrders.length === 0 ? (
-        <div className="overflow-hidden rounded-[28px] border border-gray-100 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
           <div className="flex h-full flex-col items-center justify-center py-16 text-center">
             <EmptyState
               icon={<Package className="h-16 w-16" />}
@@ -338,7 +410,7 @@ export function SellerOrdersPage() {
           </div>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {filteredOrders.map((order, index) => {
             const statusConfig = getStatusConfig(order.status);
             const StatusIcon = statusConfig.icon;
@@ -360,44 +432,45 @@ export function SellerOrdersPage() {
                     </Badge>
                   }
                   footerActions={
-                    <div className="flex flex-wrap justify-end gap-2">
-                      <Link to={`/seller/orders/${order.id}`}>
+                    <div className="flex flex-wrap justify-end gap-2 w-full flex-1">
+                      <div className="flex flexwrap justify-end gap-2 w-full md:w-auto">
+                      <Link to={`/seller/orders/${order.id}`} className=" w-full md:w-auto">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="rounded-full"
+                          className="rounded-full bg-transparent w-full md:w-auto"
                         >
                           <Eye className="mr-1 h-4 w-4" />
                           View
                         </Button>
                       </Link>
-                      <Link to={`/messages?order=${order.id}`}>
+                      <Link to={`/seller/messages?order=${order.id}`} className=" w-full md:w-auto">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="rounded-full"
+                          className="rounded-full w-full md:w-auto"
                         >
                           <MessageCircle className="mr-1 h-4 w-4" />
                           Chat
                         </Button>
                       </Link>
-                      <a href={`tel:${order.shippingAddress?.phone || ""}`}>
+                      <a href={`tel:${order.shippingAddress?.phone || ""}`} className=" w-full md:w-auto">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="rounded-full"
+                          className="rounded-full w-full md:w-auto"
                         >
                           <Phone className="mr-1 h-4 w-4" />
                           Call
                         </Button>
                       </a>
+                      </div>
 
                       {(order.status === "paid" ||
                         order.status === "processing") && (
                         <Button
-                          size="sm"
                           onClick={() => handleOrderAction(order, "ship")}
-                          className="rounded-full"
+                          className="rounded-full w-full md:w-auto"
                         >
                           <Truck className="mr-1 h-4 w-4" />
                           Ship
@@ -408,7 +481,7 @@ export function SellerOrdersPage() {
                           size="sm"
                           variant="outline"
                           onClick={() => handleOrderAction(order, "complete")}
-                          className="rounded-full text-green-600"
+                          className="rounded-full text-green-600 w-full md:w-auto bg-transparent"
                         >
                           <CheckCircle className="mr-1 h-4 w-4" />
                           Complete
@@ -419,7 +492,7 @@ export function SellerOrdersPage() {
                           size="sm"
                           variant="ghost"
                           onClick={() => handleOrderAction(order, "cancel")}
-                          className="rounded-full text-red-600"
+                          className="rounded-full text-red-600 w-full md:w-auto"
                         >
                           <XCircle className="mr-1 h-4 w-4" />
                           Cancel

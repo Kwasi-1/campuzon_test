@@ -111,7 +111,7 @@ export function ConversationsSidebar({
                       )}
                     </div>
                     <div className="flex items-center justify-between gap-2 mt-0.5">
-                      <p className="text-sm text-muted-foreground max-w-[200px] truncate flex-1 min-w-0">
+                      <p className={` min-w-0 flex-1 truncate text-sm text-muted-foreground ${conv.buyerUnreadCount > 0 ? "max-w-[180px] md:max-w-[190px] lg:max-w-[220px]" : "max-w-[220px]"}`}>
                         {conv.lastMessage?.content || "No messages yet"}
                       </p>
                       {conv.buyerUnreadCount > 0 && (

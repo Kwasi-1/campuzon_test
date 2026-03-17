@@ -248,7 +248,7 @@ export function SellLayout() {
             className="fixed inset-0 z-40 bg-black/30 lg:hidden"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <aside className="fixed left-0 top-0 z-50 h-full w-[280px] border-r border-gray-200 bg-white shadow-xl lg:hidden">
+          <aside className="fixed left-0 top-0 z-50 h-full w-[80%] border-r border-gray-200 bg-white shadow-xl lg:hidden">
             <div className="flex h-16 items-center justify-between border-b border-gray-100 px-4">
               <div className="flex items-center gap-2">
                 <img src={logo} alt="Campuzon" className="h-6 w-auto" />
@@ -299,7 +299,7 @@ export function SellLayout() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 md:px-8">
+      <main className="flex-1 lg:px-8">
         <Outlet />
       </main>
 

@@ -36,7 +36,7 @@ export function WishlistPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto p-0">
         {/* <Breadcrumb
           items={[
             { label: "Profile", href: "/profile" },
@@ -61,7 +61,7 @@ export function WishlistPage() {
             ))}
           </div>
         ) : displayItems.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 py-16">
+          <div className="bg-white rounded-sm md:rounded-lg border border-gray-200 py-16">
             <EmptyState
               icon={<Heart className="h-16 w-16" />}
               title="Your watchlist is empty"

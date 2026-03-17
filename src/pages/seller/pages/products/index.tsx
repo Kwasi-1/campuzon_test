@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Package,
@@ -20,6 +20,10 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Modal } from "@/components/shared/Modal";
 import { AddProductModal } from "@/components/modals";
+import type {
+  AddProductModalSavePayload,
+  ProductModalMode,
+} from "@/components/modals/AddProductModal";
 import { useAuthStore } from "@/stores";
 import type { Product, ProductStatus } from "@/types-new";
 import {
@@ -28,6 +32,7 @@ import {
   useDeleteProduct,
   useCurrency,
 } from "@/hooks";
+import { mockProducts } from "@/lib/mockData";
 import { Skeleton } from "@/components/shared/Skeleton";
 import {
   SellerPageSearchFilters,
@@ -49,6 +54,44 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const USE_PREVIEW_MOCK_DATA = true;
+
+function createPreviewProducts(): Product[] {
+  const previewStatuses: ProductStatus[] = [
+    "active",
+    "active",
+    "draft",
+    "sold_out",
+    "paused",
+    "active",
+    "draft",
+    "active",
+    "sold_out",
+    "paused",
+    "active",
+    "active",
+  ];
+
+  return mockProducts.slice(0, 12).map((product, index) => ({
+    ...product,
+    id: `preview-${product.id}-${index}`,
+    status: previewStatuses[index % previewStatuses.length],
+    quantity:
+      previewStatuses[index % previewStatuses.length] === "sold_out"
+        ? 0
+        : previewStatuses[index % previewStatuses.length] === "paused"
+          ? Math.max(2, product.quantity)
+          : previewStatuses[index % previewStatuses.length] === "draft"
+            ? Math.max(1, Math.min(product.quantity, 4))
+            : product.quantity,
+    soldCount: (product.soldCount || 0) + index * 3,
+    viewCount: (product.viewCount || 0) + 120 + index * 37,
+    comparePrice:
+      product.comparePrice ?? (index % 2 === 0 ? product.price + 25 : null),
+    dateCreated: new Date(Date.now() - index * 86400000).toISOString(),
+  }));
+}
+
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest First" },
   { value: "oldest", label: "Oldest First" },
@@ -63,33 +106,31 @@ const getStatusConfig = (status: ProductStatus) => {
     case "active":
       return {
         label: "Active",
-        color:
-          "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+        color: "bg-green-100 text-green-700",
         icon: CheckCircle,
       };
     case "draft":
       return {
         label: "Draft",
-        color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400",
+        color: "bg-gray-100 text-gray-700",
         icon: Clock,
       };
     case "sold_out":
       return {
         label: "Sold Out",
-        color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+        color: "bg-red-100 text-red-700",
         icon: AlertCircle,
       };
     case "paused":
       return {
         label: "Paused",
-        color:
-          "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+        color: "bg-orange-100 text-orange-700",
         icon: Pause,
       };
     case "deleted":
       return {
         label: "Deleted",
-        color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+        color: "bg-red-100 text-red-700",
         icon: AlertCircle,
       };
     default:
@@ -99,45 +140,67 @@ const getStatusConfig = (status: ProductStatus) => {
 
 export function SellerProductsPage() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { user, isAuthenticated } = useAuthStore();
+  const [previewProducts, setPreviewProducts] = useState<Product[]>(() =>
+    createPreviewProducts(),
+  );
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [productModalMode, setProductModalMode] =
+    useState<ProductModalMode>("add");
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
-  const activeModal = searchParams.get("modal");
-  const isAddProductOpen = activeModal === "add-product";
-
   const openAddProductModal = () => {
-    const next = new URLSearchParams(searchParams);
-    next.set("modal", "add-product");
-    setSearchParams(next);
+    setProductModalMode("add");
+    setSelectedProduct(null);
+    setIsProductModalOpen(true);
   };
 
-  const closeAddProductModal = () => {
-    const next = new URLSearchParams(searchParams);
-    next.delete("modal");
-    setSearchParams(next);
+  const openEditProductModal = (product: Product) => {
+    setProductModalMode("edit");
+    setSelectedProduct(product);
+    setIsProductModalOpen(true);
+  };
+
+  const openViewProductModal = (product: Product) => {
+    setProductModalMode("view");
+    setSelectedProduct(product);
+    setIsProductModalOpen(true);
+  };
+
+  const closeProductModal = () => {
+    setIsProductModalOpen(false);
+    setSelectedProduct(null);
+    setProductModalMode("add");
   };
 
   const { data: store } = useMyStore();
-  const { data: mockProducts, isLoading } = useStoreProducts(store?.id || "");
+  const { data: storeProducts, isLoading: productsLoading } = useStoreProducts(
+    store?.id || "",
+  );
   const deleteProduct = useDeleteProduct();
+  const products = useMemo(
+    () => (USE_PREVIEW_MOCK_DATA ? previewProducts : storeProducts || []),
+    [previewProducts, storeProducts],
+  );
+  const isLoading = USE_PREVIEW_MOCK_DATA ? false : productsLoading;
 
   const filteredProducts = useMemo(() => {
-    let products = [...(mockProducts || [])];
+    let productsList = [...products];
 
     if (statusFilter !== "all") {
-      products = products.filter((p) => p.status === statusFilter);
+      productsList = productsList.filter((p) => p.status === statusFilter);
     }
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      products = products.filter(
+      productsList = productsList.filter(
         (p) =>
           p.name.toLowerCase().includes(query) ||
           p.description.toLowerCase().includes(query) ||
@@ -147,40 +210,40 @@ export function SellerProductsPage() {
 
     switch (sortBy) {
       case "oldest":
-        products.sort(
+        productsList.sort(
           (a, b) =>
             new Date(a.dateCreated).getTime() -
             new Date(b.dateCreated).getTime(),
         );
         break;
       case "price-high":
-        products.sort((a, b) => b.price - a.price);
+        productsList.sort((a, b) => b.price - a.price);
         break;
       case "price-low":
-        products.sort((a, b) => a.price - b.price);
+        productsList.sort((a, b) => a.price - b.price);
         break;
       case "stock-low":
-        products.sort((a, b) => a.quantity - b.quantity);
+        productsList.sort((a, b) => a.quantity - b.quantity);
         break;
       case "best-selling":
-        products.sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0));
+        productsList.sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0));
         break;
       case "newest":
       default:
-        products.sort(
+        productsList.sort(
           (a, b) =>
             new Date(b.dateCreated).getTime() -
             new Date(a.dateCreated).getTime(),
         );
     }
 
-    return products;
-  }, [mockProducts, searchQuery, statusFilter, sortBy]);
+    return productsList;
+  }, [products, searchQuery, statusFilter, sortBy]);
 
   const { formatGHS } = useCurrency();
 
   const statusCounts = useMemo(() => {
-    const all = mockProducts || [];
+    const all = products;
     return {
       all: all.length,
       active: all.filter((p) => p.status === "active").length,
@@ -189,7 +252,7 @@ export function SellerProductsPage() {
       paused: all.filter((p) => p.status === "paused").length,
       lowStock: all.filter((p) => p.quantity > 0 && p.quantity <= 5).length,
     };
-  }, [mockProducts]);
+  }, [products]);
 
   if (!isAuthenticated || !user?.isOwner) {
     navigate("/login");
@@ -203,10 +266,104 @@ export function SellerProductsPage() {
 
   const confirmDelete = async () => {
     if (productToDelete) {
-      await deleteProduct.mutateAsync(productToDelete.id);
+      if (USE_PREVIEW_MOCK_DATA) {
+        setPreviewProducts((prev) =>
+          prev.filter((item) => item.id !== productToDelete.id),
+        );
+      } else {
+        await deleteProduct.mutateAsync(productToDelete.id);
+      }
       setDeleteModalOpen(false);
       setProductToDelete(null);
     }
+  };
+
+  const handlePreviewProductSave = async ({
+    mode,
+    productId,
+    formData,
+  }: AddProductModalSavePayload) => {
+    if (!USE_PREVIEW_MOCK_DATA) return;
+
+    if (mode === "add") {
+      const id = `preview-generated-${Date.now()}`;
+      const slug = formData.name
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-");
+
+      const newProduct: Product = {
+        id,
+        storeID: store?.id || "preview-store",
+        name: formData.name,
+        slug: slug || id,
+        description: formData.description,
+        price: Number(formData.price),
+        comparePrice: formData.comparePrice
+          ? Number(formData.comparePrice)
+          : null,
+        quantity: Number(formData.quantity),
+        minOrderQuantity: Number(formData.minOrderQuantity) || 1,
+        maxOrderQuantity: formData.maxOrderQuantity
+          ? Number(formData.maxOrderQuantity)
+          : null,
+        images: formData.images,
+        thumbnail: formData.images[0] || null,
+        category: formData.category as Product["category"],
+        tags: formData.tags,
+        status: formData.status,
+        isActive: formData.status === "active",
+        isFeatured: formData.isFeatured,
+        rating: null,
+        reviewCount: 0,
+        soldCount: 0,
+        viewCount: 0,
+        dateCreated: new Date().toISOString(),
+      };
+
+      setPreviewProducts((prev) => [newProduct, ...prev]);
+      return;
+    }
+
+    if (!productId) return;
+
+    setPreviewProducts((prev) =>
+      prev.map((item) => {
+        if (item.id !== productId) return item;
+
+        if (mode === "view") {
+          return {
+            ...item,
+            status: formData.status,
+            isActive: formData.status === "active",
+          };
+        }
+
+        return {
+          ...item,
+          name: formData.name,
+          description: formData.description,
+          price: Number(formData.price),
+          comparePrice: formData.comparePrice
+            ? Number(formData.comparePrice)
+            : null,
+          quantity: Number(formData.quantity),
+          minOrderQuantity: Number(formData.minOrderQuantity) || 1,
+          maxOrderQuantity: formData.maxOrderQuantity
+            ? Number(formData.maxOrderQuantity)
+            : null,
+          category: formData.category as Product["category"],
+          tags: formData.tags,
+          images: formData.images,
+          thumbnail: formData.images[0] || item.thumbnail,
+          status: formData.status,
+          isFeatured: formData.isFeatured,
+          isActive: formData.status === "active",
+        };
+      }),
+    );
   };
 
   const toggleProductSelection = (productId: string) => {
@@ -231,7 +388,7 @@ export function SellerProductsPage() {
   };
 
   const sidebar = (
-    <div className="space-y-6 xl:sticky xl:top-32">
+    <div className="space-y-6 xl:sticky xl:top-48">
       <PillSidebar
         options={[
           { key: "all", label: "All Products", count: statusCounts.all },
@@ -248,14 +405,17 @@ export function SellerProductsPage() {
         onChange={setStatusFilter}
       />
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3">
         {[
-          { label: "Total", value: statusCounts.all },
-          { label: "Active", value: statusCounts.active },
-          { label: "Draft", value: statusCounts.draft },
+          // { label: "Total", value: statusCounts.all },
+          // { label: "Active", value: statusCounts.active },
+          // { label: "Draft", value: statusCounts.draft },
           { label: "Low Stock", value: statusCounts.lowStock },
         ].map(({ label, value }) => (
-          <div key={label} className="rounded-2xl bg-gray-50 p-3 text-center">
+          <div
+            key={label}
+            className="rounded-md md:rounded-2xl bg-gray-50 p-3 text-center"
+          >
             <p className="text-lg font-bold text-gray-900">{value}</p>
             <p className="text-xs text-gray-500">{label}</p>
           </div>
@@ -267,7 +427,7 @@ export function SellerProductsPage() {
   return (
     <SellerPageTemplate
       title="Products"
-      description={`Manage your store products (${(mockProducts || []).length} total)`}
+      description={`Manage your store products (${products.length} total)`}
       headerActions={
         <div className="flex w-full flex-wrap items-center justify-end gap-2 md:w-auto md:flex-nowrap">
           <SellerPageSearchFilters
@@ -369,7 +529,7 @@ export function SellerProductsPage() {
             <span>Select all ({filteredProducts.length})</span>
           </div>
 
-          <div className="overflow-hidden rounded-[28px] border border-gray-100 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-md md:rounded-3xl border border-gray-100 bg-white shadow-sm">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
@@ -403,7 +563,7 @@ export function SellerProductsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex min-w-0 items-center gap-3">
-                          <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl border border-gray-100 bg-gray-100">
+                          <div className="h-12 w-12 md:h-14 md:w-14 flex-shrink-0 overflow-hidden rounded-sm md:rounded-lg border border-gray-100 bg-gray-100">
                             {product.thumbnail ? (
                               <img
                                 src={product.thumbnail}
@@ -416,10 +576,10 @@ export function SellerProductsPage() {
                               </div>
                             )}
                           </div>
-                          <div className="min-w-0">
+                          <div className="min-w-0 max-w-[300px]">
                             <Link
                               to={`/products/${product.slug}`}
-                              className="line-clamp-1 text-sm font-semibold text-gray-900 transition-colors hover:text-emerald-600"
+                              className="line-clamp-1 text-sm md:text-base font-medium text-gray-900 transition-colors hover:text-emerald-600"
                             >
                               {product.name}
                             </Link>
@@ -430,7 +590,7 @@ export function SellerProductsPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={statusConfig.color}>
+                        <Badge className={`${statusConfig.color}`}>
                           <StatusIcon className="mr-1 h-3 w-3" />
                           {statusConfig.label}
                         </Badge>
@@ -474,17 +634,13 @@ export function SellerProductsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-40">
                             <DropdownMenuItem
-                              onClick={() =>
-                                navigate(`/products/${product.slug}`)
-                              }
+                              onClick={() => openViewProductModal(product)}
                             >
                               <Eye className="mr-2 h-4 w-4" />
                               View
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() =>
-                                navigate(`/seller/products/${product.id}/edit`)
-                              }
+                              onClick={() => openEditProductModal(product)}
                             >
                               <Edit2 className="mr-2 h-4 w-4" />
                               Edit
@@ -509,8 +665,11 @@ export function SellerProductsPage() {
       )}
 
       <AddProductModal
-        isOpen={isAddProductOpen}
-        onClose={closeAddProductModal}
+        isOpen={isProductModalOpen}
+        onClose={closeProductModal}
+        mode={productModalMode}
+        product={selectedProduct}
+        onSave={USE_PREVIEW_MOCK_DATA ? handlePreviewProductSave : undefined}
       />
 
       {/* Delete Confirmation Modal */}

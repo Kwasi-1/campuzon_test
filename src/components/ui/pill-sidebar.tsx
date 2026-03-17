@@ -22,7 +22,7 @@ export function PillSidebar({
 }: PillSidebarProps) {
   return (
     <div
-      className={`flex xl:flex-col gap-3 overflow-x-auto xl:overflow-visible pb-2 xl:pb-0 scrollbar-hide ${className}`}
+      className={`flex xl:flex-col gap-3 overflow-x-auto xl:overflow-visible md:pb-2 xl:pb-0 scrollbar-hide ${className}`}
     >
       {options.map((opt) => {
         const isActive = activeKey === opt.key;

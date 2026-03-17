@@ -1,4 +1,4 @@
-import { useState, ChangeEvent } from "react";
+import { useState, ChangeEvent, useEffect, useMemo } from "react";
 import { Upload, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,8 @@ import {
   CustomSelectField,
   CustomTextareaField,
 } from "@/components/shared/text-field";
-import { useCreateProduct } from "@/hooks";
+import { useCreateProduct, useUpdateProduct } from "@/hooks";
+import type { Product, ProductStatus } from "@/types-new";
 
 const CATEGORY_OPTIONS = [
   { value: "electronics", label: "Electronics" },
@@ -25,11 +26,25 @@ const CATEGORY_OPTIONS = [
 const STATUS_OPTIONS = [
   { value: "draft", label: "Draft - Not visible to customers" },
   { value: "active", label: "Active - Visible and purchasable" },
+  { value: "paused", label: "Paused - Hidden until reactivated" },
+  { value: "sold_out", label: "Sold Out - Temporarily unavailable" },
 ];
+
+export type ProductModalMode = "add" | "edit" | "view";
+
+export interface AddProductModalSavePayload {
+  mode: ProductModalMode;
+  productId?: string;
+  formData: ProductFormData;
+  productFiles: File[];
+}
 
 interface AddProductModalProps {
   isOpen: boolean;
   onClose: () => void;
+  mode?: ProductModalMode;
+  product?: Product | null;
+  onSave?: (payload: AddProductModalSavePayload) => Promise<void> | void;
 }
 
 export interface ProductFormData {
@@ -43,7 +58,7 @@ export interface ProductFormData {
   category: string;
   tags: string[];
   images: string[];
-  status: "draft" | "active";
+  status: ProductStatus;
   isFeatured: boolean;
 }
 
@@ -62,13 +77,83 @@ const INITIAL_STATE: ProductFormData = {
   isFeatured: false,
 };
 
-export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
+const toFormData = (product: Product): ProductFormData => ({
+  name: product.name,
+  description: product.description,
+  price: product.price.toString(),
+  comparePrice: product.comparePrice?.toString() || "",
+  quantity: product.quantity.toString(),
+  minOrderQuantity: product.minOrderQuantity?.toString() || "1",
+  maxOrderQuantity: product.maxOrderQuantity?.toString() || "",
+  category: product.category || "",
+  tags: product.tags || [],
+  images:
+    product.images && product.images.length > 0
+      ? product.images
+      : product.thumbnail
+        ? [product.thumbnail]
+        : [],
+  status: product.status,
+  isFeatured: !!product.isFeatured,
+});
+
+export function AddProductModal({
+  isOpen,
+  onClose,
+  mode = "add",
+  product = null,
+  onSave,
+}: AddProductModalProps) {
   const createProduct = useCreateProduct();
+  const updateProduct = useUpdateProduct();
   const [formData, setFormData] = useState<ProductFormData>(INITIAL_STATE);
   const [productFiles, setProductFiles] = useState<File[]>([]);
   const [tagInput, setTagInput] = useState("");
 
+  const isReadOnly = mode === "view";
+
+  const modalMeta = useMemo(() => {
+    if (mode === "edit") {
+      return {
+        title: "Edit Product",
+        description: "Update product details and availability",
+        submitLabel: "Save Changes",
+      };
+    }
+
+    if (mode === "view") {
+      return {
+        title: "View Product",
+        description: "Review product details and update status",
+        submitLabel: "Update Status",
+      };
+    }
+
+    return {
+      title: "Add Product",
+      description: "Create and publish a new product",
+      submitLabel: "Create Product",
+    };
+  }, [mode]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (mode === "add" || !product) {
+      setFormData(INITIAL_STATE);
+      setProductFiles([]);
+      setTagInput("");
+      return;
+    }
+
+    setFormData(toFormData(product));
+    setProductFiles([]);
+    setTagInput("");
+  }, [isOpen, mode, product]);
+
   const handleProductImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    if (isReadOnly) return;
+
     const files = e.target.files;
     if (!files) return;
 
@@ -88,6 +173,8 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
   };
 
   const removeProductImage = (index: number) => {
+    if (isReadOnly) return;
+
     setFormData((prev) => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index),
@@ -96,6 +183,8 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
   };
 
   const addTag = () => {
+    if (isReadOnly) return;
+
     const tag = tagInput.trim().toLowerCase();
     if (tag && !formData.tags.includes(tag)) {
       setFormData((prev) => ({
@@ -107,13 +196,15 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
   };
 
   const removeTag = (tag: string) => {
+    if (isReadOnly) return;
+
     setFormData((prev) => ({
       ...prev,
       tags: prev.tags.filter((t) => t !== tag),
     }));
   };
 
-  const submitAddProduct = async () => {
+  const submitProduct = async () => {
     if (
       !formData.name ||
       !formData.description ||
@@ -142,7 +233,19 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
     formData.tags.forEach((tag) => data.append("tags[]", tag));
     productFiles.forEach((file) => data.append("images", file));
 
-    await createProduct.mutateAsync(data);
+    if (onSave) {
+      await onSave({
+        mode,
+        productId: product?.id,
+        formData,
+        productFiles,
+      });
+    } else if (mode === "add") {
+      await createProduct.mutateAsync(data);
+    } else if (product?.id) {
+      await updateProduct.mutateAsync({ id: product.id, data });
+    }
+
     setFormData(INITIAL_STATE);
     setProductFiles([]);
     onClose();
@@ -159,8 +262,8 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Add Product"
-      description="Create and publish a new product"
+      title={modalMeta.title}
+      description={modalMeta.description}
       placement="right"
       size="xl"
       outsideClick={true}
@@ -173,6 +276,7 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
             setFormData((prev) => ({ ...prev, name: e.target.value }))
           }
           placeholder="Enter product name"
+          disabled={isReadOnly}
           required
         />
 
@@ -187,6 +291,7 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
           }
           rows={4}
           placeholder="Describe your product"
+          disabled={isReadOnly}
           required
         />
 
@@ -199,6 +304,7 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
               setFormData((prev) => ({ ...prev, price: e.target.value }))
             }
             placeholder="0.00"
+            disabled={isReadOnly}
             required
           />
           <CustomInputTextField
@@ -212,6 +318,7 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
               }))
             }
             placeholder="0.00"
+            disabled={isReadOnly}
           />
         </div>
 
@@ -224,6 +331,7 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
               setFormData((prev) => ({ ...prev, quantity: e.target.value }))
             }
             placeholder="0"
+            disabled={isReadOnly}
             required
           />
           <CustomInputTextField
@@ -237,6 +345,7 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
               }))
             }
             placeholder="1"
+            disabled={isReadOnly}
           />
         </div>
 
@@ -251,12 +360,14 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
             }))
           }
           placeholder="No limit"
+          disabled={isReadOnly}
         />
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <CustomSelectField
             label="Category"
             value={formData.category}
+            isDisabled={isReadOnly}
             options={[
               { value: "", label: "Select category" },
               ...CATEGORY_OPTIONS,
@@ -278,7 +389,7 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
               onChange: (e) =>
                 setFormData((prev) => ({
                   ...prev,
-                  status: e.target.value as "draft" | "active",
+                  status: e.target.value as ProductStatus,
                 })),
             }}
           />
@@ -295,6 +406,7 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
             <input
               type="text"
               value={tagInput}
+              disabled={isReadOnly}
               onChange={(e) => setTagInput(e.target.value)}
               onKeyPress={(e) => {
                 if (e.key === "Enter") {
@@ -309,6 +421,7 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
               type="button"
               onClick={addTag}
               variant="outline"
+              disabled={isReadOnly}
               className="rounded-sm"
             >
               <Plus className="h-4 w-4" />
@@ -321,7 +434,7 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
                   key={tag}
                   variant="secondary"
                   className="flex items-center gap-1 cursor-pointer font-medium hover:bg-gray-300"
-                  onClick={() => removeTag(tag)}
+                  onClick={isReadOnly ? undefined : () => removeTag(tag)}
                 >
                   {tag}
                   <X className="h-3 w-3" />
@@ -335,7 +448,13 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
           <label className="mb-1 block text-xs font-medium text-gray-500">
             Product Images
           </label>
-          <label className="flex h-24 cursor-pointer items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 text-sm text-gray-500 hover:bg-gray-100">
+          <label
+            className={`flex h-24 items-center justify-center rounded-lg border border-dashed border-gray-300 text-sm ${
+              isReadOnly
+                ? "cursor-not-allowed bg-gray-100 text-gray-400"
+                : "cursor-pointer bg-gray-50 text-gray-500 hover:bg-gray-100"
+            }`}
+          >
             <Upload className="mr-2 h-4 w-4" />
             Upload images
             <input
@@ -343,6 +462,7 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
               multiple
               accept="image/*"
               className="hidden"
+              disabled={isReadOnly}
               onChange={handleProductImageUpload}
             />
           </label>
@@ -361,6 +481,7 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
                   <button
                     type="button"
                     onClick={() => removeProductImage(idx)}
+                    disabled={isReadOnly}
                     className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white"
                     aria-label={`Remove product image ${idx + 1}`}
                     title="Remove image"
@@ -378,6 +499,7 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
             type="checkbox"
             id="featured"
             checked={formData.isFeatured}
+            disabled={isReadOnly}
             onChange={(e) =>
               setFormData((prev) => ({
                 ...prev,
@@ -400,11 +522,13 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
             Cancel
           </Button>
           <Button
-            onClick={submitAddProduct}
-            disabled={createProduct.isPending}
+            onClick={submitProduct}
+            disabled={createProduct.isPending || updateProduct.isPending}
             className="rounded-full"
           >
-            {createProduct.isPending ? "Saving..." : "Create Product"}
+            {createProduct.isPending || updateProduct.isPending
+              ? "Saving..."
+              : modalMeta.submitLabel}
           </Button>
         </div>
       </div>

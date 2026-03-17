@@ -221,33 +221,33 @@ export function SellerDashboardPage() {
 
   return (
     <SellerPageTemplate
-      title={`Welcome back, ${user.firstName}!`}
-      description="Here's what's happening with your store today."
-      headerActions={
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="rounded-full">
-            <Calendar className="mr-2 h-4 w-4" />
-            Last 30 Days
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="hidden rounded-full sm:flex"
-            onClick={() => openModal("withdraw-funds")}
-          >
-            <DollarSign className="mr-2 h-4 w-4" />
-            Withdraw Funds
-          </Button>
-          <Button
-            size="sm"
-            className="rounded-full"
-            onClick={() => openModal("add-product")}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Product
-          </Button>
-        </div>
-      }
+      // title={`Welcome back, ${user.firstName}!`}
+      // description="Here's what's happening with your store today."
+      // headerActions={
+      //   <div className="flex gap-2">
+      //     <Button variant="outline" size="sm" className="rounded-full">
+      //       <Calendar className="mr-2 h-4 w-4" />
+      //       Last 30 Days
+      //     </Button>
+      //     <Button
+      //       variant="outline"
+      //       size="sm"
+      //       className="hidden rounded-full sm:flex"
+      //       onClick={() => openModal("withdraw-funds")}
+      //     >
+      //       <DollarSign className="mr-2 h-4 w-4" />
+      //       Withdraw Funds
+      //     </Button>
+      //     <Button
+      //       size="sm"
+      //       className="rounded-full"
+      //       onClick={() => openModal("add-product")}
+      //     >
+      //       <Plus className="mr-2 h-4 w-4" />
+      //       Add Product
+      //     </Button>
+      //   </div>
+      // }
     >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -288,9 +288,9 @@ export function SellerDashboardPage() {
                       </div>
                     </div>
                     <div
-                      className={`h-12 w-12 rounded-lg ${stat.bgColor} flex items-center justify-center`}
+                      className={`h-12 w-12 rounded-full border bg-muted/60 flex items-center justify-center`}
                     >
-                      <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                      <stat.icon className={`h-6 w-6`} />
                     </div>
                   </div>
                 </CardContent>
@@ -445,21 +445,11 @@ export function SellerDashboardPage() {
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle>Top Products</CardTitle>
-              <CardDescription>
+              <CardDescription className="hidden md:flex items-center gap-1">
                 Best performing products this month
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="search"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-9 w-48 pl-9 pr-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
               <Link to="/seller/products">
                 <Button variant="outline" size="sm">
                   Manage Products
@@ -513,7 +503,7 @@ export function SellerDashboardPage() {
                             product.stock < 10 ? "destructive" : "secondary"
                           }
                         >
-                          {product.stock} left
+                          {product.stock} <span className="hidden md:block ml-1">left</span>
                         </Badge>
                       </td>
                       <td className="text-right py-3 px-4">

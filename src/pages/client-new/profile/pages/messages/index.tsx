@@ -211,7 +211,7 @@ export function MessagesPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-16rem)] min-h-[500px] md:min-h-[600px] w-full overflow-hidden border rounded-xl bg-background shadow-sm">
+    <div className="flex h-[calc(100vh-16rem)] md:h-[calc(100vh-16rem)] min-h-[500px] md:min-h-[600px] w-full overflow-hidden md:border md:rounded-xl bg-background md:shadow-sm -mb-10 -mt-10 md:mb-auto md:mt-auto">
       {/* Sidebar List */}
       <ConversationsSidebar
         conversations={filteredConversations}

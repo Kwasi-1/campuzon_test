@@ -21,6 +21,7 @@ interface SellerPageTemplateProps {
   headerActions?: ReactNode;
   sidebar?: ReactNode;
   children: ReactNode;
+  messagesPadding?: boolean; // New prop to control padding for messages page
 }
 
 export function SellerPageTemplate({
@@ -29,12 +30,13 @@ export function SellerPageTemplate({
   headerActions,
   sidebar,
   children,
+  messagesPadding = false,
 }: SellerPageTemplateProps) {
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className={`container mx-auto ${messagesPadding ? 'px-0 md:px-4 pt-0 md:pt-2 md:pb-2' : 'px-4 py-8'} `}>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-2xl md:text-3xl font-medium tracking-tight text-gray-900">
             {title}
           </h1>
           {description ? (
@@ -46,7 +48,7 @@ export function SellerPageTemplate({
         {headerActions}
       </div>
 
-      <div className="flex flex-col xl:flex-row gap-8 pb-10">
+      <div className="flex flex-col xl:flex-row gap-4 md:gap-8 pb-10">
         {sidebar ? <aside className="xl:w-72 shrink-0">{sidebar}</aside> : null}
         <section className="flex-1 min-w-0">{children}</section>
       </div>
@@ -79,7 +81,7 @@ export function SellerPageSearchFilters({
 
   return (
     <div
-      className={`flex w-full items-center justify-end gap-2 md:w-auto ${className || ""}`}
+      className={`flex w-full items-center md:justify-end gap-2 md:w-auto ${className || ""}`}
     >
       <div
         className={`overflow-hidden transition-all duration-300 ${

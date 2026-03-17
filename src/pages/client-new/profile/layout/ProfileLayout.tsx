@@ -34,6 +34,8 @@ export function ProfileLayout() {
     { label: "Settings", icon: Settings, path: "/settings" },
   ];
 
+  const messagesPadding = location.pathname === "/messages";
+
   const handleLogout = () => {
     logout();
     navigate("/");
@@ -45,9 +47,9 @@ export function ProfileLayout() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="container mx-auto px-4 py-6 lg:px-8">
+      <div className="container mx-auto px-0 py-6 ">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-end md:gap-36 gap-20 lg:gap-40 justify-between mb-8 pb-8 border-b border-gray-100">
+        <div className="hidden lg:flex flex-col md:flex-row md:items-end md:gap-36 gap-20 lg:gap-40 justify-between mb-8 pb-8 border-b border-gray-100 px-4 lg:px-8">
           <div>
             <p className="text-gray-500 text-sm mb-1">Good Morning,</p>
             <h1 className="text-3xl font-semibold text-gray-900 tracking-tight w-full text-nowrap capitalize">
@@ -94,7 +96,9 @@ export function ProfileLayout() {
         </div>
 
         {/* Page Content */}
-        <div className="mt-8">
+        <div
+          className={`mt-8 lg:px-8 ${messagesPadding ? "px-0 md:px-4" : "px-4"}`}
+        >
           <Outlet />
         </div>
       </div>
