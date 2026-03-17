@@ -10,7 +10,7 @@ interface ModalProps {
   title?: string;
   description?: string;
   children: React.ReactNode;
-  size?: "sm" | "md" | "lg" | "xl" | "full";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
   placement?: "center" | "right" | "fullscreen";
   showCloseButton?: boolean;
   outsideClick?: boolean;
@@ -22,6 +22,7 @@ const sizeClasses = {
   md: "max-w-md",
   lg: "max-w-lg",
   xl: "max-w-xl",
+  '2xl': "max-w-2xl",
   full: "max-w-4xl",
 };
 
@@ -150,7 +151,7 @@ export function Modal({
               )}
 
               {/* Content */}
-              <div className="flex-1 overflow-y-auto p-6">{children}</div>
+              <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">{children}</div>
 
               {/* Footer */}
               {footer && (

@@ -2,10 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  AlertCircle,
   CheckCircle,
-  Clock,
-  DollarSign,
   Eye,
   MessageCircle,
   Package,
@@ -18,14 +15,13 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Modal } from "@/components/shared/Modal";
 import { useAuthStore } from "@/stores";
-import type { Order, OrderStatus } from "@/types-new";
+import type { Order } from "@/types-new";
 import {
   useCurrency,
   useMyStore,
   useStoreOrders,
   useUpdateOrderStatus,
 } from "@/hooks";
-import { mockOrders } from "@/lib/mockData";
 import { Skeleton } from "@/components/shared/Skeleton";
 import {
   SellerPageSearchFilters,
@@ -33,62 +29,17 @@ import {
 } from "@/pages/seller/components/SellerPageTemplate";
 import { PillSidebar } from "@/components/ui/pill-sidebar";
 import { OrderCard } from "@/components/shared/OrderCard";
-
-const USE_PREVIEW_MOCK_DATA = true;
-
-function createPreviewOrders(): Order[] {
-  const previewStatuses: OrderStatus[] = [
-    "pending",
-    "paid",
-    "processing",
-    "shipped",
-    "delivered",
-    "completed",
-    "cancelled",
-    "refunded",
-  ];
-
-  return Array.from({ length: 8 }, (_, index) => {
-    const source = mockOrders[index % mockOrders.length];
-    const status = previewStatuses[index % previewStatuses.length];
-    const createdAt = new Date(Date.now() - index * 18 * 60 * 60 * 1000);
-
-    return {
-      ...source,
-      id: `preview-order-${index + 1}`,
-      orderNumber: `ORD-2026-${String(index + 1).padStart(4, "0")}`,
-      status,
-      totalAmount: source.totalAmount + index * 22.5,
-      subtotal: source.subtotal + index * 18,
-      dateCreated: createdAt.toISOString(),
-      paidAt:
-        status === "pending" || status === "cancelled"
-          ? null
-          : new Date(createdAt.getTime() + 60 * 60 * 1000).toISOString(),
-      shippedAt: ["shipped", "delivered", "completed"].includes(status)
-        ? new Date(createdAt.getTime() + 24 * 60 * 60 * 1000).toISOString()
-        : null,
-      deliveredAt: ["delivered", "completed"].includes(status)
-        ? new Date(createdAt.getTime() + 48 * 60 * 60 * 1000).toISOString()
-        : null,
-      completedAt:
-        status === "completed"
-          ? new Date(createdAt.getTime() + 52 * 60 * 60 * 1000).toISOString()
-          : null,
-      deliveryAddress:
-        source.deliveryAddress ||
-        `Block ${String.fromCharCode(65 + index)}, Campus Hostel`,
-      shippingAddress: {
-        fullName: `Student Buyer ${index + 1}`,
-        phone: `+233 24 ${String(100000 + index).slice(-6)}`,
-        addressLine1: `Room ${100 + index}, Block ${String.fromCharCode(65 + index)}`,
-        city: "Accra",
-        region: "Greater Accra",
-      },
-      buyerNote: index % 3 === 0 ? "Please call on arrival" : source.buyerNote,
-    };
-  });
-}
+import {
+  USE_PREVIEW_MOCK_DATA,
+  applyPreviewOrderAction,
+  getAvailableSellerOrderActions,
+  getNextStatusForAction,
+  getSellerActionDescription,
+  getSellerActionLabel,
+  getStatusConfig,
+  loadPreviewOrders,
+  type SellerOrderAction,
+} from "./orderWorkflow";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All Orders" },
@@ -114,74 +65,12 @@ type ExtraFilterKey =
   | "refunded"
   | "disputed";
 
-const getStatusConfig = (status: OrderStatus) => {
-  switch (status) {
-    case "pending":
-      return {
-        label: "Pending",
-        color:
-          "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-        icon: Clock,
-      };
-    case "paid":
-      return {
-        label: "Paid",
-        color:
-          "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-        icon: DollarSign,
-      };
-    case "processing":
-      return {
-        label: "Processing",
-        color:
-          "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-        icon: Package,
-      };
-    case "shipped":
-      return {
-        label: "Shipped",
-        color:
-          "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
-        icon: Truck,
-      };
-    case "delivered":
-      return {
-        label: "Delivered",
-        color:
-          "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400",
-        icon: CheckCircle,
-      };
-    case "completed":
-      return {
-        label: "Completed",
-        color:
-          "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-        icon: CheckCircle,
-      };
-    case "cancelled":
-      return {
-        label: "Cancelled",
-        color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-        icon: XCircle,
-      };
-    case "refunded":
-      return {
-        label: "Refunded",
-        color:
-          "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-        icon: AlertCircle,
-      };
-    default:
-      return { label: status, color: "bg-gray-100 text-gray-700", icon: Clock };
-  }
-};
-
 export function SellerOrdersPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
   const { formatGHS } = useCurrency();
   const [previewOrders, setPreviewOrders] = useState<Order[]>(() =>
-    createPreviewOrders(),
+    loadPreviewOrders(),
   );
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -189,9 +78,7 @@ export function SellerOrdersPage() {
   const [extraFilter, setExtraFilter] = useState<ExtraFilterKey>("all");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [actionModalOpen, setActionModalOpen] = useState(false);
-  const [actionType, setActionType] = useState<
-    "ship" | "complete" | "cancel" | null
-  >(null);
+  const [actionType, setActionType] = useState<SellerOrderAction | null>(null);
 
   const { data: store } = useMyStore();
   const { data: apiOrders, isLoading: ordersLoading } = useStoreOrders(
@@ -228,56 +115,39 @@ export function SellerOrdersPage() {
     return orders;
   }, [effectiveFilter, searchQuery, storeOrders]);
 
-  const handleOrderAction = (
-    order: Order,
-    action: "ship" | "complete" | "cancel",
-  ) => {
+  const handleOrderAction = (order: Order, action: SellerOrderAction) => {
     setSelectedOrder(order);
     setActionType(action);
     setActionModalOpen(true);
   };
 
-  const confirmAction = async () => {
-    if (!selectedOrder || !actionType) return;
-
-    const newStatus =
-      actionType === "ship"
-        ? "shipped"
-        : actionType === "complete"
-          ? "completed"
-          : "cancelled";
-
-    if (USE_PREVIEW_MOCK_DATA) {
-      setPreviewOrders((prev) =>
-        prev.map((order) =>
-          order.id === selectedOrder.id
-            ? { ...order, status: newStatus as OrderStatus }
-            : order,
-        ),
-      );
-    } else {
-      await updateStatus.mutateAsync({
-        id: selectedOrder.id,
-        status: newStatus as OrderStatus,
-      });
-    }
-
+  const closeActionModal = () => {
     setActionModalOpen(false);
     setSelectedOrder(null);
     setActionType(null);
   };
 
-  const getActionLabel = () => {
-    switch (actionType) {
-      case "ship":
-        return "Mark as Shipped";
-      case "complete":
-        return "Mark as Completed";
-      case "cancel":
-        return "Cancel Order";
-      default:
-        return "";
+  const confirmAction = async () => {
+    if (!selectedOrder || !actionType) return;
+
+    const newStatus = getNextStatusForAction(actionType);
+
+    if (USE_PREVIEW_MOCK_DATA) {
+      const updatedOrders = applyPreviewOrderAction(
+        previewOrders,
+        selectedOrder.id,
+        actionType,
+      );
+
+      setPreviewOrders(updatedOrders);
+    } else {
+      await updateStatus.mutateAsync({
+        id: selectedOrder.id,
+        status: newStatus,
+      });
     }
+
+    closeActionModal();
   };
 
   const stats = useMemo(() => {
@@ -348,9 +218,9 @@ export function SellerOrdersPage() {
             {stats.completed}
           </p>
         </div> */}
-        <div className="rounded-md md:rounded-2xl bg-gray-50 p-3">
+        <div className="rounded-md md:rounded-2xl bg-gray-50 p-3 pl-6 text-center md:text-left">
           <p className="text-xs text-gray-500">Revenue</p>
-          <p className="truncate text-sm font-semibold text-gray-900">
+          <p className="truncate text-lg font-semibold text-gray-900">
             {formatGHS(stats.totalRevenue)}
           </p>
         </div>
@@ -433,71 +303,80 @@ export function SellerOrdersPage() {
                   }
                   footerActions={
                     <div className="flex flex-wrap justify-end gap-2 w-full flex-1">
-                      <div className="flex flexwrap justify-end gap-2 w-full md:w-auto">
-                      <Link to={`/seller/orders/${order.id}`} className=" w-full md:w-auto">
+                      <div className="flex flex-row justify-end gap-2 w-full md:w-auto">
                         <Button
                           variant="outline"
                           size="sm"
                           className="rounded-full bg-transparent w-full md:w-auto"
+                          onClick={() => navigate(`/seller/orders/${order.id}`)}
                         >
                           <Eye className="mr-1 h-4 w-4" />
                           View
                         </Button>
-                      </Link>
-                      <Link to={`/seller/messages?order=${order.id}`} className=" w-full md:w-auto">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="rounded-full w-full md:w-auto"
+                        <Link
+                          to={`/seller/messages?order=${order.id}`}
+                          className=" w-full md:w-auto"
                         >
-                          <MessageCircle className="mr-1 h-4 w-4" />
-                          Chat
-                        </Button>
-                      </Link>
-                      <a href={`tel:${order.shippingAddress?.phone || ""}`} className=" w-full md:w-auto">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="rounded-full w-full md:w-auto"
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="rounded-full w-full md:w-auto"
+                          >
+                            <MessageCircle className="mr-1 h-4 w-4" />
+                            Chat
+                          </Button>
+                        </Link>
+                        <a
+                          href={`tel:${order.shippingAddress?.phone || ""}`}
+                          className=" w-full md:w-auto"
                         >
-                          <Phone className="mr-1 h-4 w-4" />
-                          Call
-                        </Button>
-                      </a>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="rounded-full w-full md:w-auto"
+                          >
+                            <Phone className="mr-1 h-4 w-4" />
+                            Call
+                          </Button>
+                        </a>
                       </div>
 
-                      {(order.status === "paid" ||
-                        order.status === "processing") && (
+                      {getAvailableSellerOrderActions(order).map((action) => (
                         <Button
-                          onClick={() => handleOrderAction(order, "ship")}
-                          className="rounded-full w-full md:w-auto"
-                        >
-                          <Truck className="mr-1 h-4 w-4" />
-                          Ship
-                        </Button>
-                      )}
-                      {order.status === "delivered" && (
-                        <Button
+                          key={action}
                           size="sm"
-                          variant="outline"
-                          onClick={() => handleOrderAction(order, "complete")}
-                          className="rounded-full text-green-600 w-full md:w-auto bg-transparent"
+                          variant={
+                            action === "cancel"
+                              ? "outline"
+                              : action === "complete"
+                                ? "outline"
+                                : "default"
+                          }
+                          onClick={() => handleOrderAction(order, action)}
+                          className={`rounded-full w-full md:w-auto ${
+                            action === "complete"
+                              ? "text-green-600 bg-transparent"
+                              : action === "cancel"
+                                ? "text-red-600 bg-transparent"
+                                : ""
+                          }`}
                         >
-                          <CheckCircle className="mr-1 h-4 w-4" />
-                          Complete
+                          {action === "ship" ? (
+                            <Truck className="mr-1 h-4 w-4" />
+                          ) : null}
+                          {action === "complete" ? (
+                            <CheckCircle className="mr-1 h-4 w-4" />
+                          ) : null}
+                          {action === "cancel" ? (
+                            <XCircle className="mr-1 h-4 w-4" />
+                          ) : null}
+                          {action === "ship"
+                            ? "Ship"
+                            : action === "complete"
+                              ? "Complete"
+                              : "Cancel"}
                         </Button>
-                      )}
-                      {order.status === "pending" && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleOrderAction(order, "cancel")}
-                          className="rounded-full text-red-600 w-full md:w-auto"
-                        >
-                          <XCircle className="mr-1 h-4 w-4" />
-                          Cancel
-                        </Button>
-                      )}
+                      ))}
                     </div>
                   }
                 />
@@ -509,24 +388,28 @@ export function SellerOrdersPage() {
 
       <Modal
         isOpen={actionModalOpen}
-        onClose={() => setActionModalOpen(false)}
-        title={getActionLabel()}
+        onClose={closeActionModal}
+        title={actionType ? getSellerActionLabel(actionType) : "Order Action"}
       >
         <div className="space-y-4">
-          <p>
-            {actionType === "cancel"
-              ? `Are you sure you want to cancel order ${selectedOrder?.orderNumber}? This will refund the customer.`
-              : `Confirm ${actionType === "ship" ? "shipping" : "completion"} for order ${selectedOrder?.orderNumber}?`}
+          <p className="text-sm text-gray-600">
+            {actionType
+              ? getSellerActionDescription(
+                  actionType,
+                  selectedOrder?.orderNumber,
+                )
+              : ""}
           </p>
           <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setActionModalOpen(false)}>
+            <Button variant="outline" onClick={closeActionModal}>
               Cancel
             </Button>
             <Button
               variant={actionType === "cancel" ? "destructive" : "default"}
               onClick={confirmAction}
+              disabled={updateStatus.isPending}
             >
-              {getActionLabel()}
+              {actionType ? getSellerActionLabel(actionType) : "Confirm"}
             </Button>
           </div>
         </div>

@@ -414,7 +414,7 @@ export function SellerProductsPage() {
         ].map(({ label, value }) => (
           <div
             key={label}
-            className="rounded-md md:rounded-2xl bg-gray-50 p-3 text-center"
+            className="rounded-md md:rounded-2xl bg-gray-50 p-3 text-center md:text-left pl-6"
           >
             <p className="text-lg font-bold text-gray-900">{value}</p>
             <p className="text-xs text-gray-500">{label}</p>

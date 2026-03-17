@@ -68,6 +68,7 @@ import {
   BecomeSellerPage,
   SellerAddProductPage,
   SellerDashboardPage,
+  SellerOrderDetailPage,
   SellerMessagesPage,
   SellerOrdersPage,
   SellerProductsPage,
@@ -126,6 +127,10 @@ const App = () => (
                         <Route
                           path="/seller/orders"
                           element={<SellerOrdersPage />}
+                        />
+                        <Route
+                          path="/seller/orders/:orderId"
+                          element={<SellerOrderDetailPage />}
                         />
                         <Route
                           path="/seller/messages"

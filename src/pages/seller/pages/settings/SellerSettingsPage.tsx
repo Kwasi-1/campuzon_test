@@ -180,7 +180,7 @@ export function SellerSettingsPage() {
     activeSection === "all" || activeSection === section;
 
   const sidebar = (
-    <div className="hidden md:block space-y-6 xl:sticky xl:top-32">
+    <div className="hidden md:block space-y-4 md:space-y-6 xl:sticky xl:top-48">
       <PillSidebar
         options={SECTION_OPTIONS.map((option) => ({
           key: option.key,
@@ -189,11 +189,11 @@ export function SellerSettingsPage() {
         activeKey={activeSection}
         onChange={(key) => setActiveSection(key as SettingsSection)}
       />
-      <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-2xl bg-gray-50 p-3">
+      <div className="grid grid-cols-1 gap-2">
+        {/* <div className="rounded-2xl bg-gray-50 p-3">
           <p className="text-xs text-gray-500">Sections</p>
           <p className="text-lg font-semibold text-gray-900">5</p>
-        </div>
+        </div> */}
         <div className="rounded-2xl bg-gray-50 p-3">
           <p className="text-xs text-gray-500">Alerts On</p>
           <p className="text-lg font-semibold text-gray-900">
