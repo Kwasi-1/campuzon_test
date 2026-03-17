@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Modal } from "@/components/shared/Modal";
 import { AddProductModal } from "@/components/modals";
@@ -54,6 +55,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import toast from "react-hot-toast";
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest First" },
@@ -101,6 +103,19 @@ const getStatusConfig = (status: ProductStatus) => {
   }
 };
 
+const getStoreActionBlockReason = (storeStatus?: string) => {
+  switch (storeStatus) {
+    case "pending":
+      return "Your store is not active. Please wait for approval.";
+    case "suspended":
+      return "Your store is suspended. Only admin can reactivate this store.";
+    case "closed":
+      return "Your store is closed. Contact support for next steps.";
+    default:
+      return null;
+  }
+};
+
 export function SellerProductsPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
@@ -116,12 +131,22 @@ export function SellerProductsPage() {
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   const openAddProductModal = () => {
+    const reason = getStoreActionBlockReason(store?.status);
+    if (reason) {
+      toast.error(reason);
+      return;
+    }
     setProductModalMode("add");
     setSelectedProduct(null);
     setIsProductModalOpen(true);
   };
 
   const openEditProductModal = (product: Product) => {
+    const reason = getStoreActionBlockReason(store?.status);
+    if (reason) {
+      toast.error(reason);
+      return;
+    }
     setProductModalMode("edit");
     setSelectedProduct(product);
     setIsProductModalOpen(true);
@@ -140,6 +165,8 @@ export function SellerProductsPage() {
   };
 
   const { data: store } = useSellerMyStore();
+  const storeActionBlockReason = getStoreActionBlockReason(store?.status);
+  const isProductActionsDisabled = Boolean(storeActionBlockReason);
   const { data: storeProducts, isLoading: productsLoading } = useSellerStoreProducts(
     store?.id || "",
   );
@@ -218,6 +245,11 @@ export function SellerProductsPage() {
   }
 
   const handleDeleteProduct = (product: Product) => {
+    const reason = getStoreActionBlockReason(store?.status);
+    if (reason) {
+      toast.error(reason);
+      return;
+    }
     setProductToDelete(product);
     setDeleteModalOpen(true);
   };
@@ -343,6 +375,8 @@ export function SellerProductsPage() {
           <Button
             className="hidden md:flex gap-2 rounded-full bg-[#1C1C1E] text-white hover:bg-black"
             onClick={openAddProductModal}
+            disabled={isProductActionsDisabled}
+            title={storeActionBlockReason || "Add Product"}
           >
             <Plus className="h-4 w-4" />
             <span className="hidden lg:block">Add Product</span>
@@ -351,10 +385,24 @@ export function SellerProductsPage() {
       }
       sidebar={sidebar}
     >
+      <Alert
+        className={`mb-4 ${
+          store?.status === "active"
+            ? "border-green-200 bg-green-50 text-green-800"
+            : "border-amber-200 bg-amber-50 text-amber-900"
+        }`}
+      >
+        {store?.status === "active"
+          ? "Store status: Active. Product actions are enabled."
+          : storeActionBlockReason || "Store status unavailable."}
+      </Alert>
+
       <Button
         variant="ghost"
         className="absolute top-8 right-4 flex md:hidden rounded-full"
         onClick={openAddProductModal}
+        disabled={isProductActionsDisabled}
+        title={storeActionBlockReason || "Add Product"}
       >
         <Plus className="h-4 w-4" />
       </Button>
@@ -369,11 +417,22 @@ export function SellerProductsPage() {
             {selectedProducts.length} product(s) selected
           </span>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isProductActionsDisabled}
+              title={storeActionBlockReason || "Deactivate selected products"}
+            >
               <EyeOff className="h-4 w-4 mr-1" />
               Deactivate
             </Button>
-            <Button variant="outline" size="sm" className="text-red-600">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-red-600"
+              disabled={isProductActionsDisabled}
+              title={storeActionBlockReason || "Delete selected products"}
+            >
               <Trash2 className="h-4 w-4 mr-1" />
               Delete
             </Button>
@@ -383,7 +442,7 @@ export function SellerProductsPage() {
 
       {/* Products List */}
       {isLoading ? (
-        <div className="rounded-[28px] border border-gray-100 bg-white p-4 shadow-sm">
+        <div className="rounded-md md:rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
           <div className="space-y-3">
             {[1, 2, 3, 4].map((i) => (
               <Skeleton key={i} className="h-16 w-full rounded-2xl" />
@@ -409,6 +468,8 @@ export function SellerProductsPage() {
                 <Button
                   className="gap-2 rounded-full bg-[#1C1C1E] text-white hover:bg-black"
                   onClick={openAddProductModal}
+                  disabled={isProductActionsDisabled}
+                  title={storeActionBlockReason || "Add Product"}
                 >
                   <Plus className="h-4 w-4" />
                   Add Product
@@ -533,6 +594,11 @@ export function SellerProductsPage() {
                               size="icon"
                               className="h-9 w-9 rounded-full"
                               aria-label={`Open actions for ${product.name}`}
+                                  disabled={isProductActionsDisabled}
+                                  title={
+                                    storeActionBlockReason ||
+                                    `Open actions for ${product.name}`
+                                  }
                             >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
@@ -546,6 +612,7 @@ export function SellerProductsPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => openEditProductModal(product)}
+                              disabled={isProductActionsDisabled}
                             >
                               <Edit2 className="mr-2 h-4 w-4" />
                               Edit
@@ -553,6 +620,7 @@ export function SellerProductsPage() {
                             <DropdownMenuItem
                               className="text-red-600 focus:text-red-600"
                               onClick={() => handleDeleteProduct(product)}
+                              disabled={isProductActionsDisabled}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete

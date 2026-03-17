@@ -17,6 +17,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuthStore } from "@/stores";
@@ -28,8 +29,10 @@ import {
   useSendMessage,
   useUploadChatImage,
 } from "@/hooks/useChat";
+import { useSellerMyStore } from "@/hooks/useSellerPortal";
 import { SellerPageTemplate } from "@/pages/seller/components/SellerPageTemplate";
 import type { ChatMessage, Conversation } from "@/types-new";
+import toast from "react-hot-toast";
 
 type SellerConversationFilter =
   | "all"
@@ -94,9 +97,23 @@ function extractImageUrl(message: ChatMessage): string | null {
   return null;
 }
 
+function getStoreActionBlockReason(storeStatus?: string): string | null {
+  switch (storeStatus) {
+    case "pending":
+      return "Your store is not active. Please wait for approval.";
+    case "suspended":
+      return "Your store is suspended. Only admin can reactivate this store.";
+    case "closed":
+      return "Your store is closed. Contact support for next steps.";
+    default:
+      return null;
+  }
+}
+
 export function SellerMessagesPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
+  const { data: store } = useSellerMyStore();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<SellerConversationFilter>("all");
@@ -124,6 +141,16 @@ export function SellerMessagesPage() {
   const markAsRead = useMarkAsRead();
   const sendMessage = useSendMessage();
   const uploadImage = useUploadChatImage();
+  const storeActionBlockReason = getStoreActionBlockReason(store?.status);
+  const areMessageActionsDisabled = Boolean(storeActionBlockReason);
+  const areStarActionsDisabled =
+    store?.status === "suspended" || store?.status === "closed";
+  const starActionBlockReason =
+    store?.status === "suspended"
+      ? "Your store is suspended. Only admin can reactivate this store."
+      : store?.status === "closed"
+        ? "Your store is closed. Contact support for next steps."
+        : null;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -220,6 +247,11 @@ export function SellerMessagesPage() {
   };
 
   const toggleConversationStar = (conversationId: string) => {
+    if (areStarActionsDisabled) {
+      toast.error(starActionBlockReason || "Action unavailable");
+      return;
+    }
+
     setStarredConversationIds((previous) => {
       const next = new Set(previous);
       if (next.has(conversationId)) {
@@ -232,6 +264,11 @@ export function SellerMessagesPage() {
   };
 
   const handleSendMessage = async () => {
+    if (storeActionBlockReason) {
+      toast.error(storeActionBlockReason);
+      return;
+    }
+
     if (!selectedConversationId || (!newMessage.trim() && !selectedImage)) {
       return;
     }
@@ -258,6 +295,11 @@ export function SellerMessagesPage() {
   };
 
   const handlePickImage = (event: ChangeEvent<HTMLInputElement>) => {
+    if (storeActionBlockReason) {
+      toast.error(storeActionBlockReason);
+      return;
+    }
+
     const file = event.target.files?.[0];
     if (!file) {
       return;
@@ -281,6 +323,33 @@ export function SellerMessagesPage() {
 
   return (
     <SellerPageTemplate messagesPadding={true}>
+      <Alert
+        className={`mb-4 ${
+          store?.status === "active"
+            ? "border-green-200 bg-green-50 text-green-800"
+            : "border-amber-200 bg-amber-50 text-amber-900"
+        }`}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span>
+            {store?.status === "active"
+              ? "Store status: Active. Message actions are enabled."
+              : storeActionBlockReason || "Store status unavailable."}
+          </span>
+          {store?.status === "suspended" || store?.status === "pending" ? (
+            <Button asChild size="sm" variant="outline" className="rounded-full">
+              <a
+                href={`mailto:support@campuzon.me?subject=Store Reactivation Request - ${encodeURIComponent(
+                  store?.storeName || "Seller Store",
+                )}`}
+              >
+                Request Reactivation
+              </a>
+            </Button>
+          ) : null}
+        </div>
+      </Alert>
+
       <div className="flex h-[calc(100vh-7rem)] md:h-[calc(100vh-16rem)] -mb-10 -mt-2 md:mb-auto md:mt-auto min-h-[500px] w-full overflow-hidden md:rounded-xl md:border bg-background md:shadow-sm md:min-h-[600px]">
         <div
           className={`w-full border-border md:flex md:min-w-[320px] md:max-w-[350px] md:flex-col md:border-r lg:min-w-[400px] lg:max-w-[450px] ${
@@ -465,6 +534,7 @@ export function SellerMessagesPage() {
                     aria-label="Star conversation"
                     title="Star conversation"
                     onClick={() => toggleConversationStar(selectedConversation.id)}
+                    disabled={areStarActionsDisabled}
                   >
                     <Star
                       className={`h-4 w-4 ${starredConversationIds.has(selectedConversation.id) ? "fill-yellow-500 text-yellow-500" : ""}`}
@@ -646,6 +716,8 @@ export function SellerMessagesPage() {
                     type="button"
                     variant="outline"
                     onClick={() => fileInputRef.current?.click()}
+                    disabled={areMessageActionsDisabled}
+                    title={storeActionBlockReason || "Attach image"}
                     className="flex h-10 w-10 items-center justify-center rounded-full p-0"
                   >
                     <ImagePlus className="h-4 w-4" />
@@ -661,12 +733,18 @@ export function SellerMessagesPage() {
                       }
                     }}
                     placeholder="Reply to customer..."
+                    disabled={areMessageActionsDisabled}
                     className="flex-1 rounded-full"
                   />
 
                   <Button
                     onClick={() => void handleSendMessage()}
-                    disabled={(!newMessage.trim() && !selectedImage) || sendMessage.isPending}
+                    disabled={
+                      areMessageActionsDisabled ||
+                      (!newMessage.trim() && !selectedImage) ||
+                      sendMessage.isPending
+                    }
+                    title={storeActionBlockReason || "Send message"}
                     className="flex h-10 w-10 items-center justify-center rounded-full p-0"
                   >
                     <Send className="h-4 w-4" />

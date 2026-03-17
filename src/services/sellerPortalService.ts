@@ -173,6 +173,19 @@ export interface SellerPortalService {
   withdrawFunds(data: { amount: number; accountID: string }): Promise<unknown>;
   getAutoResponder(): Promise<SellerAutoResponderConfig>;
   updateAutoResponder(data: SellerAutoResponderConfig): Promise<unknown>;
+  updateStoreProfile(data: {
+    storeName: string;
+    description: string;
+  }): Promise<unknown>;
+  updateStoreContact(data: {
+    email: string;
+    phoneNumber: string;
+  }): Promise<unknown>;
+  updateStoreLocation(data: { hallId: string | null }): Promise<unknown>;
+  updateStorePreferences(data: {
+    notifyOnOrder: boolean;
+  }): Promise<unknown>;
+  deactivateStore(reason: string): Promise<unknown>;
 }
 
 export const sellerPortalService: SellerPortalService = {
@@ -280,6 +293,41 @@ export const sellerPortalService: SellerPortalService = {
         greeting: data.message,
       },
     });
+    return extractData(response);
+  },
+
+  async updateStoreProfile(data: { storeName: string; description: string }) {
+    const response = await api.patch('/store/settings/profile', {
+      storeName: data.storeName,
+      description: data.description,
+    });
+    return extractData(response);
+  },
+
+  async updateStoreContact(data: { email: string; phoneNumber: string }) {
+    const response = await api.patch('/store/settings/contact', {
+      email: data.email,
+      phoneNumber: data.phoneNumber,
+    });
+    return extractData(response);
+  },
+
+  async updateStoreLocation(data: { hallId: string | null }) {
+    const response = await api.patch('/store/settings/location', {
+      hallId: data.hallId,
+    });
+    return extractData(response);
+  },
+
+  async updateStorePreferences(data: { notifyOnOrder: boolean }) {
+    const response = await api.patch('/store/settings/preferences', {
+      notifyOnOrder: data.notifyOnOrder,
+    });
+    return extractData(response);
+  },
+
+  async deactivateStore(reason: string) {
+    const response = await api.post('/store/settings/deactivate', { reason });
     return extractData(response);
   },
 };

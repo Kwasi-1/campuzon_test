@@ -16,6 +16,7 @@ export const sellerPortalKeys = {
   wallet: () => [...sellerPortalKeys.all, 'wallet'] as const,
   walletTransactions: () => [...sellerPortalKeys.wallet(), 'transactions'] as const,
   autoResponder: () => [...sellerPortalKeys.all, 'autoResponder'] as const,
+  settings: () => [...sellerPortalKeys.all, 'settings'] as const,
 };
 
 export function useSellerMyStore() {
@@ -159,6 +160,81 @@ export function useSellerUpdateAutoResponder() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: sellerPortalKeys.autoResponder() });
       toast.success('Auto-responder settings updated');
+    },
+    onError: (error) => {
+      toast.error(extractError(error));
+    },
+  });
+}
+
+export function useSellerUpdateStoreProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { storeName: string; description: string }) =>
+      sellerPortalService.updateStoreProfile(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: sellerPortalKeys.store() });
+    },
+    onError: (error) => {
+      toast.error(extractError(error));
+    },
+  });
+}
+
+export function useSellerUpdateStoreContact() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { email: string; phoneNumber: string }) =>
+      sellerPortalService.updateStoreContact(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: sellerPortalKeys.store() });
+    },
+    onError: (error) => {
+      toast.error(extractError(error));
+    },
+  });
+}
+
+export function useSellerUpdateStoreLocation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { hallId: string | null }) =>
+      sellerPortalService.updateStoreLocation(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: sellerPortalKeys.store() });
+    },
+    onError: (error) => {
+      toast.error(extractError(error));
+    },
+  });
+}
+
+export function useSellerUpdateStorePreferences() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { notifyOnOrder: boolean }) =>
+      sellerPortalService.updateStorePreferences(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: sellerPortalKeys.store() });
+    },
+    onError: (error) => {
+      toast.error(extractError(error));
+    },
+  });
+}
+
+export function useSellerDeactivateStore() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (reason: string) => sellerPortalService.deactivateStore(reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: sellerPortalKeys.store() });
+      toast.success('Store deactivated successfully');
     },
     onError: (error) => {
       toast.error(extractError(error));

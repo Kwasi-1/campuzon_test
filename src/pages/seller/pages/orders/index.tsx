@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Modal } from "@/components/shared/Modal";
 import { useAuthStore } from "@/stores";
@@ -49,6 +50,7 @@ import { downloadOrderReceipt } from "./receipt";
 import { SellerReceiptPreviewModal } from "./components/SellerReceiptPreviewModal";
 import { OrderReceiptActions } from "./components/OrderReceiptActions";
 import OrderCardSkeleton from "@/components/orders/orderCardSkeleton";
+import toast from "react-hot-toast";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All Orders" },
@@ -68,6 +70,19 @@ type ExtraFilterKey =
   | "refunded"
   | "disputed";
 
+const getStoreActionBlockReason = (storeStatus?: string) => {
+  switch (storeStatus) {
+    case "pending":
+      return "Your store is not active. Please wait for approval.";
+    case "suspended":
+      return "Your store is suspended. Only admin can reactivate this store.";
+    case "closed":
+      return "Your store is closed. Contact support for next steps.";
+    default:
+      return null;
+  }
+};
+
 export function SellerOrdersPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
@@ -83,6 +98,8 @@ export function SellerOrdersPage() {
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
 
   const { data: store } = useSellerMyStore();
+  const storeActionBlockReason = getStoreActionBlockReason(store?.status);
+  const areOrderActionsDisabled = Boolean(storeActionBlockReason);
   const { data: apiOrders, isLoading: ordersLoading } = useSellerStoreOrders(
     store?.id || "",
   );
@@ -135,6 +152,10 @@ export function SellerOrdersPage() {
   }, [effectiveFilter, extraFilter, mainFilter, searchQuery, storeOrders]);
 
   const handleOrderAction = (order: Order, action: SellerOrderAction) => {
+    if (storeActionBlockReason) {
+      toast.error(storeActionBlockReason);
+      return;
+    }
     setSelectedOrder(order);
     setActionType(action);
     setActionModalOpen(true);
@@ -147,6 +168,11 @@ export function SellerOrdersPage() {
   };
 
   const confirmAction = async () => {
+    if (storeActionBlockReason) {
+      toast.error(storeActionBlockReason);
+      return;
+    }
+
     if (!selectedOrder || !actionType) return;
 
     const newStatus = getNextStatusForAction(actionType, selectedOrder.status);
@@ -266,6 +292,33 @@ export function SellerOrdersPage() {
       headerActions={headerActions}
       sidebar={sidebar}
     >
+      <Alert
+        className={`mb-4 ${
+          store?.status === "active"
+            ? "border-green-200 bg-green-50 text-green-800"
+            : "border-amber-200 bg-amber-50 text-amber-900"
+        }`}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span>
+            {store?.status === "active"
+              ? "Store status: Active. Order actions are enabled."
+              : storeActionBlockReason || "Store status unavailable."}
+          </span>
+          {store?.status === "suspended" || store?.status === "pending" ? (
+            <Button asChild size="sm" variant="outline" className="rounded-full">
+              <a
+                href={`mailto:support@campuzon.me?subject=Store Reactivation Request - ${encodeURIComponent(
+                  store?.storeName || "Seller Store",
+                )}`}
+              >
+                Request Reactivation
+              </a>
+            </Button>
+          ) : null}
+        </div>
+      </Alert>
+
       {isLoading ? (
         <div className="space-y-6">
           {[1, 2, 3].map((i) => (
@@ -371,6 +424,11 @@ export function SellerOrdersPage() {
                                 : "default"
                             }
                             onClick={() => handleOrderAction(order, action)}
+                            disabled={areOrderActionsDisabled}
+                            title={
+                              storeActionBlockReason ||
+                              "Perform order action"
+                            }
                             className={`w-full rounded-full ${
                               action === "cancel"
                                 ? "bg-transparent text-red-600"
@@ -408,6 +466,11 @@ export function SellerOrdersPage() {
                             onClick={() =>
                               handleOrderAction(order, desktopPrimaryAction)
                             }
+                            disabled={areOrderActionsDisabled}
+                            title={
+                              storeActionBlockReason ||
+                              "Perform order action"
+                            }
                             className={`rounded-full ${
                               desktopPrimaryAction === "cancel"
                                 ? "bg-transparent text-red-600"
@@ -438,6 +501,11 @@ export function SellerOrdersPage() {
                                 size="sm"
                                 variant="outline"
                                 className="rounded-full"
+                                disabled={areOrderActionsDisabled}
+                                title={
+                                  storeActionBlockReason ||
+                                  "More order actions"
+                                }
                               >
                                 <MoreHorizontal className="mr-1 h-4 w-4" />
                                 More
@@ -450,6 +518,7 @@ export function SellerOrdersPage() {
                                   onClick={() =>
                                     handleOrderAction(order, action)
                                   }
+                                  disabled={areOrderActionsDisabled}
                                   className={
                                     action === "cancel"
                                       ? "text-red-600 focus:text-red-600"
@@ -548,7 +617,8 @@ export function SellerOrdersPage() {
             <Button
               variant={actionType === "cancel" ? "destructive" : "default"}
               onClick={confirmAction}
-              disabled={updateStatus.isPending}
+              disabled={updateStatus.isPending || areOrderActionsDisabled}
+              title={storeActionBlockReason || "Confirm action"}
             >
               {actionType ? getSellerActionLabel(actionType) : "Confirm"}
             </Button>

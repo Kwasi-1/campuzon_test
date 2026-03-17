@@ -29,11 +29,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PillSidebar } from "@/components/ui/pill-sidebar";
 import {
   useSellerAutoResponder,
+  useSellerDeactivateStore,
   useSellerMyStore,
   useSellerUpdateAutoResponder,
+  useSellerUpdateStoreContact,
+  useSellerUpdateStoreLocation,
+  useSellerUpdateStorePreferences,
+  useSellerUpdateStoreProfile,
 } from "@/hooks/useSellerPortal";
 import { useAuthStore } from "@/stores";
 import { SellerPageTemplate } from "../../components/SellerPageTemplate";
+import toast from "react-hot-toast";
 
 // Mock store data
 const mockStoreData = {
@@ -87,11 +93,17 @@ export function SellerSettingsPage() {
   const { data: store } = useSellerMyStore();
   const { data: autoResponder } = useSellerAutoResponder();
   const updateAutoResponder = useSellerUpdateAutoResponder();
+  const updateStoreProfile = useSellerUpdateStoreProfile();
+  const updateStoreContact = useSellerUpdateStoreContact();
+  const updateStoreLocation = useSellerUpdateStoreLocation();
+  const updateStorePreferences = useSellerUpdateStorePreferences();
+  const deactivateStore = useSellerDeactivateStore();
 
   const [formData, setFormData] = useState(mockStoreData);
   const [activeSection, setActiveSection] = useState<SettingsSection>("all");
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveInfo, setSaveInfo] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deactivateModalOpen, setDeactivateModalOpen] = useState(false);
   const [notificationPrefs, setNotificationPrefs] = useState({
@@ -100,6 +112,15 @@ export function SellerSettingsPage() {
     lowStock: true,
     reviews: true,
   });
+
+  const storeActionBlockReason =
+    store?.status === "pending"
+      ? "Your store is not active. Please wait for approval."
+      : store?.status === "suspended"
+        ? "Your store is suspended. Only admin can reactivate this store."
+        : store?.status === "closed"
+          ? "Your store is closed. Contact support for next steps."
+          : null;
 
   // Synchronize auto-responder data from backend
   useEffect(() => {
@@ -141,11 +162,13 @@ export function SellerSettingsPage() {
   const handleChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setSaveSuccess(false);
+    setSaveInfo(null);
   };
 
   const handleNotificationToggle = (key: keyof typeof notificationPrefs) => {
     setNotificationPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
     setSaveSuccess(false);
+    setSaveInfo(null);
   };
 
   const handleImageUpload = (
@@ -163,18 +186,46 @@ export function SellerSettingsPage() {
   };
 
   const handleSave = async () => {
+    if (storeActionBlockReason) {
+      toast.error(storeActionBlockReason);
+      return;
+    }
+
     setIsSaving(true);
+    setSaveInfo(null);
 
     try {
-      // Save Auto-Responder settings to backend
-      await updateAutoResponder.mutateAsync({
-        enabled: formData.autoResponderEnabled,
-        botName: formData.autoResponderName,
-        message: formData.autoResponderMessage,
-      });
+      const looksLikeUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const canPatchLocation = looksLikeUuid.test(formData.institution);
 
-      // Simulate other settings save
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await Promise.all([
+        updateStoreProfile.mutateAsync({
+          storeName: formData.storeName,
+          description: formData.description,
+        }),
+        updateStoreContact.mutateAsync({
+          email: formData.email,
+          phoneNumber: formData.phoneNumber,
+        }),
+        updateStorePreferences.mutateAsync({
+          notifyOnOrder: notificationPrefs.newOrder,
+        }),
+        updateAutoResponder.mutateAsync({
+          enabled: formData.autoResponderEnabled,
+          botName: formData.autoResponderName,
+          message: formData.autoResponderMessage,
+        }),
+        ...(canPatchLocation
+          ? [updateStoreLocation.mutateAsync({ hallId: formData.institution })]
+          : []),
+      ]);
+
+      if (!canPatchLocation) {
+        setSaveInfo(
+          "Location mapping is not connected yet. Contact/location hall mapping requires backend hall IDs.",
+        );
+      }
+
       setSaveSuccess(true);
     } catch (error) {
       console.error("Failed to save settings:", error);
@@ -183,11 +234,18 @@ export function SellerSettingsPage() {
     }
   };
 
-  const handleDeactivate = () => {
-    // In a real app, this would call an API
-    console.log("Deactivating store");
-    setDeactivateModalOpen(false);
-    navigate("/seller/dashboard");
+  const handleDeactivate = async () => {
+    if (!store) return;
+
+    try {
+      await deactivateStore.mutateAsync(
+        "Seller requested deactivation from settings",
+      );
+      setDeactivateModalOpen(false);
+      navigate("/seller/dashboard");
+    } catch (error) {
+      console.error("Deactivate store failed:", error);
+    }
   };
 
   const handleDelete = () => {
@@ -228,7 +286,8 @@ export function SellerSettingsPage() {
   const headerActions = (
     <Button
       onClick={handleSave}
-      disabled={isSaving}
+      disabled={isSaving || Boolean(storeActionBlockReason)}
+      title={storeActionBlockReason || "Save Changes"}
       className="rounded-full bg-[#1C1C1E] text-white hover:bg-black"
     >
       <Save className="mr-2 h-4 w-4" />
@@ -244,9 +303,27 @@ export function SellerSettingsPage() {
         headerActions={headerActions}
         sidebar={sidebar}
       >
+        <Alert
+          className={`mb-6 ${
+            store?.status === "active"
+              ? "border-green-200 bg-green-50 text-green-800"
+              : "border-amber-200 bg-amber-50 text-amber-900"
+          }`}
+        >
+          {store?.status === "active"
+            ? "Store status: Active. Settings updates are enabled."
+            : storeActionBlockReason || "Store status unavailable."}
+        </Alert>
+
         {saveSuccess ? (
           <Alert variant="success" className="mb-6">
             Settings saved successfully!
+          </Alert>
+        ) : null}
+
+        {saveInfo ? (
+          <Alert className="mb-6 border-blue-200 bg-blue-50 text-blue-900">
+            {saveInfo}
           </Alert>
         ) : null}
 
@@ -591,6 +668,10 @@ export function SellerSettingsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 md:p-8">
+                <Alert className="mb-4 border-amber-200 bg-amber-50 text-amber-900">
+                  Only admin can reactivate this store after deactivation.
+                </Alert>
+
                 <div className="space-y-3">
                   <div className="flex items-center justify-between rounded-xl border border-red-200 p-4">
                     <div>
@@ -605,11 +686,41 @@ export function SellerSettingsPage() {
                       variant="outline"
                       className="border-red-200 text-red-600 hover:bg-red-50"
                       onClick={() => setDeactivateModalOpen(true)}
+                      disabled={store?.status === "suspended"}
+                      title={
+                        store?.status === "suspended"
+                          ? "Store already deactivated"
+                          : "Deactivate Store"
+                      }
                     >
                       <Lock className="mr-1 h-4 w-4" />
                       Deactivate
                     </Button>
                   </div>
+
+                  {(store?.status === "suspended" || store?.status === "pending") && (
+                    <div className="flex items-center justify-between rounded-xl border border-blue-200 p-4">
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          Request Reactivation
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Contact support and include your store name for faster review.
+                        </p>
+                      </div>
+                      <Button
+                        asChild
+                        variant="outline"
+                        className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                      >
+                        <a
+                          href={`mailto:support@campuzon.me?subject=Store Reactivation Request - ${encodeURIComponent(formData.storeName)}`}
+                        >
+                          Contact Support
+                        </a>
+                      </Button>
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between rounded-xl border border-red-200 p-4">
                     <div>
@@ -641,8 +752,11 @@ export function SellerSettingsPage() {
         <div className="space-y-4">
           <p>
             Are you sure you want to deactivate your store? Your products will
-            be hidden from customers until you reactivate.
+            be hidden from customers.
           </p>
+          <Alert className="border-amber-200 bg-amber-50 text-amber-900">
+            Only admin can reactivate this store.
+          </Alert>
           <div className="flex justify-end gap-3">
             <Button
               variant="outline"
@@ -650,8 +764,12 @@ export function SellerSettingsPage() {
             >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeactivate}>
-              Deactivate Store
+            <Button
+              variant="destructive"
+              onClick={() => void handleDeactivate()}
+              disabled={deactivateStore.isPending}
+            >
+              {deactivateStore.isPending ? "Deactivating..." : "Deactivate Store"}
             </Button>
           </div>
         </div>
