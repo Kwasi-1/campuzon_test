@@ -21,9 +21,11 @@ import {
   getAvailableSellerOrderActions,
   getOrderStep,
   getSellerActionLabel,
+  getSellerWorkflowStatus,
   getStatusConfig,
   type SellerOrderAction,
 } from "../orderWorkflow";
+import { OrderReceiptActions } from "./OrderReceiptActions";
 
 interface SellerOrderDetailsViewProps {
   order: Order;
@@ -33,6 +35,8 @@ interface SellerOrderDetailsViewProps {
   isCompact?: boolean;
   isActionPending?: boolean;
   sectionIdPrefix?: string;
+  onViewReceipt?: () => void;
+  onDownloadReceipt?: () => void;
 }
 
 export function SellerOrderDetailsView({
@@ -43,6 +47,8 @@ export function SellerOrderDetailsView({
   isCompact = false,
   isActionPending = false,
   sectionIdPrefix = "seller-order-detail",
+  onViewReceipt,
+  onDownloadReceipt,
 }: SellerOrderDetailsViewProps) {
   const statusConfig = getStatusConfig(order.status);
   const StatusIcon = statusConfig.icon;
@@ -359,11 +365,11 @@ export function SellerOrderDetailsView({
                   onClick={() => onRequestAction(action)}
                   disabled={isActionPending}
                 >
-                  {action === "ship" ? (
-                    <Truck className="mr-2 h-4 w-4" />
+                  {action === "process" ? (
+                    <Package className="mr-2 h-4 w-4" />
                   ) : null}
-                  {action === "complete" ? (
-                    <CheckCircle className="mr-2 h-4 w-4" />
+                  {action === "deliver" ? (
+                    <Truck className="mr-2 h-4 w-4" />
                   ) : null}
                   {action === "cancel" ? (
                     <XCircle className="mr-2 h-4 w-4" />
@@ -371,6 +377,17 @@ export function SellerOrderDetailsView({
                   {getSellerActionLabel(action)}
                 </Button>
               ))}
+
+              {getSellerWorkflowStatus(order.status) === "completed" &&
+              onViewReceipt &&
+              onDownloadReceipt ? (
+                <OrderReceiptActions
+                  compact
+                  onViewReceipt={onViewReceipt}
+                  onDownloadReceipt={onDownloadReceipt}
+                />
+              ) : null}
+
               {availableActions.length === 0 ? (
                 <p className="rounded-2xl bg-gray-50 px-4 py-3 text-sm text-gray-500">
                   No seller workflow actions are available for the current

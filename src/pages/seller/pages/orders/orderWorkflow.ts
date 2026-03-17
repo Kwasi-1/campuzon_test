@@ -2,9 +2,7 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
-  DollarSign,
   Package,
-  Truck,
   XCircle,
   type LucideIcon,
 } from "lucide-react";
@@ -14,7 +12,10 @@ import type { Order, OrderStatus } from "@/types-new";
 export const USE_PREVIEW_MOCK_DATA = true;
 const PREVIEW_STORAGE_KEY = "seller-orders-preview-v1";
 
-export type SellerOrderAction = "ship" | "complete" | "cancel";
+export type SellerOrderAction =
+  | "process"
+  | "deliver"
+  | "cancel";
 
 export const ORDER_TIMELINE: Array<{
   status: OrderStatus;
@@ -23,50 +24,48 @@ export const ORDER_TIMELINE: Array<{
 }> = [
   {
     status: "pending",
-    label: "Order Placed",
-    description: "Waiting for payment confirmation",
-  },
-  {
-    status: "paid",
-    label: "Paid",
-    description: "Payment confirmed and ready for preparation",
+    label: "Pending",
+    description: "Payment is confirmed and the order is waiting for seller fulfillment",
   },
   {
     status: "processing",
     label: "Processing",
-    description: "Seller is preparing the order",
-  },
-  {
-    status: "shipped",
-    label: "Shipped",
-    description: "Order is in transit to the buyer",
-  },
-  {
-    status: "delivered",
-    label: "Delivered",
-    description: "Order has reached the buyer",
+    description: "Seller is preparing the order (optional step)",
   },
   {
     status: "completed",
     label: "Completed",
-    description: "Order closed successfully",
+    description: "Delivery is confirmed, the transaction closes, and the receipt is ready",
   },
 ];
 
+export function getSellerWorkflowStatus(status: OrderStatus): OrderStatus {
+  switch (status) {
+    case "paid":
+      return "pending";
+    case "shipped":
+    case "delivered":
+      return "completed";
+    default:
+      return status;
+  }
+}
+
 export function getOrderStep(status: OrderStatus): number {
+  const normalizedStatus = getSellerWorkflowStatus(status);
   const steps: Record<OrderStatus, number> = {
     pending: 0,
-    paid: 1,
-    processing: 2,
-    shipped: 3,
-    delivered: 4,
-    completed: 5,
+    paid: 0,
+    processing: 1,
+    shipped: 2,
+    delivered: 2,
+    completed: 2,
     cancelled: -1,
     refunded: -1,
     disputed: -1,
   };
 
-  return steps[status] ?? 0;
+  return steps[normalizedStatus] ?? 0;
 }
 
 export function getStatusConfig(status: OrderStatus): {
@@ -74,7 +73,9 @@ export function getStatusConfig(status: OrderStatus): {
   color: string;
   icon: LucideIcon;
 } {
-  switch (status) {
+  const normalizedStatus = getSellerWorkflowStatus(status);
+
+  switch (normalizedStatus) {
     case "pending":
       return {
         label: "Pending",
@@ -82,33 +83,12 @@ export function getStatusConfig(status: OrderStatus): {
           "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
         icon: Clock,
       };
-    case "paid":
-      return {
-        label: "Paid",
-        color:
-          "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-        icon: DollarSign,
-      };
     case "processing":
       return {
         label: "Processing",
         color:
           "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
         icon: Package,
-      };
-    case "shipped":
-      return {
-        label: "Shipped",
-        color:
-          "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
-        icon: Truck,
-      };
-    case "delivered":
-      return {
-        label: "Delivered",
-        color:
-          "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400",
-        icon: CheckCircle,
       };
     case "completed":
       return {
@@ -144,14 +124,11 @@ export function getStatusConfig(status: OrderStatus): {
 export function getAvailableSellerOrderActions(
   order: Order,
 ): SellerOrderAction[] {
-  switch (order.status) {
-    case "paid":
-    case "processing":
-      return ["ship"];
-    case "delivered":
-      return ["complete"];
+  switch (getSellerWorkflowStatus(order.status)) {
     case "pending":
-      return ["cancel"];
+      return ["process", "deliver", "cancel"];
+    case "processing":
+      return ["deliver", "cancel"];
     default:
       return [];
   }
@@ -159,10 +136,10 @@ export function getAvailableSellerOrderActions(
 
 export function getSellerActionLabel(action: SellerOrderAction): string {
   switch (action) {
-    case "ship":
-      return "Mark as Shipped";
-    case "complete":
-      return "Mark as Completed";
+    case "process":
+      return "Mark as Processing";
+    case "deliver":
+      return "Confirm Delivery";
     case "cancel":
       return "Cancel Order";
   }
@@ -171,38 +148,49 @@ export function getSellerActionLabel(action: SellerOrderAction): string {
 export function getSellerActionDescription(
   action: SellerOrderAction,
   orderNumber?: string,
+  currentStatus?: OrderStatus,
 ): string {
   switch (action) {
-    case "ship":
-      return `Confirm shipping for order ${orderNumber || ""}? The buyer will see it as in transit.`;
-    case "complete":
-      return `Confirm completion for order ${orderNumber || ""}? This closes the order workflow.`;
+    case "process":
+      return `Mark order ${orderNumber || ""} as processing? Use this if you are preparing the item before handoff.`;
+    case "deliver":
+      return `Confirm in-person delivery for order ${orderNumber || ""}? This will complete the transaction and show the receipt.`;
     case "cancel":
-      return `Are you sure you want to cancel order ${orderNumber || ""}? This should only be done before fulfillment proceeds.`;
+      return getSellerWorkflowStatus(currentStatus || "pending") === "pending" ||
+        getSellerWorkflowStatus(currentStatus || "pending") === "processing"
+        ? `Cancel order ${orderNumber || ""}? This will trigger an automatic refund to the buyer.`
+        : `Cancel order ${orderNumber || ""}? This will close the order and trigger the appropriate refund flow.`;
   }
 }
 
-export function getNextStatusForAction(action: SellerOrderAction): OrderStatus {
+export function getNextStatusForAction(
+  action: SellerOrderAction,
+  currentStatus?: OrderStatus,
+): OrderStatus {
+  const normalizedStatus = getSellerWorkflowStatus(currentStatus || "pending");
+
   switch (action) {
-    case "ship":
-      return "shipped";
-    case "complete":
+    case "process":
+      return "processing";
+    case "deliver":
       return "completed";
     case "cancel":
-      return "cancelled";
+      return normalizedStatus === "pending" || normalizedStatus === "processing"
+        ? "refunded"
+        : "cancelled";
   }
 }
 
 export function createPreviewOrders(): Order[] {
   const previewStatuses: OrderStatus[] = [
     "pending",
-    "paid",
     "processing",
-    "shipped",
-    "delivered",
     "completed",
     "cancelled",
     "refunded",
+    "disputed",
+    "pending",
+    "processing",
   ];
 
   return Array.from({ length: 8 }, (_, index) => {
@@ -219,18 +207,15 @@ export function createPreviewOrders(): Order[] {
       subtotal: source.subtotal + index * 18,
       dateCreated: createdAt.toISOString(),
       paidAt:
-        status === "pending" || status === "cancelled"
+        status === "cancelled"
           ? null
           : new Date(createdAt.getTime() + 60 * 60 * 1000).toISOString(),
-      shippedAt: ["shipped", "delivered", "completed"].includes(status)
+      deliveredAt: status === "completed"
         ? new Date(createdAt.getTime() + 24 * 60 * 60 * 1000).toISOString()
-        : null,
-      deliveredAt: ["delivered", "completed"].includes(status)
-        ? new Date(createdAt.getTime() + 48 * 60 * 60 * 1000).toISOString()
         : null,
       completedAt:
         status === "completed"
-          ? new Date(createdAt.getTime() + 52 * 60 * 60 * 1000).toISOString()
+          ? new Date(createdAt.getTime() + 26 * 60 * 60 * 1000).toISOString()
           : null,
       deliveryAddress:
         source.deliveryAddress ||
@@ -296,10 +281,7 @@ export function applyOrderStatus(order: Order, nextStatus: OrderStatus): Order {
     paidAt:
       order.paidAt ||
       (nextStatus !== "pending" && nextStatus !== "cancelled" ? timestamp : null),
-    shippedAt:
-      nextStatus === "shipped" || nextStatus === "delivered" || nextStatus === "completed"
-        ? order.shippedAt || timestamp
-        : null,
+    shippedAt: null,
     deliveredAt:
       nextStatus === "delivered" || nextStatus === "completed"
         ? order.deliveredAt || timestamp
@@ -313,7 +295,10 @@ export function applyPreviewOrderAction(
   orderId: string,
   action: SellerOrderAction,
 ): Order[] {
-  const nextStatus = getNextStatusForAction(action);
+  const targetOrder = orders.find((order) => order.id === orderId);
+  if (!targetOrder) return orders;
+
+  const nextStatus = getNextStatusForAction(action, targetOrder.status);
   const updated = orders.map((order) =>
     order.id === orderId ? applyOrderStatus(order, nextStatus) : order,
   );

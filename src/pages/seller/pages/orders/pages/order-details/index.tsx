@@ -8,9 +8,11 @@ import { PillSidebar } from "@/components/ui/pill-sidebar";
 import { useAuthStore } from "@/stores";
 import { useCurrency, useOrder, useUpdateOrderStatus } from "@/hooks";
 import { SellerPageTemplate } from "@/pages/seller/components/SellerPageTemplate";
+import type { Order } from "@/types-new";
 import { SellerOrderDetailsView } from "../../components/SellerOrderDetailsView";
 import {
   USE_PREVIEW_MOCK_DATA,
+  applyOrderStatus,
   applyPreviewOrderAction,
   findPreviewOrder,
   getNextStatusForAction,
@@ -19,6 +21,8 @@ import {
   loadPreviewOrders,
   type SellerOrderAction,
 } from "../../orderWorkflow";
+import { SellerReceiptPreviewModal } from "../../components/SellerReceiptPreviewModal";
+import { downloadOrderReceipt } from "../../receipt";
 
 type DetailSectionKey =
   | "overview"
@@ -58,14 +62,14 @@ function useOrderSectionSidebar() {
 
   const sidebar = (
     <div className="hidden md:block space-y-4 md:space-y-6 xl:sticky xl:top-48">
-    <PillSidebar
-      options={DETAIL_SECTION_OPTIONS.map((section) => ({
-        key: section.key,
-        label: section.label,
-      }))}
-      activeKey={activeSection}
-      onChange={handleSectionChange}
-    />
+      <PillSidebar
+        options={DETAIL_SECTION_OPTIONS.map((section) => ({
+          key: section.key,
+          label: section.label,
+        }))}
+        activeKey={activeSection}
+        onChange={handleSectionChange}
+      />
     </div>
   );
 
@@ -80,6 +84,8 @@ function PreviewSellerOrderDetailContent({ orderId }: { orderId: string }) {
   const [pendingAction, setPendingAction] = useState<SellerOrderAction | null>(
     null,
   );
+  const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
   const { sidebar } = useOrderSectionSidebar();
 
   const order = useMemo(
@@ -122,9 +128,18 @@ function PreviewSellerOrderDetailContent({ orderId }: { orderId: string }) {
   const confirmAction = () => {
     if (!pendingAction) return;
 
-    setPreviewOrders((prev) =>
-      applyPreviewOrderAction(prev, order.id, pendingAction),
-    );
+    const shouldOpenReceipt = pendingAction === "deliver";
+
+    setPreviewOrders((prev) => {
+      const updated = applyPreviewOrderAction(prev, order.id, pendingAction);
+      if (shouldOpenReceipt) {
+        const matched = updated.find((item) => item.id === order.id) || null;
+        setReceiptOrder(matched);
+        setIsReceiptModalOpen(true);
+      }
+      return updated;
+    });
+
     setPendingAction(null);
   };
 
@@ -149,6 +164,11 @@ function PreviewSellerOrderDetailContent({ orderId }: { orderId: string }) {
         formatAmount={formatGHS}
         onRequestAction={setPendingAction}
         sectionIdPrefix={DETAIL_SECTION_PREFIX}
+        onViewReceipt={() => {
+          setReceiptOrder(order);
+          setIsReceiptModalOpen(true);
+        }}
+        onDownloadReceipt={() => downloadOrderReceipt(order, formatGHS)}
       />
 
       <Modal
@@ -161,7 +181,11 @@ function PreviewSellerOrderDetailContent({ orderId }: { orderId: string }) {
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
             {pendingAction
-              ? getSellerActionDescription(pendingAction, order.orderNumber)
+              ? getSellerActionDescription(
+                  pendingAction,
+                  order.orderNumber,
+                  order.status,
+                )
               : ""}
           </p>
           <div className="flex justify-end gap-3">
@@ -177,6 +201,21 @@ function PreviewSellerOrderDetailContent({ orderId }: { orderId: string }) {
           </div>
         </div>
       </Modal>
+
+      <SellerReceiptPreviewModal
+        isOpen={isReceiptModalOpen}
+        order={receiptOrder}
+        onClose={() => {
+          setIsReceiptModalOpen(false);
+          setReceiptOrder(null);
+        }}
+        onDownload={() => {
+          if (!receiptOrder) return;
+          downloadOrderReceipt(receiptOrder, formatGHS);
+        }}
+        formatAmount={formatGHS}
+        completionMessage="Delivery confirmed. This order is now complete and the receipt has been generated."
+      />
     </SellerPageTemplate>
   );
 }
@@ -190,6 +229,8 @@ function LiveSellerOrderDetailContent({ orderId }: { orderId: string }) {
   const [pendingAction, setPendingAction] = useState<SellerOrderAction | null>(
     null,
   );
+  const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
   const { sidebar } = useOrderSectionSidebar();
 
   if (!isAuthenticated || !user?.isOwner) {
@@ -200,10 +241,18 @@ function LiveSellerOrderDetailContent({ orderId }: { orderId: string }) {
   const confirmAction = async () => {
     if (!order || !pendingAction) return;
 
+    const nextStatus = getNextStatusForAction(pendingAction, order.status);
+
     await updateStatus.mutateAsync({
       id: order.id,
-      status: getNextStatusForAction(pendingAction),
+      status: nextStatus,
     });
+
+    if (pendingAction === "deliver") {
+      setReceiptOrder(applyOrderStatus(order, nextStatus));
+      setIsReceiptModalOpen(true);
+    }
+
     setPendingAction(null);
   };
 
@@ -235,6 +284,11 @@ function LiveSellerOrderDetailContent({ orderId }: { orderId: string }) {
           onRequestAction={setPendingAction}
           isActionPending={updateStatus.isPending}
           sectionIdPrefix={DETAIL_SECTION_PREFIX}
+          onViewReceipt={() => {
+            setReceiptOrder(order);
+            setIsReceiptModalOpen(true);
+          }}
+          onDownloadReceipt={() => downloadOrderReceipt(order, formatGHS)}
         />
       ) : (
         <div className="rounded-3xl border border-gray-100 bg-white p-10 text-center shadow-sm">
@@ -252,7 +306,11 @@ function LiveSellerOrderDetailContent({ orderId }: { orderId: string }) {
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
             {pendingAction && order
-              ? getSellerActionDescription(pendingAction, order.orderNumber)
+              ? getSellerActionDescription(
+                  pendingAction,
+                  order.orderNumber,
+                  order.status,
+                )
               : ""}
           </p>
           <div className="flex justify-end gap-3">
@@ -269,6 +327,21 @@ function LiveSellerOrderDetailContent({ orderId }: { orderId: string }) {
           </div>
         </div>
       </Modal>
+
+      <SellerReceiptPreviewModal
+        isOpen={isReceiptModalOpen}
+        order={receiptOrder}
+        onClose={() => {
+          setIsReceiptModalOpen(false);
+          setReceiptOrder(null);
+        }}
+        onDownload={() => {
+          if (!receiptOrder) return;
+          downloadOrderReceipt(receiptOrder, formatGHS);
+        }}
+        formatAmount={formatGHS}
+        completionMessage="Delivery confirmed. This order is now complete and the receipt has been generated."
+      />
     </SellerPageTemplate>
   );
 }

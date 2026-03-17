@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  CheckCircle,
   Eye,
   MessageCircle,
   Package,
@@ -31,39 +30,34 @@ import { PillSidebar } from "@/components/ui/pill-sidebar";
 import { OrderCard } from "@/components/shared/OrderCard";
 import {
   USE_PREVIEW_MOCK_DATA,
+  applyOrderStatus,
   applyPreviewOrderAction,
   getAvailableSellerOrderActions,
   getNextStatusForAction,
+  getSellerWorkflowStatus,
   getSellerActionDescription,
   getSellerActionLabel,
   getStatusConfig,
   loadPreviewOrders,
   type SellerOrderAction,
 } from "./orderWorkflow";
+import { downloadOrderReceipt } from "./receipt";
+import { SellerReceiptPreviewModal } from "./components/SellerReceiptPreviewModal";
+import { OrderReceiptActions } from "./components/OrderReceiptActions";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All Orders" },
   { value: "pending", label: "Pending" },
-  { value: "paid", label: "Paid" },
   { value: "processing", label: "Processing" },
-  { value: "shipped", label: "Shipped" },
-  { value: "delivered", label: "Delivered" },
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
   { value: "refunded", label: "Refunded" },
   { value: "disputed", label: "Disputed" },
 ];
 
-const MAIN_FILTER_KEYS = ["all", "pending", "shipped", "completed"] as const;
+const MAIN_FILTER_KEYS = ["all", "pending", "cancelled", "completed"] as const;
 type MainFilterKey = (typeof MAIN_FILTER_KEYS)[number];
-type ExtraFilterKey =
-  | "all"
-  | "paid"
-  | "processing"
-  | "delivered"
-  | "cancelled"
-  | "refunded"
-  | "disputed";
+type ExtraFilterKey = "all" | "cancelled" | "refunded" | "disputed";
 
 export function SellerOrdersPage() {
   const navigate = useNavigate();
@@ -79,6 +73,8 @@ export function SellerOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [actionModalOpen, setActionModalOpen] = useState(false);
   const [actionType, setActionType] = useState<SellerOrderAction | null>(null);
+  const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
 
   const { data: store } = useMyStore();
   const { data: apiOrders, isLoading: ordersLoading } = useStoreOrders(
@@ -97,7 +93,9 @@ export function SellerOrdersPage() {
     let orders = [...storeOrders];
 
     if (effectiveFilter !== "all") {
-      orders = orders.filter((order) => order.status === effectiveFilter);
+      orders = orders.filter(
+        (order) => getSellerWorkflowStatus(order.status) === effectiveFilter,
+      );
     }
 
     if (searchQuery) {
@@ -130,7 +128,9 @@ export function SellerOrdersPage() {
   const confirmAction = async () => {
     if (!selectedOrder || !actionType) return;
 
-    const newStatus = getNextStatusForAction(actionType);
+    const newStatus = getNextStatusForAction(actionType, selectedOrder.status);
+    const shouldOpenReceipt = actionType === "deliver";
+    let updatedForReceipt: Order | null = null;
 
     if (USE_PREVIEW_MOCK_DATA) {
       const updatedOrders = applyPreviewOrderAction(
@@ -140,11 +140,19 @@ export function SellerOrdersPage() {
       );
 
       setPreviewOrders(updatedOrders);
+      updatedForReceipt =
+        updatedOrders.find((order) => order.id === selectedOrder.id) || null;
     } else {
       await updateStatus.mutateAsync({
         id: selectedOrder.id,
         status: newStatus,
       });
+      updatedForReceipt = applyOrderStatus(selectedOrder, newStatus);
+    }
+
+    if (shouldOpenReceipt && updatedForReceipt) {
+      setReceiptOrder(updatedForReceipt);
+      setIsReceiptModalOpen(true);
     }
 
     closeActionModal();
@@ -152,29 +160,25 @@ export function SellerOrdersPage() {
 
   const stats = useMemo(() => {
     const orders = storeOrders;
-    const pending = orders.filter(
-      (o) => o.status === "pending" || o.status === "paid",
-    ).length;
-    const shipped = orders.filter((o) => o.status === "shipped").length;
-    const completed = orders.filter(
-      (o) => o.status === "completed" || o.status === "delivered",
-    ).length;
     const totalRevenue = orders
       .filter((o) => o.status !== "cancelled" && o.status !== "refunded")
       .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-    return { pending, shipped, completed, totalRevenue };
+    return { totalRevenue };
   }, [storeOrders]);
 
   const statusCounts = useMemo(() => {
     const orders = storeOrders;
     return {
       all: orders.length,
-      pending: orders.filter((o) => o.status === "pending").length,
-      paid: orders.filter((o) => o.status === "paid").length,
-      processing: orders.filter((o) => o.status === "processing").length,
-      shipped: orders.filter((o) => o.status === "shipped").length,
-      delivered: orders.filter((o) => o.status === "delivered").length,
-      completed: orders.filter((o) => o.status === "completed").length,
+      pending: orders.filter(
+        (o) => getSellerWorkflowStatus(o.status) === "pending",
+      ).length,
+      processing: orders.filter(
+        (o) => getSellerWorkflowStatus(o.status) === "processing",
+      ).length,
+      completed: orders.filter(
+        (o) => getSellerWorkflowStatus(o.status) === "completed",
+      ).length,
       cancelled: orders.filter((o) => o.status === "cancelled").length,
       refunded: orders.filter((o) => o.status === "refunded").length,
       disputed: orders.filter((o) => o.status === "disputed").length,
@@ -204,20 +208,6 @@ export function SellerOrdersPage() {
       />
 
       <div className="grid grid-cols-1 gap-2">
-        {/* <div className="rounded-2xl bg-gray-50 p-3">
-          <p className="text-xs text-gray-500">Pending</p>
-          <p className="text-lg font-semibold text-gray-900">{stats.pending}</p>
-        </div>
-        <div className="rounded-2xl bg-gray-50 p-3">
-          <p className="text-xs text-gray-500">Shipped</p>
-          <p className="text-lg font-semibold text-gray-900">{stats.shipped}</p>
-        </div>
-        <div className="rounded-2xl bg-gray-50 p-3">
-          <p className="text-xs text-gray-500">Completed</p>
-          <p className="text-lg font-semibold text-gray-900">
-            {stats.completed}
-          </p>
-        </div> */}
         <div className="rounded-md md:rounded-2xl bg-gray-50 p-3 pl-6 text-center md:text-left">
           <p className="text-xs text-gray-500">Revenue</p>
           <p className="truncate text-lg font-semibold text-gray-900">
@@ -238,9 +228,6 @@ export function SellerOrdersPage() {
       selectPlaceholder="More filters"
       selectOptions={[
         { value: "all", label: "More Filters" },
-        { value: "paid", label: "Paid" },
-        { value: "processing", label: "Processing" },
-        { value: "delivered", label: "Delivered" },
         { value: "cancelled", label: "Cancelled" },
         { value: "refunded", label: "Refunded" },
         { value: "disputed", label: "Disputed" },
@@ -344,39 +331,47 @@ export function SellerOrdersPage() {
                       {getAvailableSellerOrderActions(order).map((action) => (
                         <Button
                           key={action}
-                          size="sm"
+                          // size="sm"
                           variant={
-                            action === "cancel"
+                            action === "cancel" || action === "process"
                               ? "outline"
-                              : action === "complete"
-                                ? "outline"
-                                : "default"
+                              : "default"
                           }
                           onClick={() => handleOrderAction(order, action)}
                           className={`rounded-full w-full md:w-auto ${
-                            action === "complete"
-                              ? "text-green-600 bg-transparent"
-                              : action === "cancel"
-                                ? "text-red-600 bg-transparent"
-                                : ""
+                            action === "cancel"
+                              ? "text-red-600 bg-transparent"
+                              : ""
                           }`}
                         >
-                          {action === "ship" ? (
-                            <Truck className="mr-1 h-4 w-4" />
+                          {action === "process" ? (
+                            <Package className="mr-1 h-4 w-4" />
                           ) : null}
-                          {action === "complete" ? (
-                            <CheckCircle className="mr-1 h-4 w-4" />
+                          {action === "deliver" ? (
+                            <Truck className="mr-1 h-4 w-4" />
                           ) : null}
                           {action === "cancel" ? (
                             <XCircle className="mr-1 h-4 w-4" />
                           ) : null}
-                          {action === "ship"
-                            ? "Ship"
-                            : action === "complete"
-                              ? "Complete"
+                          {action === "process"
+                            ? "Process"
+                            : action === "deliver"
+                              ? "Delivered"
                               : "Cancel"}
                         </Button>
                       ))}
+
+                      {getSellerWorkflowStatus(order.status) === "completed" ? (
+                        <OrderReceiptActions
+                          onViewReceipt={() => {
+                            setReceiptOrder(order);
+                            setIsReceiptModalOpen(true);
+                          }}
+                          onDownloadReceipt={() =>
+                            downloadOrderReceipt(order, formatGHS)
+                          }
+                        />
+                      ) : null}
                     </div>
                   }
                 />
@@ -397,6 +392,7 @@ export function SellerOrdersPage() {
               ? getSellerActionDescription(
                   actionType,
                   selectedOrder?.orderNumber,
+                  selectedOrder?.status,
                 )
               : ""}
           </p>
@@ -414,6 +410,21 @@ export function SellerOrdersPage() {
           </div>
         </div>
       </Modal>
+
+      <SellerReceiptPreviewModal
+        isOpen={isReceiptModalOpen}
+        order={receiptOrder}
+        onClose={() => {
+          setIsReceiptModalOpen(false);
+          setReceiptOrder(null);
+        }}
+        onDownload={() => {
+          if (!receiptOrder) return;
+          downloadOrderReceipt(receiptOrder, formatGHS);
+        }}
+        formatAmount={formatGHS}
+        completionMessage="Delivery confirmed. The transaction has been completed and the receipt is ready."
+      />
     </SellerPageTemplate>
   );
 }
