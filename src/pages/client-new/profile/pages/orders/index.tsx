@@ -10,52 +10,51 @@ import { useAuthStore } from "@/stores";
 import { formatPrice } from "@/lib/utils";
 import { mockOrders, mockStores } from "@/lib/mockData";
 import type { Order, OrderStatus } from "@/types-new";
-
-// We map our backend statuses to simpler display categories for the sidebar
-type DisplayCategory = "on_shipping" | "arrived" | "canceled" | "all";
-
-const CATEGORY_MAP: Record<DisplayCategory, OrderStatus[]> = {
-  all: [],
-  on_shipping: ["pending", "paid", "processing", "shipped"],
-  arrived: ["delivered", "completed"],
-  canceled: ["cancelled", "refunded", "disputed"],
-};
-
-const getCategory = (status: OrderStatus): DisplayCategory => {
-  if (CATEGORY_MAP.on_shipping.includes(status)) return "on_shipping";
-  if (CATEGORY_MAP.arrived.includes(status)) return "arrived";
-  if (CATEGORY_MAP.canceled.includes(status)) return "canceled";
-  return "all";
-};
+import {
+  getBuyerCategory,
+  getBuyerStatusMeta,
+  type BuyerDisplayCategory,
+} from "./orderWorkflow";
 
 const getStatusBadge = (status: OrderStatus) => {
-  const cat = getCategory(status);
-  switch (cat) {
-    case "on_shipping":
+  const statusMeta = getBuyerStatusMeta(status);
+
+  switch (statusMeta.label) {
+    case "Pending Delivery":
       return (
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-600 text-xs font-medium">
-          <div className="w-1.5 h-1.5 rounded-full bg-red-600"></div>
-          On Deliver
+        <div className="flex items-center gap-1.5 rounded-full bg-yellow-50 px-2.5 py-1 text-xs font-medium text-yellow-700">
+          <div className="h-1.5 w-1.5 rounded-full bg-yellow-700" />
+          {statusMeta.label}
         </div>
       );
-    case "arrived":
+    case "Processing":
       return (
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-600 text-xs font-medium">
-          <div className="w-1.5 h-1.5 rounded-full bg-green-600"></div>
-          Arrived
+        <div className="flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700">
+          <div className="h-1.5 w-1.5 rounded-full bg-indigo-700" />
+          {statusMeta.label}
         </div>
       );
-    case "canceled":
+    case "Completed":
       return (
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">
-          <div className="w-1.5 h-1.5 rounded-full bg-gray-600"></div>
-          Canceled
+        <div className="flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
+          <div className="h-1.5 w-1.5 rounded-full bg-green-700" />
+          {statusMeta.label}
+        </div>
+      );
+    case "Cancelled":
+      return (
+        <div className="flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
+          <div className="h-1.5 w-1.5 rounded-full bg-gray-600" />
+          {statusMeta.label}
         </div>
       );
     default:
       return (
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">
-          {status}
+        <div
+          className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${statusMeta.className}`}
+        >
+          <div className="h-1.5 w-1.5 rounded-full bg-current" />
+          {statusMeta.label}
         </div>
       );
   }
@@ -70,13 +69,13 @@ function createPreviewOrders(): Order[] {
 
   const statuses: OrderStatus[] = [
     "pending",
-    "paid",
     "processing",
-    "shipped",
-    "delivered",
     "completed",
     "cancelled",
     "refunded",
+    "disputed",
+    "pending",
+    "processing",
   ];
 
   return mockOrders.slice(0, 8).map((order, index) => {
@@ -89,22 +88,17 @@ function createPreviewOrders(): Order[] {
       orderNumber: `ORD-PREVIEW-${String(index + 1).padStart(4, "0")}`,
       status,
       paidAt:
-        status === "pending"
+        status === "cancelled"
           ? null
           : new Date(baseDate.getTime() + index * 86400000).toISOString(),
       shippedAt:
-        ["pending", "paid", "processing"].includes(status) || !order.shippedAt
+        ["pending", "processing"].includes(status) || !order.shippedAt
           ? null
           : new Date(baseDate.getTime() + (index + 1) * 86400000).toISOString(),
       deliveredAt:
-        [
-          "pending",
-          "paid",
-          "processing",
-          "shipped",
-          "cancelled",
-          "refunded",
-        ].includes(status) || !order.deliveredAt
+        ["pending", "processing", "cancelled", "refunded", "disputed"].includes(
+          status,
+        ) || !order.deliveredAt
           ? null
           : new Date(baseDate.getTime() + (index + 2) * 86400000).toISOString(),
       completedAt:
@@ -121,7 +115,8 @@ function createPreviewOrders(): Order[] {
 
 export function OrdersPage() {
   const navigate = useNavigate();
-  const [activeCategory, setActiveCategory] = useState<DisplayCategory>("all");
+  const [activeCategory, setActiveCategory] =
+    useState<BuyerDisplayCategory>("all");
   const { isAuthenticated } = useAuthStore();
 
   const { data: rawOrders, isLoading } = useMyOrders();
@@ -139,13 +134,14 @@ export function OrdersPage() {
   const counts = useMemo(() => {
     return {
       all: displayOrders.length,
-      on_shipping: displayOrders.filter(
-        (o) => getCategory(o.status) === "on_shipping",
+      active: displayOrders.filter(
+        (o) => getBuyerCategory(o.status) === "active",
       ).length,
-      arrived: displayOrders.filter((o) => getCategory(o.status) === "arrived")
-        .length,
-      canceled: displayOrders.filter(
-        (o) => getCategory(o.status) === "canceled",
+      completed: displayOrders.filter(
+        (o) => getBuyerCategory(o.status) === "completed",
+      ).length,
+      issues: displayOrders.filter(
+        (o) => getBuyerCategory(o.status) === "issues",
       ).length,
     };
   }, [displayOrders]);
@@ -154,7 +150,7 @@ export function OrdersPage() {
   const filteredOrders = useMemo(() => {
     if (activeCategory === "all") return displayOrders;
     return displayOrders.filter(
-      (o) => getCategory(o.status) === activeCategory,
+      (o) => getBuyerCategory(o.status) === activeCategory,
     );
   }, [displayOrders, activeCategory]);
 
@@ -167,11 +163,15 @@ export function OrdersPage() {
     navigate(`/orders/${orderId}`);
   };
 
-  const categories: { key: DisplayCategory; label: string; count: number }[] = [
+  const categories: {
+    key: BuyerDisplayCategory;
+    label: string;
+    count: number;
+  }[] = [
     { key: "all", label: "All Orders", count: counts.all },
-    { key: "on_shipping", label: "On Shipping", count: counts.on_shipping },
-    { key: "arrived", label: "Arrived", count: counts.arrived },
-    { key: "canceled", label: "Canceled", count: counts.canceled },
+    { key: "active", label: "Active", count: counts.active },
+    { key: "completed", label: "Completed", count: counts.completed },
+    { key: "issues", label: "Issues", count: counts.issues },
   ];
 
   return (

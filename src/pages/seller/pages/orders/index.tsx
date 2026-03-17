@@ -54,17 +54,21 @@ import { OrderReceiptActions } from "./components/OrderReceiptActions";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All Orders" },
-  { value: "pending", label: "Pending" },
-  { value: "processing", label: "Processing" },
+  { value: "active", label: "Active" },
   { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
-  { value: "refunded", label: "Refunded" },
-  { value: "disputed", label: "Disputed" },
+  { value: "issues", label: "Issues" },
 ];
 
-const MAIN_FILTER_KEYS = ["all", "pending", "cancelled", "completed"] as const;
+const MAIN_FILTER_KEYS = ["all", "active", "completed", "issues"] as const;
 type MainFilterKey = (typeof MAIN_FILTER_KEYS)[number];
-type ExtraFilterKey = "all" | "cancelled" | "refunded" | "disputed";
+type ExtraFilterKey =
+  | "all"
+  | "pending"
+  | "processing"
+  | "completed"
+  | "cancelled"
+  | "refunded"
+  | "disputed";
 
 export function SellerOrdersPage() {
   const navigate = useNavigate();
@@ -99,7 +103,25 @@ export function SellerOrdersPage() {
   const filteredOrders = useMemo(() => {
     let orders = [...storeOrders];
 
-    if (effectiveFilter !== "all") {
+    if (extraFilter !== "all") {
+      orders = orders.filter(
+        (order) => getSellerWorkflowStatus(order.status) === extraFilter,
+      );
+    } else if (mainFilter === "active") {
+      orders = orders.filter((order) => {
+        const status = getSellerWorkflowStatus(order.status);
+        return status === "pending" || status === "processing";
+      });
+    } else if (mainFilter === "issues") {
+      orders = orders.filter((order) => {
+        const status = getSellerWorkflowStatus(order.status);
+        return (
+          status === "cancelled" ||
+          status === "refunded" ||
+          status === "disputed"
+        );
+      });
+    } else if (effectiveFilter !== "all") {
       orders = orders.filter(
         (order) => getSellerWorkflowStatus(order.status) === effectiveFilter,
       );
@@ -118,7 +140,7 @@ export function SellerOrdersPage() {
     }
 
     return orders;
-  }, [effectiveFilter, searchQuery, storeOrders]);
+  }, [effectiveFilter, extraFilter, mainFilter, searchQuery, storeOrders]);
 
   const handleOrderAction = (order: Order, action: SellerOrderAction) => {
     setSelectedOrder(order);
@@ -177,6 +199,10 @@ export function SellerOrdersPage() {
     const orders = storeOrders;
     return {
       all: orders.length,
+      active: orders.filter((o) => {
+        const status = getSellerWorkflowStatus(o.status);
+        return status === "pending" || status === "processing";
+      }).length,
       pending: orders.filter(
         (o) => getSellerWorkflowStatus(o.status) === "pending",
       ).length,
@@ -186,6 +212,14 @@ export function SellerOrdersPage() {
       completed: orders.filter(
         (o) => getSellerWorkflowStatus(o.status) === "completed",
       ).length,
+      issues: orders.filter((o) => {
+        const status = getSellerWorkflowStatus(o.status);
+        return (
+          status === "cancelled" ||
+          status === "refunded" ||
+          status === "disputed"
+        );
+      }).length,
       cancelled: orders.filter((o) => o.status === "cancelled").length,
       refunded: orders.filter((o) => o.status === "refunded").length,
       disputed: orders.filter((o) => o.status === "disputed").length,
@@ -235,6 +269,9 @@ export function SellerOrdersPage() {
       selectPlaceholder="More filters"
       selectOptions={[
         { value: "all", label: "More Filters" },
+        { value: "pending", label: "Pending" },
+        { value: "processing", label: "Processing" },
+        { value: "completed", label: "Completed" },
         { value: "cancelled", label: "Cancelled" },
         { value: "refunded", label: "Refunded" },
         { value: "disputed", label: "Disputed" },

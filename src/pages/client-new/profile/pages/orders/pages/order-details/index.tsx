@@ -24,89 +24,37 @@ import {
   RefreshCw,
   Ban,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/shared/Skeleton";  
+import { Skeleton } from "@/components/shared/Skeleton";
 import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
-import { Modal } from "@/components/shared/Modal"
-import {
-  useOrder,
-  useConfirmDelivery,
-  useCancelOrder,
-  useDisputeOrder,
-  useReleaseFunds,
-  usePayment,
-} from "@/hooks";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Modal } from "@/components/shared/Modal";
+import { useOrder, useCancelOrder, useDisputeOrder, usePayment } from "@/hooks";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/stores";
 import { orderKeys } from "@/hooks/useOrders";
-import { formatPrice, formatDate, getOrderStatusColor } from "@/lib/utils";
+import { formatPrice, formatDate } from "@/lib/utils";
 import type { Order, OrderStatus } from "@/types-new";
-
-const ORDER_TIMELINE: {
-  status: OrderStatus;
-  label: string;
-  description: string;
-}[] = [
-  {
-    status: "pending",
-    label: "Order Placed",
-    description: "Waiting for payment",
-  },
-  {
-    status: "paid",
-    label: "Payment Confirmed",
-    description: "Payment received securely",
-  },
-  {
-    status: "processing",
-    label: "Processing",
-    description: "Seller is preparing your order",
-  },
-  { status: "shipped", label: "Shipped", description: "Order is on the way" },
-  {
-    status: "delivered",
-    label: "Delivered",
-    description: "Order has been delivered",
-  },
-  {
-    status: "completed",
-    label: "Completed",
-    description: "Order completed successfully",
-  },
-];
-
-const getStatusStep = (status: OrderStatus): number => {
-  const steps: Record<OrderStatus, number> = {
-    pending: 0,
-    paid: 1,
-    processing: 2,
-    shipped: 3,
-    delivered: 4,
-    completed: 5,
-    cancelled: -1,
-    refunded: -1,
-    disputed: -1,
-  };
-  return steps[status] ?? 0;
-};
+import {
+  BUYER_ORDER_TIMELINE,
+  getBuyerStatusMeta,
+  getBuyerStatusStep,
+  normalizeBuyerStatus,
+} from "../../orderWorkflow";
+import {
+  downloadBuyerOrderReceipt,
+  previewBuyerOrderReceipt,
+} from "../../receipt";
 
 export function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
   const { data: order, isLoading } = useOrder(id!);
-  const confirmDelivery = useConfirmDelivery();
   const cancelOrder = useCancelOrder();
   const disputeOrder = useDisputeOrder();
-  const releaseFunds = useReleaseFunds();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const { verifyPayment } = usePayment();
@@ -175,22 +123,17 @@ export function OrderDetailPage() {
   }
 
   const displayOrder = order;
-  const currentStep = getStatusStep(displayOrder.status);
-  const canConfirmDelivery = displayOrder.status === "delivered";
-  const canCancel =
-    displayOrder.status === "pending" || displayOrder.status === "paid";
-  const canDispute =
-    displayOrder.status === "delivered" || displayOrder.status === "completed";
-  const canReview = displayOrder.status === "completed";
+  const normalizedStatus = normalizeBuyerStatus(displayOrder.status);
+  const statusMeta = getBuyerStatusMeta(displayOrder.status);
+  const currentStep = getBuyerStatusStep(displayOrder.status);
+  const canCancel = normalizedStatus === "pending";
+  const canDispute = normalizedStatus === "completed";
+  const canReview = normalizedStatus === "completed";
 
   const handleCopyOrderNumber = () => {
     navigator.clipboard.writeText(displayOrder.orderNumber);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleConfirmDelivery = async () => {
-    await confirmDelivery.mutateAsync(displayOrder.id);
   };
 
   const handleCancelOrder = async () => {
@@ -206,16 +149,6 @@ export function OrderDetailPage() {
     });
     setShowDisputeModal(false);
     setDisputeDescription("");
-  };
-
-  const handleReleaseFunds = async () => {
-    if (
-      window.confirm(
-        "Are you satisfied with the order? This will release the payment to the seller and mark the order as completed.",
-      )
-    ) {
-      await releaseFunds.mutateAsync(displayOrder.id);
-    }
   };
 
   if (!isAuthenticated) {
@@ -237,7 +170,6 @@ export function OrderDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
@@ -260,11 +192,8 @@ export function OrderDetailPage() {
             Placed on {formatDate(displayOrder.dateCreated)}
           </p>
         </div>
-        <Badge
-          className={`${getOrderStatusColor(displayOrder.status)} text-base px-4 py-2`}
-        >
-          {displayOrder.status.charAt(0).toUpperCase() +
-            displayOrder.status.slice(1)}
+        <Badge className={`${statusMeta.className} px-4 py-2 text-base`}>
+          {statusMeta.label}
         </Badge>
       </div>
 
@@ -283,7 +212,7 @@ export function OrderDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="relative">
-                    {ORDER_TIMELINE.map((step, index) => {
+                    {BUYER_ORDER_TIMELINE.map((step, index) => {
                       const isCompleted = index <= currentStep;
                       const isCurrent = index === currentStep;
 
@@ -293,7 +222,7 @@ export function OrderDetailPage() {
                           className="flex gap-4 pb-6 last:pb-0"
                         >
                           {/* Line */}
-                          {index < ORDER_TIMELINE.length - 1 && (
+                          {index < BUYER_ORDER_TIMELINE.length - 1 && (
                             <div
                               className={`absolute left-4 top-8 w-0.5 h-[calc(100%-2rem)] -translate-x-1/2 ${
                                 isCompleted ? "bg-green-500" : "bg-muted"
@@ -364,55 +293,20 @@ export function OrderDetailPage() {
             </Alert>
           )}
 
-          {/* Confirm Delivery Banner */}
-          {canConfirmDelivery && (
-            <Alert className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+          {normalizedStatus === "completed" ? (
+            <Alert className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20">
               <CheckCircle className="h-5 w-5 text-green-600" />
               <div className="flex-1">
                 <p className="font-medium text-green-800 dark:text-green-200">
-                  Have you received your order?
+                  Order completed
                 </p>
                 <p className="text-sm text-green-700 dark:text-green-300">
-                  Confirm delivery to mark it as received. You'll still have 12
-                  hours to release funds or raise a dispute.
+                  You can view or download your receipt, leave a review, or
+                  report an issue if needed.
                 </p>
               </div>
-              <Button
-                onClick={handleConfirmDelivery}
-                disabled={confirmDelivery.isPending}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                {confirmDelivery.isPending
-                  ? "Confirming..."
-                  : "Confirm Receipt"}
-              </Button>
             </Alert>
-          )}
-
-          {/* Release Funds Banner */}
-          {displayOrder.status === "delivered" && (
-            <Alert className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-              <Shield className="h-5 w-5 text-blue-600" />
-              <div className="flex-1">
-                <p className="font-medium text-blue-800 dark:text-blue-200">
-                  Satisfied with the item?
-                </p>
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  Funds are currently in escrow. You can release them now if
-                  everything is perfect.
-                </p>
-              </div>
-              <Button
-                onClick={handleReleaseFunds}
-                disabled={releaseFunds.isPending}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {releaseFunds.isPending
-                  ? "Releasing..."
-                  : "Release Funds Early"}
-              </Button>
-            </Alert>
-          )}
+          ) : null}
 
           {/* Order Items */}
           <Card>
@@ -691,6 +585,29 @@ export function OrderDetailPage() {
                   Cancel Order
                 </Button>
               )}
+
+              {normalizedStatus === "completed" ? (
+                <>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() =>
+                      previewBuyerOrderReceipt(displayOrder, formatPrice)
+                    }
+                  >
+                    View Receipt
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() =>
+                      downloadBuyerOrderReceipt(displayOrder, formatPrice)
+                    }
+                  >
+                    Download Receipt
+                  </Button>
+                </>
+              ) : null}
 
               {canDispute && (
                 <Button
