@@ -9,8 +9,8 @@ import {
 } from "@/components/ui/input-group";
 import { AuthDivider } from "@/components/ui/auth-divider";
 import { FloatingPaths } from "@/components/floating-paths";
-import campuzonLogo from "@/assets/tobra_logo.png";
-import campuzonLogoWhite from "@/assets/tobra_logo_white.png";
+import campuzonLogo from "@/assets/campuzon_logo_small.png";
+import campuzonLogoWhite from "@/assets/campuzon_logo.png";
 
 interface AuthPageProps {
   /** Override the default email-continue form with a custom form (e.g. email + password). */
