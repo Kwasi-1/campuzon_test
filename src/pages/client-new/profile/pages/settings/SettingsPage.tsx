@@ -355,7 +355,7 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="max-w7xl mx-auto py-8 space-y-6">
+    <div className=" mx-auto lg:py-8 space-y-6">
       {/* Page header */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
@@ -370,7 +370,7 @@ export function SettingsPage() {
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[450px_minmax(0,1fr)] gap-6 items-start">
-        <div className="space-y-6 lg:sticky lg:top-24">
+        <div className="space-y-6 lg:sticky lg:top-36">
           {/* ── ACCOUNT ─────────────────────────────────────────────────────── */}
           <Section title="Account" delay={0.05}>
             <Link to="/profile">

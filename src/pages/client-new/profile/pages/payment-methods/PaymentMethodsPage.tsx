@@ -168,11 +168,11 @@ export function PaymentMethodsPage() {
   ];
 
   return (
-    <div className="py-8">
+    <div className="lg:py-8">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
         <div className="space-y-1">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-gray-900">
             Payment Methods
           </h1>
           <p className="text-sm text-gray-500">Manage your payment options</p>
@@ -204,7 +204,7 @@ export function PaymentMethodsPage() {
       <div className="flex flex-col xl:flex-row gap-8 pb-12">
         {/* Sidebar Filters */}
         <div className="xl:w-64 shrink-0">
-          <div className="flex xl:flex-col gap-3 overflow-x-auto xl:overflow-visible pb-2 xl:pb-0 scrollbar-hide xl:sticky xl:top-24">
+          <div className="flex xl:flex-col lg:sticky lg:top-36 gap-3 overflow-x-auto xl:overflow-visible pb-2 xl:pb-0 scrollbar-hide xl:sticky xl:top-36">
             {sidebarCategories.map((cat) => {
               const isActive = filter === cat.key;
               return (

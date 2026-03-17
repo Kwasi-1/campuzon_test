@@ -182,7 +182,7 @@ export function NotificationsPage() {
   ];
 
   return (
-    <div className=" mx-auto py-8">
+    <div className=" mx-auto lg:py-8">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div className="space-y-1">
