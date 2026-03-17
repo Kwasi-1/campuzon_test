@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/shared/Skeleton";
+import { MessagesSkeleton, QuickStatsSkeleton, RecentOrdersSkeleton, Skeleton, StatCardsSkeleton, StoreRatingSkeleton, TopProductsSkeleton } from "@/components/shared/Skeleton";
 import { AddProductModal, WithdrawFundsModal } from "@/components/modals";
 import { useAuthStore } from "@/stores";
 import {
@@ -76,7 +76,6 @@ const statusConfig = {
     icon: XCircle,
   },
 };
-
 export function SellerDashboardPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -168,6 +167,9 @@ export function SellerDashboardPage() {
     });
   };
 
+  // Derive a single loading flag for wallet-based stat cards
+  const statsLoading = walletLoading || storeLoading;
+
   const statCards = [
     {
       title: "Available Balance",
@@ -240,108 +242,52 @@ export function SellerDashboardPage() {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-6"
       >
-        {/* <div className="hidden grid-cols-1 gap-3 sm:grid sm:grid-cols-3">
-          <Button
-            variant="outline"
-            className="justify-between rounded-2xl border-gray-200 bg-white px-4 py-5"
-            onClick={goToOrders}
-          >
-            <span className="flex items-center gap-2">
-              <ShoppingCart className="h-4 w-4" />
-              Manage Orders
-            </span>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            className="justify-between rounded-2xl border-gray-200 bg-white px-4 py-5"
-            onClick={goToProducts}
-          >
-            <span className="flex items-center gap-2">
-              <Package className="h-4 w-4" />
-              Manage Products
-            </span>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            className="justify-between rounded-2xl border-gray-200 bg-white px-4 py-5"
-            onClick={goToMessages}
-          >
-            <span className="flex items-center gap-2">
-              <Search className="h-4 w-4" />
-              Open Messages
-            </span>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div> */}
-
         {/* Stats Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {statCards.map((stat, index) => (
-            <motion.div
-              key={stat.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Card className={cardClassName}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        {stat.title}
-                      </p>
-                      <p className="text-2xl font-bold mt-1">{stat.value}</p>
-                      <div className="flex items-center gap-1 mt-2">
-                        {stat.change > 0 ? (
-                          <ArrowUpRight className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <ArrowDownRight className="h-4 w-4 text-red-600" />
-                        )}
-                        <span
-                          className={`text-sm font-medium ${stat.change > 0 ? "text-green-600" : "text-red-600"}`}
-                        >
-                          {Math.abs(stat.change)}%
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          vs last month
-                        </span>
+          {statsLoading ? (
+            <StatCardsSkeleton />
+          ) : (
+            statCards.map((stat, index) => (
+              <motion.div
+                key={stat.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card className={cardClassName}>
+                  <CardContent className="pt-6">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          {stat.title}
+                        </p>
+                        <p className="text-2xl font-bold mt-1">{stat.value}</p>
+                        <div className="flex items-center gap-1 mt-2">
+                          {stat.change > 0 ? (
+                            <ArrowUpRight className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <ArrowDownRight className="h-4 w-4 text-red-600" />
+                          )}
+                          <span
+                            className={`text-sm font-medium ${stat.change > 0 ? "text-green-600" : "text-red-600"}`}
+                          >
+                            {Math.abs(stat.change)}%
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            vs last month
+                          </span>
+                        </div>
+                      </div>
+                      <div className="h-12 w-12 rounded-full border bg-muted/60 flex items-center justify-center">
+                        <stat.icon className="h-6 w-6" />
                       </div>
                     </div>
-                    <div
-                      className={`h-12 w-12 rounded-full border bg-muted/60 flex items-center justify-center`}
-                    >
-                      <stat.icon className={`h-6 w-6`} />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))
+          )}
         </div>
-
-        {/* Quick Actions */}
-        {/* <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {quickActions.map((action) => (
-            <Link
-              key={action.label}
-              to={action.path}
-              className={`flex items-center gap-3 p-4 rounded-xl ${action.color} hover:opacity-90 transition-opacity`}
-            >
-              <action.icon className="h-5 w-5" />
-              <span className="font-medium text-sm">{action.label}</span>
-              {action.badge && (
-                <Badge
-                  variant="secondary"
-                  className="ml-auto bg-primary text-white"
-                >
-                  {action.badge}
-                </Badge>
-              )}
-            </Link>
-          ))}
-        </div> */}
 
         {/* Main Content Grid */}
         <div className="grid gap-6 lg:grid-cols-3">
@@ -362,9 +308,7 @@ export function SellerDashboardPage() {
             <CardContent>
               <div className="space-y-4 overflow-x-auto">
                 {ordersLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} className="h-16 w-full rounded-lg" />
-                  ))
+                  <RecentOrdersSkeleton />
                 ) : recentOrders.length === 0 ? (
                   <div className="text-center py-8">
                     <p className="text-sm text-muted-foreground">
@@ -438,46 +382,56 @@ export function SellerDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentMessages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className="flex cursor-pointer items-start gap-3 rounded-lg p-3 transition-colors hover:bg-muted/50"
-                    role="button"
-                    tabIndex={0}
-                    onClick={goToMessages}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        goToMessages();
-                      }
-                    }}
-                  >
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={msg.participant?.image} />
-                      <AvatarFallback>
-                        {(msg.participant?.name || "C").charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>                   
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-medium truncate">
-                          {msg.participant?.name || "Customer"}
-                        </p>
-                        {(msg.unreadCount || 0) > 0 && (
-                          <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {msg.lastMessage?.content || "No messages yet"}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatDate(
-                          msg.lastMessageAt || new Date().toISOString(),
-                        )}
-                      </p>
-                    </div>
+                {storeLoading ? (
+                  <MessagesSkeleton />
+                ) : recentMessages.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-muted-foreground">
+                      No messages yet
+                    </p>
                   </div>
-                ))}
+                ) : (
+                  recentMessages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className="flex cursor-pointer items-start gap-3 rounded-lg p-3 transition-colors hover:bg-muted/50"
+                      role="button"
+                      tabIndex={0}
+                      onClick={goToMessages}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          goToMessages();
+                        }
+                      }}
+                    >
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={msg.participant?.image} />
+                        <AvatarFallback>
+                          {(msg.participant?.name || "C").charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-medium truncate">
+                            {msg.participant?.name || "Customer"}
+                          </p>
+                          {(msg.unreadCount || 0) > 0 && (
+                            <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {msg.lastMessage?.content || "No messages yet"}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formatDate(
+                            msg.lastMessageAt || new Date().toISOString(),
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -501,90 +455,94 @@ export function SellerDashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">
-                      Product
-                    </th>
-                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">
-                      Sales
-                    </th>
-                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">
-                      Revenue
-                    </th>
-                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">
-                      Stock
-                    </th>
-                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topProducts.map((product, index) => (
-                    <tr
-                      key={product.id}
-                      className="border-b border-border last:border-0 hover:bg-muted/50"
-                    >
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm text-muted-foreground">
-                            #{index + 1}
-                          </span>
-                          <span className="font-medium">{product.name}</span>
-                        </div>
-                      </td>
-                      <td className="text-right py-3 px-4">{product.sales}</td>
-                      <td className="text-right py-3 px-4 font-medium">
-                        {formatCurrency(product.revenue)}
-                      </td>
-                      <td className="text-right py-3 px-4">
-                        <Badge
-                          variant={
-                            product.stock < 10 ? "destructive" : "secondary"
-                          }
-                        >
-                          {product.stock}{" "}
-                          <span className="hidden md:block ml-1">left</span>
-                        </Badge>
-                      </td>
-                      <td className="text-right py-3 px-4">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={goToProducts}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={goToProducts}
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </td>
+            {productsLoading ? (
+              <TopProductsSkeleton />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-3 px-4 font-medium text-muted-foreground">
+                        Product
+                      </th>
+                      <th className="text-right py-3 px-4 font-medium text-muted-foreground">
+                        Sales
+                      </th>
+                      <th className="text-right py-3 px-4 font-medium text-muted-foreground">
+                        Revenue
+                      </th>
+                      <th className="text-right py-3 px-4 font-medium text-muted-foreground">
+                        Stock
+                      </th>
+                      <th className="text-right py-3 px-4 font-medium text-muted-foreground">
+                        Actions
+                      </th>
                     </tr>
-                  ))}
-                  {topProducts.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="py-6 px-4 text-center text-sm text-muted-foreground"
+                  </thead>
+                  <tbody>
+                    {topProducts.map((product, index) => (
+                      <tr
+                        key={product.id}
+                        className="border-b border-border last:border-0 hover:bg-muted/50"
                       >
-                        No product performance data yet
-                      </td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
-            </div>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm text-muted-foreground">
+                              #{index + 1}
+                            </span>
+                            <span className="font-medium">{product.name}</span>
+                          </div>
+                        </td>
+                        <td className="text-right py-3 px-4">{product.sales}</td>
+                        <td className="text-right py-3 px-4 font-medium">
+                          {formatCurrency(product.revenue)}
+                        </td>
+                        <td className="text-right py-3 px-4">
+                          <Badge
+                            variant={
+                              product.stock < 10 ? "destructive" : "secondary"
+                            }
+                          >
+                            {product.stock}{" "}
+                            <span className="hidden md:block ml-1">left</span>
+                          </Badge>
+                        </td>
+                        <td className="text-right py-3 px-4">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={goToProducts}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={goToProducts}
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {topProducts.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="py-6 px-4 text-center text-sm text-muted-foreground"
+                        >
+                          No product performance data yet
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -596,60 +554,66 @@ export function SellerDashboardPage() {
               <CardDescription>Based on customer reviews</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-4">
-                <div className="text-5xl font-bold">4.8</div>
-                <div>
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`h-5 w-5 ${star <= 4 ? "text-yellow-400 fill-yellow-400" : "text-yellow-400 fill-yellow-400/50"}`}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Based on 156 reviews
-                  </p>
-                </div>
-              </div>
-              <div className="mt-6 space-y-2">
-                {[5, 4, 3, 2, 1].map((rating) => {
-                  const percentage =
-                    rating === 5
-                      ? 72
-                      : rating === 4
-                        ? 18
-                        : rating === 3
-                          ? 6
-                          : rating === 2
-                            ? 3
-                            : 1;
-                  const widthClass =
-                    rating === 5
-                      ? "w-[72%]"
-                      : rating === 4
-                        ? "w-[18%]"
-                        : rating === 3
-                          ? "w-[6%]"
-                          : rating === 2
-                            ? "w-[3%]"
-                            : "w-[1%]";
-                  return (
-                    <div key={rating} className="flex items-center gap-2">
-                      <span className="text-sm w-3">{rating}</span>
-                      <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                      <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className={`h-full rounded-full bg-yellow-400 ${widthClass}`}
-                        />
+              {storeLoading ? (
+                <StoreRatingSkeleton />
+              ) : (
+                <>
+                  <div className="flex items-center gap-4">
+                    <div className="text-5xl font-bold">4.8</div>
+                    <div>
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`h-5 w-5 ${star <= 4 ? "text-yellow-400 fill-yellow-400" : "text-yellow-400 fill-yellow-400/50"}`}
+                          />
+                        ))}
                       </div>
-                      <span className="text-sm text-muted-foreground w-10">
-                        {percentage}%
-                      </span>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Based on 156 reviews
+                      </p>
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                  <div className="mt-6 space-y-2">
+                    {[5, 4, 3, 2, 1].map((rating) => {
+                      const percentage =
+                        rating === 5
+                          ? 72
+                          : rating === 4
+                            ? 18
+                            : rating === 3
+                              ? 6
+                              : rating === 2
+                                ? 3
+                                : 1;
+                      const widthClass =
+                        rating === 5
+                          ? "w-[72%]"
+                          : rating === 4
+                            ? "w-[18%]"
+                            : rating === 3
+                              ? "w-[6%]"
+                              : rating === 2
+                                ? "w-[3%]"
+                                : "w-[1%]";
+                      return (
+                        <div key={rating} className="flex items-center gap-2">
+                          <span className="text-sm w-3">{rating}</span>
+                          <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                          <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                            <div
+                              className={`h-full rounded-full bg-yellow-400 ${widthClass}`}
+                            />
+                          </div>
+                          <span className="text-sm text-muted-foreground w-10">
+                            {percentage}%
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -659,54 +623,58 @@ export function SellerDashboardPage() {
               <CardDescription>Key performance indicators</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                      <TrendingUp className="h-5 w-5 text-green-600" />
+              {storeLoading ? (
+                <QuickStatsSkeleton />
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                        <TrendingUp className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Conversion Rate</p>
+                        <p className="text-sm text-muted-foreground">
+                          Visitors who made a purchase
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">Conversion Rate</p>
-                      <p className="text-sm text-muted-foreground">
-                        Visitors who made a purchase
-                      </p>
-                    </div>
+                    <span className="text-xl font-bold">3.2%</span>
                   </div>
-                  <span className="text-xl font-bold">3.2%</span>
-                </div>
 
-                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                      <DollarSign className="h-5 w-5 text-blue-600" />
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                        <DollarSign className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Average Order Value</p>
+                        <p className="text-sm text-muted-foreground">
+                          Per transaction
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">Average Order Value</p>
-                      <p className="text-sm text-muted-foreground">
-                        Per transaction
-                      </p>
-                    </div>
+                    <span className="text-xl font-bold">
+                      {formatCurrency(365)}
+                    </span>
                   </div>
-                  <span className="text-xl font-bold">
-                    {formatCurrency(365)}
-                  </span>
-                </div>
 
-                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                      <Users className="h-5 w-5 text-purple-600" />
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                        <Users className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Repeat Customers</p>
+                        <p className="text-sm text-muted-foreground">
+                          Returning buyers
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">Repeat Customers</p>
-                      <p className="text-sm text-muted-foreground">
-                        Returning buyers
-                      </p>
-                    </div>
+                    <span className="text-xl font-bold">28%</span>
                   </div>
-                  <span className="text-xl font-bold">28%</span>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
