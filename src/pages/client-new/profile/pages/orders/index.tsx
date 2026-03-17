@@ -8,11 +8,12 @@ import { OrderCard } from "@/components/shared/OrderCard";
 import { useMyOrders } from "@/hooks";
 import { useAuthStore } from "@/stores";
 import { formatPrice } from "@/lib/utils";
-import { mockOrders, mockStores } from "@/lib/mockData";
 import type { Order, OrderStatus } from "@/types-new";
 import {
+  loadBuyerPreviewOrders,
   getBuyerCategory,
   getBuyerStatusMeta,
+  USE_BUYER_PREVIEW_MOCK_DATA,
   type BuyerDisplayCategory,
 } from "./orderWorkflow";
 
@@ -60,59 +61,6 @@ const getStatusBadge = (status: OrderStatus) => {
   }
 };
 
-// Mock data preview flag
-const USE_PREVIEW_MOCK_DATA = true;
-
-// Create varied preview orders with different statuses for design testing
-function createPreviewOrders(): Order[] {
-  if (mockOrders.length === 0) return [];
-
-  const statuses: OrderStatus[] = [
-    "pending",
-    "processing",
-    "completed",
-    "cancelled",
-    "refunded",
-    "disputed",
-    "pending",
-    "processing",
-  ];
-
-  return mockOrders.slice(0, 8).map((order, index) => {
-    const status = statuses[index % statuses.length];
-    const baseDate = new Date("2024-12-15");
-
-    return {
-      ...order,
-      id: `preview-order-${index + 1}`,
-      orderNumber: `ORD-PREVIEW-${String(index + 1).padStart(4, "0")}`,
-      status,
-      paidAt:
-        status === "cancelled"
-          ? null
-          : new Date(baseDate.getTime() + index * 86400000).toISOString(),
-      shippedAt:
-        ["pending", "processing"].includes(status) || !order.shippedAt
-          ? null
-          : new Date(baseDate.getTime() + (index + 1) * 86400000).toISOString(),
-      deliveredAt:
-        ["pending", "processing", "cancelled", "refunded", "disputed"].includes(
-          status,
-        ) || !order.deliveredAt
-          ? null
-          : new Date(baseDate.getTime() + (index + 2) * 86400000).toISOString(),
-      completedAt:
-        status === "completed"
-          ? new Date(baseDate.getTime() + (index + 3) * 86400000).toISOString()
-          : null,
-      store: mockStores[index % mockStores.length],
-      deliveryAddress: `${
-        ["Room 301", "Room 302", "Room 303", "Room 304"][index % 4]
-      }, Hall ${["A", "B", "C"][index % 3]}, University Campus`,
-    };
-  });
-}
-
 export function OrdersPage() {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] =
@@ -122,11 +70,11 @@ export function OrdersPage() {
   const { data: rawOrders, isLoading } = useMyOrders();
 
   // Create preview orders for mock data mode
-  const previewOrders = useMemo(() => createPreviewOrders(), []);
+  const previewOrders = useMemo(() => loadBuyerPreviewOrders(), []);
 
   // Select between preview and API data using useMemo for stability
   const displayOrders = useMemo(
-    () => (USE_PREVIEW_MOCK_DATA ? previewOrders : rawOrders || []),
+    () => (USE_BUYER_PREVIEW_MOCK_DATA ? previewOrders : rawOrders || []),
     [previewOrders, rawOrders],
   );
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useParams,
@@ -39,9 +39,11 @@ import { formatPrice, formatDate } from "@/lib/utils";
 import type { Order, OrderStatus } from "@/types-new";
 import {
   BUYER_ORDER_TIMELINE,
+  findBuyerPreviewOrder,
   getBuyerStatusMeta,
   getBuyerStatusStep,
   normalizeBuyerStatus,
+  USE_BUYER_PREVIEW_MOCK_DATA,
 } from "../../orderWorkflow";
 import {
   downloadBuyerOrderReceipt,
@@ -53,6 +55,14 @@ export function OrderDetailPage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
   const { data: order, isLoading } = useOrder(id!);
+  const previewOrder = useMemo(
+    () => (id ? findBuyerPreviewOrder(id) : null),
+    [id],
+  );
+
+  const displayOrder = USE_BUYER_PREVIEW_MOCK_DATA ? previewOrder : order;
+  const pageLoading = USE_BUYER_PREVIEW_MOCK_DATA ? false : isLoading;
+
   const cancelOrder = useCancelOrder();
   const disputeOrder = useDisputeOrder();
 
@@ -96,7 +106,7 @@ export function OrderDetailPage() {
   // If isLoading, we return skeleton.
   // If !order, we should show "Order not found".
 
-  if (isLoading) {
+  if (pageLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="space-y-6">
@@ -108,7 +118,7 @@ export function OrderDetailPage() {
     );
   }
 
-  if (!order) {
+  if (!displayOrder) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <h1 className="text-2xl font-bold mb-4">Order Not Found</h1>
@@ -122,7 +132,6 @@ export function OrderDetailPage() {
     );
   }
 
-  const displayOrder = order;
   const normalizedStatus = normalizeBuyerStatus(displayOrder.status);
   const statusMeta = getBuyerStatusMeta(displayOrder.status);
   const currentStep = getBuyerStatusStep(displayOrder.status);
@@ -156,18 +165,6 @@ export function OrderDetailPage() {
     return null;
   }
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="space-y-6">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-48 w-full" />
-          <Skeleton className="h-64 w-full" />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
@@ -192,7 +189,7 @@ export function OrderDetailPage() {
             Placed on {formatDate(displayOrder.dateCreated)}
           </p>
         </div>
-        <Badge className={`${statusMeta.className} px-4 py-2 text-base`}>
+        <Badge className={`${statusMeta.className} font-medium px-4 py-2 text-base`}>
           {statusMeta.label}
         </Badge>
       </div>

@@ -1,4 +1,7 @@
-import type { OrderStatus } from "@/types-new";
+import { mockOrders, mockStores } from "@/lib/mockData";
+import type { Order, OrderStatus } from "@/types-new";
+
+export const USE_BUYER_PREVIEW_MOCK_DATA = true;
 
 export type BuyerDisplayCategory = "active" | "completed" | "issues" | "all";
 
@@ -111,4 +114,61 @@ export function getBuyerStatusStep(status: OrderStatus): number {
   };
 
   return steps[normalized] ?? 0;
+}
+
+export function createBuyerPreviewOrders(): Order[] {
+  if (mockOrders.length === 0) return [];
+
+  const statuses: OrderStatus[] = [
+    "pending",
+    "processing",
+    "completed",
+    "cancelled",
+    "refunded",
+    "disputed",
+    "pending",
+    "processing",
+  ];
+
+  return mockOrders.slice(0, 8).map((order, index) => {
+    const status = statuses[index % statuses.length];
+    const baseDate = new Date("2024-12-15");
+
+    return {
+      ...order,
+      id: `preview-order-${index + 1}`,
+      orderNumber: `ORD-PREVIEW-${String(index + 1).padStart(4, "0")}`,
+      status,
+      paidAt:
+        status === "cancelled"
+          ? null
+          : new Date(baseDate.getTime() + index * 86400000).toISOString(),
+      shippedAt:
+        ["pending", "processing"].includes(status) || !order.shippedAt
+          ? null
+          : new Date(baseDate.getTime() + (index + 1) * 86400000).toISOString(),
+      deliveredAt:
+        ["pending", "processing", "cancelled", "refunded", "disputed"].includes(
+          status,
+        ) || !order.deliveredAt
+          ? null
+          : new Date(baseDate.getTime() + (index + 2) * 86400000).toISOString(),
+      completedAt:
+        status === "completed"
+          ? new Date(baseDate.getTime() + (index + 3) * 86400000).toISOString()
+          : null,
+      store: mockStores[index % mockStores.length],
+      deliveryAddress: `${
+        ["Room 301", "Room 302", "Room 303", "Room 304"][index % 4]
+      }, Hall ${["A", "B", "C"][index % 3]}, University Campus`,
+    };
+  });
+}
+
+export function loadBuyerPreviewOrders(): Order[] {
+  return createBuyerPreviewOrders();
+}
+
+export function findBuyerPreviewOrder(orderId: string): Order | null {
+  return loadBuyerPreviewOrders().find((order) => order.id === orderId) || null;
 }
