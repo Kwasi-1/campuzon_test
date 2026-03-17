@@ -109,6 +109,10 @@ const App = () => (
                       {/* Seller Routes */}
                       <Route element={<SellLayout />}>
                         <Route
+                          path="/seller"
+                          element={<Navigate to="/seller/dashboard" replace />}
+                        />
+                        <Route
                           path="/seller/dashboard"
                           element={<SellerDashboardPage />}
                         />

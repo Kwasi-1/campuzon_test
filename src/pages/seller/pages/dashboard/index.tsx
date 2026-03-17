@@ -144,6 +144,14 @@ export function SellerDashboardPage() {
     setSearchParams(next);
   };
 
+  const goToOrders = () => navigate("/seller/orders");
+  const goToProducts = () => navigate("/seller/products");
+  const goToMessages = () => navigate("/seller/messages");
+
+  const openOrderDetails = (orderId: string) => {
+    navigate(`/seller/orders/${orderId}`);
+  };
+
   // Redirect if not authenticated or not a store owner
   if (!isAuthenticated || !user) {
     navigate("/login", { state: { from: "/seller/dashboard" } });
@@ -221,39 +229,75 @@ export function SellerDashboardPage() {
 
   return (
     <SellerPageTemplate
-      // title={`Welcome back, ${user.firstName}!`}
-      // description="Here's what's happening with your store today."
-      // headerActions={
-      //   <div className="flex gap-2">
-      //     <Button variant="outline" size="sm" className="rounded-full">
-      //       <Calendar className="mr-2 h-4 w-4" />
-      //       Last 30 Days
-      //     </Button>
-      //     <Button
-      //       variant="outline"
-      //       size="sm"
-      //       className="hidden rounded-full sm:flex"
-      //       onClick={() => openModal("withdraw-funds")}
-      //     >
-      //       <DollarSign className="mr-2 h-4 w-4" />
-      //       Withdraw Funds
-      //     </Button>
-      //     <Button
-      //       size="sm"
-      //       className="rounded-full"
-      //       onClick={() => openModal("add-product")}
-      //     >
-      //       <Plus className="mr-2 h-4 w-4" />
-      //       Add Product
-      //     </Button>
-      //   </div>
-      // }
+      title={`Welcome back, ${user.firstName}!`}
+      description="Here's what's happening with your store today."
+      headerActions={
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="rounded-full">
+            <Calendar className="mr-2 h-4 w-4" />
+            Last 30 Days
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="hidden rounded-full sm:flex"
+            onClick={() => openModal("withdraw-funds")}
+          >
+            <DollarSign className="mr-2 h-4 w-4" />
+            Withdraw Funds
+          </Button>
+          <Button
+            size="sm"
+            className="rounded-full"
+            onClick={() => openModal("add-product")}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Product
+          </Button>
+        </div>
+      }
     >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="space-y-6"
       >
+        <div className="hidden grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <Button
+            variant="outline"
+            className="justify-between rounded-2xl border-gray-200 bg-white px-4 py-5"
+            onClick={goToOrders}
+          >
+            <span className="flex items-center gap-2">
+              <ShoppingCart className="h-4 w-4" />
+              Manage Orders
+            </span>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="justify-between rounded-2xl border-gray-200 bg-white px-4 py-5"
+            onClick={goToProducts}
+          >
+            <span className="flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              Manage Products
+            </span>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="justify-between rounded-2xl border-gray-200 bg-white px-4 py-5"
+            onClick={goToMessages}
+          >
+            <span className="flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              Open Messages
+            </span>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+
         {/* Stats Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {statCards.map((stat, index) => (
@@ -359,7 +403,16 @@ export function SellerDashboardPage() {
                     return (
                       <div
                         key={order.id}
-                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors min-w-0"
+                        className="flex cursor-pointer items-center gap-3 rounded-lg p-3 transition-colors hover:bg-muted/50 min-w-0"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openOrderDetails(order.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            openOrderDetails(order.id);
+                          }
+                        }}
                       >
                         <div
                           className={`h-10 w-10 rounded-lg ${status.color} flex items-center justify-center shrink-0`}
@@ -410,7 +463,16 @@ export function SellerDashboardPage() {
                 {mockRecentMessages.map((msg) => (
                   <div
                     key={msg.id}
-                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                    className="flex cursor-pointer items-start gap-3 rounded-lg p-3 transition-colors hover:bg-muted/50"
+                    role="button"
+                    tabIndex={0}
+                    onClick={goToMessages}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        goToMessages();
+                      }
+                    }}
                   >
                     <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-semibold shrink-0">
                       {msg.customer.charAt(0)}
@@ -503,7 +565,8 @@ export function SellerDashboardPage() {
                             product.stock < 10 ? "destructive" : "secondary"
                           }
                         >
-                          {product.stock} <span className="hidden md:block ml-1">left</span>
+                          {product.stock}{" "}
+                          <span className="hidden md:block ml-1">left</span>
                         </Badge>
                       </td>
                       <td className="text-right py-3 px-4">
@@ -512,6 +575,7 @@ export function SellerDashboardPage() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
+                            onClick={goToProducts}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -519,6 +583,7 @@ export function SellerDashboardPage() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
+                            onClick={goToProducts}
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
