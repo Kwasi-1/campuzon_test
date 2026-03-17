@@ -33,7 +33,9 @@ export function SellerPageTemplate({
   messagesPadding = false,
 }: SellerPageTemplateProps) {
   return (
-    <div className={`relative container mx-auto ${messagesPadding ? 'px-0 md:px-4 pt-0 md:pt-2 md:pb-2' : 'px-4 py-8'} `}>
+    <div
+      className={`relative container mx-auto ${messagesPadding ? "px-0 md:px-4 pt-0 md:pt-2 md:pb-2" : "px-4 py-8"} `}
+    >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-medium tracking-tight text-gray-900">
@@ -96,7 +98,7 @@ export function SellerPageSearchFilters({
               placeholder={searchPlaceholder}
               value={searchValue}
               onChange={(event) => onSearchChange(event.target.value)}
-              className="h-10 rounded-full pl-9 pr-10"
+              className="h-10 rounded-full pl-9 pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-foreground"
             />
             <button
               type="button"
