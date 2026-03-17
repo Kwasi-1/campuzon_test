@@ -388,7 +388,7 @@ export function SellerProductsPage() {
   };
 
   const sidebar = (
-    <div className="space-y-6 xl:sticky xl:top-48">
+    <div className="space-y-4 md:space-y-6 xl:sticky xl:top-48">
       <PillSidebar
         options={[
           { key: "all", label: "All Products", count: statusCounts.all },
@@ -443,7 +443,7 @@ export function SellerProductsPage() {
             }))}
           />
           <Button
-            className="gap-2 rounded-full bg-[#1C1C1E] text-white hover:bg-black"
+            className="hidden md:flex gap-2 rounded-full bg-[#1C1C1E] text-white hover:bg-black"
             onClick={openAddProductModal}
           >
             <Plus className="h-4 w-4" />
