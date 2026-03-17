@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import {
   Eye,
   MessageCircle,
+  MoreHorizontal,
   Package,
   Phone,
   Truck,
@@ -27,6 +28,12 @@ import {
   SellerPageTemplate,
 } from "@/pages/seller/components/SellerPageTemplate";
 import { PillSidebar } from "@/components/ui/pill-sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { OrderCard } from "@/components/shared/OrderCard";
 import {
   USE_PREVIEW_MOCK_DATA,
@@ -271,6 +278,15 @@ export function SellerOrdersPage() {
           {filteredOrders.map((order, index) => {
             const statusConfig = getStatusConfig(order.status);
             const StatusIcon = statusConfig.icon;
+            const availableActions = getAvailableSellerOrderActions(order);
+            const desktopPrimaryAction = availableActions.includes("deliver")
+              ? "deliver"
+              : availableActions.includes("process")
+                ? "process"
+                : availableActions[0];
+            const desktopSecondaryActions = availableActions.filter(
+              (action) => action !== desktopPrimaryAction,
+            );
 
             return (
               <motion.div
@@ -289,12 +305,12 @@ export function SellerOrdersPage() {
                     </Badge>
                   }
                   footerActions={
-                    <div className="flex flex-wrap justify-end gap-2 w-full flex-1">
-                      <div className="flex flex-row justify-end gap-2 w-full md:w-auto">
+                    <div className="flex w-full flex-1 flex-wrap justify-end gap-2">
+                      <div className="flex w-full flex-row justify-end gap-2 md:w-auto">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="rounded-full bg-transparent w-full md:w-auto"
+                          className="w-full rounded-full bg-transparent md:w-auto"
                           onClick={() => navigate(`/seller/orders/${order.id}`)}
                         >
                           <Eye className="mr-1 h-4 w-4" />
@@ -302,12 +318,12 @@ export function SellerOrdersPage() {
                         </Button>
                         <Link
                           to={`/seller/messages?order=${order.id}`}
-                          className=" w-full md:w-auto"
+                          className="w-full md:w-auto"
                         >
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="rounded-full w-full md:w-auto"
+                            className="w-full rounded-full md:w-auto"
                           >
                             <MessageCircle className="mr-1 h-4 w-4" />
                             Chat
@@ -315,12 +331,12 @@ export function SellerOrdersPage() {
                         </Link>
                         <a
                           href={`tel:${order.shippingAddress?.phone || ""}`}
-                          className=" w-full md:w-auto"
+                          className="w-full md:w-auto"
                         >
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="rounded-full w-full md:w-auto"
+                            className="w-full rounded-full md:w-auto"
                           >
                             <Phone className="mr-1 h-4 w-4" />
                             Call
@@ -328,49 +344,161 @@ export function SellerOrdersPage() {
                         </a>
                       </div>
 
-                      {getAvailableSellerOrderActions(order).map((action) => (
-                        <Button
-                          key={action}
-                          // size="sm"
-                          variant={
-                            action === "cancel" || action === "process"
-                              ? "outline"
-                              : "default"
-                          }
-                          onClick={() => handleOrderAction(order, action)}
-                          className={`rounded-full w-full md:w-auto ${
-                            action === "cancel"
-                              ? "text-red-600 bg-transparent"
-                              : ""
-                          }`}
-                        >
-                          {action === "process" ? (
-                            <Package className="mr-1 h-4 w-4" />
-                          ) : null}
-                          {action === "deliver" ? (
-                            <Truck className="mr-1 h-4 w-4" />
-                          ) : null}
-                          {action === "cancel" ? (
-                            <XCircle className="mr-1 h-4 w-4" />
-                          ) : null}
-                          {action === "process"
-                            ? "Process"
-                            : action === "deliver"
-                              ? "Delivered"
-                              : "Cancel"}
-                        </Button>
-                      ))}
+                      <div className="flex w-full flex-col gap-2 md:hidden">
+                        {availableActions.map((action) => (
+                          <Button
+                            key={action}
+                            variant={
+                              action === "cancel" || action === "process"
+                                ? "outline"
+                                : "default"
+                            }
+                            onClick={() => handleOrderAction(order, action)}
+                            className={`w-full rounded-full ${
+                              action === "cancel"
+                                ? "bg-transparent text-red-600"
+                                : ""
+                            }`}
+                          >
+                            {action === "process" ? (
+                              <Package className="mr-1 h-4 w-4" />
+                            ) : null}
+                            {action === "deliver" ? (
+                              <Truck className="mr-1 h-4 w-4" />
+                            ) : null}
+                            {action === "cancel" ? (
+                              <XCircle className="mr-1 h-4 w-4" />
+                            ) : null}
+                            {action === "process"
+                              ? "Process"
+                              : action === "deliver"
+                                ? "Deliver"
+                                : "Cancel"}
+                          </Button>
+                        ))}
+                      </div>
+
+                      <div className="hidden md:flex md:items-center md:gap-2">
+                        {desktopPrimaryAction ? (
+                          <Button
+                            size="sm"
+                            variant={
+                              desktopPrimaryAction === "cancel" ||
+                              desktopPrimaryAction === "process"
+                                ? "outline"
+                                : "default"
+                            }
+                            onClick={() =>
+                              handleOrderAction(order, desktopPrimaryAction)
+                            }
+                            className={`rounded-full ${
+                              desktopPrimaryAction === "cancel"
+                                ? "bg-transparent text-red-600"
+                                : ""
+                            }`}
+                          >
+                            {desktopPrimaryAction === "process" ? (
+                              <Package className="mr-1 h-4 w-4" />
+                            ) : null}
+                            {desktopPrimaryAction === "deliver" ? (
+                              <Truck className="mr-1 h-4 w-4" />
+                            ) : null}
+                            {desktopPrimaryAction === "cancel" ? (
+                              <XCircle className="mr-1 h-4 w-4" />
+                            ) : null}
+                            {desktopPrimaryAction === "process"
+                              ? "Process"
+                              : desktopPrimaryAction === "deliver"
+                                ? "Deliver"
+                                : "Cancel"}
+                          </Button>
+                        ) : null}
+
+                        {desktopSecondaryActions.length > 0 ? (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="rounded-full"
+                              >
+                                <MoreHorizontal className="mr-1 h-4 w-4" />
+                                More
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                              {desktopSecondaryActions.map((action) => (
+                                <DropdownMenuItem
+                                  key={action}
+                                  onClick={() =>
+                                    handleOrderAction(order, action)
+                                  }
+                                  className={
+                                    action === "cancel"
+                                      ? "text-red-600 focus:text-red-600"
+                                      : ""
+                                  }
+                                >
+                                  {action === "process"
+                                    ? "Mark as Processing"
+                                    : null}
+                                  {action === "deliver"
+                                    ? "Confirm Delivery"
+                                    : null}
+                                  {action === "cancel" ? "Cancel Order" : null}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        ) : null}
+                      </div>
 
                       {getSellerWorkflowStatus(order.status) === "completed" ? (
-                        <OrderReceiptActions
-                          onViewReceipt={() => {
-                            setReceiptOrder(order);
-                            setIsReceiptModalOpen(true);
-                          }}
-                          onDownloadReceipt={() =>
-                            downloadOrderReceipt(order, formatGHS)
-                          }
-                        />
+                        <>
+                          <div className="w-full md:hidden">
+                            <OrderReceiptActions
+                              onViewReceipt={() => {
+                                setReceiptOrder(order);
+                                setIsReceiptModalOpen(true);
+                              }}
+                              onDownloadReceipt={() =>
+                                downloadOrderReceipt(order, formatGHS)
+                              }
+                            />
+                          </div>
+
+                          <div className="hidden md:flex md:items-center">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="rounded-full"
+                                >
+                                  <MoreHorizontal className="mr-1 h-4 w-4" />
+                                  More
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setReceiptOrder(order);
+                                    setIsReceiptModalOpen(true);
+                                  }}
+                                >
+                                  View Receipt
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    downloadOrderReceipt(order, formatGHS)
+                                  }
+                                >
+                                  Download Receipt
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </>
                       ) : null}
                     </div>
                   }
