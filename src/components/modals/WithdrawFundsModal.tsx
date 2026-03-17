@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/shared/Modal";
 import { CustomInputTextField } from "@/components/shared/text-field";
-import { useWithdrawFunds, useWallet } from "@/hooks";
+import { useSellerWallet, useSellerWithdrawFunds } from "@/hooks/useSellerPortal";
 
 interface WithdrawFundsModalProps {
   isOpen: boolean;
@@ -13,8 +13,8 @@ export function WithdrawFundsModal({
   isOpen,
   onClose,
 }: WithdrawFundsModalProps) {
-  const withdrawFunds = useWithdrawFunds();
-  const { data: wallet } = useWallet();
+  const withdrawFunds = useSellerWithdrawFunds();
+  const { data: wallet } = useSellerWallet();
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawAccountID, setWithdrawAccountID] = useState("");
 

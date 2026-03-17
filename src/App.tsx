@@ -11,17 +11,8 @@ import { WishlistProvider } from "./contexts/WishlistContext";
 import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/client-new/home-page";
 import Products from "./pages/client-new/products";
-import ProductDetail from "./pages/client/products/ProductDetail";
-import Cart from "./pages/client/orders/Cart";
-import OrderTracking from "./pages/client/orders/OrderTracking";
-import OrderHistory from "./pages/client/orders/OrderHistory";
-import Wishlist from "./pages/client/products/Wishlist";
-import Account from "./pages/client/account/Account";
-import UnifiedLogin from "./pages/auth/UnifiedLogin";
 import TwoFactorAuth from "./pages/auth/TwoFactorAuth";
-import MultiStepSignup from "./pages/auth/MultiStepSignup";
 import NotFound from "./pages/NotFound";
-import ProductSearch from "./pages/client/products/ProductSearch";
 import ContactUs from "./pages/client/contact/ContactUs";
 import FAQs from "./pages/client/contact/FAQs";
 import TermsConditions from "./pages/client/company_policy/TermsConditions";
@@ -37,7 +28,6 @@ import AdminStores from "./pages/admin/stores/AdminStores";
 import AdminProducts from "./pages/admin/products/AdminProducts";
 import AdminTransactions from "./pages/admin/transactions/AdminTransactions";
 import AdminSettings from "./pages/admin/settings/AdminSettings";
-import StoreTransactions from "./pages/store/transactions/StoreTransactions";
 import AdminNotifications from "./pages/admin/notifications/AdminNotifications";
 
 // Super Admin Portal Components
@@ -249,7 +239,6 @@ const App = () => (
                           element={<ProductDetailPage />}
                         />
                         <Route path="/cart" element={<CartPage />} />
-                        <Route path="/track" element={<OrderTracking />} />
                         <Route
                           path="/track/:orderId"
                           element={<OrderConfirmation />}
@@ -264,7 +253,6 @@ const App = () => (
                                   element={<OrderHistory />}
                                 />
                               </Route> */}
-                        <Route path="/account" element={<Account />} />
                         <Route path="/contact" element={<ContactUs />} />
                         <Route path="/faqs" element={<FAQs />} />
                         <Route path="/terms" element={<TermsConditions />} />

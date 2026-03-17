@@ -471,7 +471,7 @@ export function OrderDetailPage() {
                 {displayOrder.items?.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-4 rounded-lg border border-gray-100 bg-gray-50/70 p-3"
+                    className="flex flex-wrap items-center gap-4 rounded-lg border border-gray-100 bg-gray-50/70 p-3"
                   >
                     <Link
                       to={item.productID ? `/products/${item.productID}` : "#"}
@@ -489,7 +489,7 @@ export function OrderDetailPage() {
                         to={
                           item.productID ? `/products/${item.productID}` : "#"
                         }
-                        className="truncate text-sm font-semibold text-gray-900 hover:text-primary"
+                        className="line-clamp-1 truncate text-sm font-semibold text-gray-900 hover:text-primary"
                       >
                         {item.productName}
                       </Link>

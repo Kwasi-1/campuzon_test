@@ -27,7 +27,10 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PillSidebar } from "@/components/ui/pill-sidebar";
-import { useAutoResponder, useUpdateAutoResponder } from "@/hooks";
+import {
+  useSellerAutoResponder,
+  useSellerUpdateAutoResponder,
+} from "@/hooks/useSellerPortal";
 import { useAuthStore } from "@/stores";
 import { SellerPageTemplate } from "../../components/SellerPageTemplate";
 
@@ -80,8 +83,8 @@ const SECTION_OPTIONS = [
 export function SellerSettingsPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
-  const { data: autoResponder } = useAutoResponder();
-  const updateAutoResponder = useUpdateAutoResponder();
+  const { data: autoResponder } = useSellerAutoResponder();
+  const updateAutoResponder = useSellerUpdateAutoResponder();
 
   const [formData, setFormData] = useState(mockStoreData);
   const [activeSection, setActiveSection] = useState<SettingsSection>("all");

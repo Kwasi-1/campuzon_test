@@ -74,3 +74,6 @@ export type {
   CreateStorePayload,
   SellerStoreRecord,
 } from './sellerOnboardingService';
+
+// Export seller portal service
+export { default as sellerPortalService } from './sellerPortalService';

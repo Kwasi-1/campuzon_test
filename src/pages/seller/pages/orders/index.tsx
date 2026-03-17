@@ -16,12 +16,12 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { Modal } from "@/components/shared/Modal";
 import { useAuthStore } from "@/stores";
 import type { Order } from "@/types-new";
+import { useCurrency } from "@/hooks";
 import {
-  useCurrency,
-  useMyStore,
-  useStoreOrders,
-  useUpdateOrderStatus,
-} from "@/hooks";
+  useSellerMyStore,
+  useSellerStoreOrders,
+  useSellerUpdateOrderStatus,
+} from "@/hooks/useSellerPortal";
 import { Skeleton } from "@/components/shared/Skeleton";
 import {
   SellerPageSearchFilters,
@@ -87,11 +87,11 @@ export function SellerOrdersPage() {
   const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
 
-  const { data: store } = useMyStore();
-  const { data: apiOrders, isLoading: ordersLoading } = useStoreOrders(
+  const { data: store } = useSellerMyStore();
+  const { data: apiOrders, isLoading: ordersLoading } = useSellerStoreOrders(
     store?.id || "",
   );
-  const updateStatus = useUpdateOrderStatus();
+  const updateStatus = useSellerUpdateOrderStatus();
   const storeOrders = useMemo(
     () => (USE_PREVIEW_MOCK_DATA ? previewOrders : apiOrders || []),
     [previewOrders, apiOrders],

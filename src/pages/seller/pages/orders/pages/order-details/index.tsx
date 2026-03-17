@@ -6,7 +6,11 @@ import { Modal } from "@/components/shared/Modal";
 import { Skeleton } from "@/components/shared/Skeleton";
 import { PillSidebar } from "@/components/ui/pill-sidebar";
 import { useAuthStore } from "@/stores";
-import { useCurrency, useOrder, useUpdateOrderStatus } from "@/hooks";
+import { useCurrency } from "@/hooks";
+import {
+  useSellerOrder,
+  useSellerUpdateOrderStatus,
+} from "@/hooks/useSellerPortal";
 import { SellerPageTemplate } from "@/pages/seller/components/SellerPageTemplate";
 import type { Order } from "@/types-new";
 import { SellerOrderDetailsView } from "../../components/SellerOrderDetailsView";
@@ -224,8 +228,8 @@ function LiveSellerOrderDetailContent({ orderId }: { orderId: string }) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
   const { formatGHS } = useCurrency();
-  const { data: order, isLoading } = useOrder(orderId);
-  const updateStatus = useUpdateOrderStatus();
+  const { data: order, isLoading } = useSellerOrder(orderId);
+  const updateStatus = useSellerUpdateOrderStatus();
   const [pendingAction, setPendingAction] = useState<SellerOrderAction | null>(
     null,
   );

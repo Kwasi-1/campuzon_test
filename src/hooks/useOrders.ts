@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, extractData, extractError } from '@/lib/api';
 import type { Order, OrderStatus, CreateOrderRequest } from '@/types-new';
+import { normalizeSellerOrder, normalizeSellerOrderArray } from '@/types-new';
 import toast from 'react-hot-toast';
 
 // Query Keys
@@ -20,8 +21,11 @@ export function useMyOrders(filters?: Record<string, unknown>) {
     queryKey: orderKeys.list(filters),
     queryFn: async (): Promise<Order[]> => {
       const response = await api.get('/orders', { params: filters });
-      const data = extractData<{ orders?: Order[]; items?: Order[] } | Order[]>(response);
-      return Array.isArray(data) ? data : data.orders || data.items || [];
+      const data = extractData<{ orders?: unknown[]; items?: unknown[] } | unknown[]>(response);
+      if (Array.isArray(data)) {
+        return normalizeSellerOrderArray(data);
+      }
+      return normalizeSellerOrderArray(data.orders || data.items || []);
     },
   });
 }
@@ -32,7 +36,12 @@ export function useOrder(id: string) {
     queryKey: orderKeys.detail(id),
     queryFn: async (): Promise<Order> => {
       const response = await api.get(`/orders/${id}`);
-      return extractData<Order>(response);
+      const data = extractData<{ order?: unknown } | unknown>(response);
+      return normalizeSellerOrder(
+        data && typeof data === 'object' && 'order' in data
+          ? data.order
+          : data,
+      );
     },
     enabled: !!id,
   });
@@ -44,8 +53,11 @@ export function useStoreOrders(storeId: string) {
     queryKey: orderKeys.storeOrders(storeId),
     queryFn: async (): Promise<Order[]> => {
       const response = await api.get(`/stores/${storeId}/orders`);
-      const data = extractData<{ orders?: Order[]; items?: Order[] } | Order[]>(response);
-      return Array.isArray(data) ? data : data.orders || data.items || [];
+      const data = extractData<{ orders?: unknown[]; items?: unknown[] } | unknown[]>(response);
+      if (Array.isArray(data)) {
+        return normalizeSellerOrderArray(data);
+      }
+      return normalizeSellerOrderArray(data.orders || data.items || []);
     },
     enabled: !!storeId,
   });

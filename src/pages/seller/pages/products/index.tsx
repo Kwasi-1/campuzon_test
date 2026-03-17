@@ -26,12 +26,12 @@ import type {
 } from "@/components/modals/AddProductModal";
 import { useAuthStore } from "@/stores";
 import type { Product, ProductStatus } from "@/types-new";
+import { useCurrency } from "@/hooks";
 import {
-  useMyStore,
-  useStoreProducts,
-  useDeleteProduct,
-  useCurrency,
-} from "@/hooks";
+  useSellerDeleteProduct,
+  useSellerMyStore,
+  useSellerStoreProducts,
+} from "@/hooks/useSellerPortal";
 import { mockProducts } from "@/lib/mockData";
 import { Skeleton } from "@/components/shared/Skeleton";
 import {
@@ -180,11 +180,11 @@ export function SellerProductsPage() {
     setProductModalMode("add");
   };
 
-  const { data: store } = useMyStore();
-  const { data: storeProducts, isLoading: productsLoading } = useStoreProducts(
+  const { data: store } = useSellerMyStore();
+  const { data: storeProducts, isLoading: productsLoading } = useSellerStoreProducts(
     store?.id || "",
   );
-  const deleteProduct = useDeleteProduct();
+  const deleteProduct = useSellerDeleteProduct();
   const products = useMemo(
     () => (USE_PREVIEW_MOCK_DATA ? previewProducts : storeProducts || []),
     [previewProducts, storeProducts],

@@ -494,3 +494,5 @@ export interface ProductFilters {
 
 // Alias for ChatMessage for backwards compatibility
 export type Message = ChatMessage;
+
+export * from './seller';

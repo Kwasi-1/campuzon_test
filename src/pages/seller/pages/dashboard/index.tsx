@@ -34,11 +34,11 @@ import { Skeleton } from "@/components/shared/Skeleton";
 import { AddProductModal, WithdrawFundsModal } from "@/components/modals";
 import { useAuthStore } from "@/stores";
 import {
-  useMyStore,
-  useStoreOrders,
-  useStoreProducts,
-  useWallet,
-} from "@/hooks";
+  useSellerMyStore,
+  useSellerStoreOrders,
+  useSellerStoreProducts,
+  useSellerWallet,
+} from "@/hooks/useSellerPortal";
 import { formatPrice } from "@/lib/utils";
 import { SellerPageTemplate } from "../../components/SellerPageTemplate";
 
@@ -119,14 +119,14 @@ export function SellerDashboardPage() {
   const { user, isAuthenticated } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: store, isLoading: storeLoading } = useMyStore();
-  const { data: orders, isLoading: ordersLoading } = useStoreOrders(
+  const { data: store, isLoading: storeLoading } = useSellerMyStore();
+  const { data: orders, isLoading: ordersLoading } = useSellerStoreOrders(
     store?.id || "",
   );
-  const { data: products, isLoading: productsLoading } = useStoreProducts(
+  const { data: products, isLoading: productsLoading } = useSellerStoreProducts(
     store?.id || "",
   );
-  const { data: wallet, isLoading: walletLoading } = useWallet();
+  const { data: wallet, isLoading: walletLoading } = useSellerWallet();
 
   const activeModal = searchParams.get("modal");
   const isAddProductOpen = activeModal === "add-product";
@@ -262,7 +262,7 @@ export function SellerDashboardPage() {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-6"
       >
-        <div className="hidden grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="hidden grid-cols-1 gap-3 sm:grid sm:grid-cols-3">
           <Button
             variant="outline"
             className="justify-between rounded-2xl border-gray-200 bg-white px-4 py-5"

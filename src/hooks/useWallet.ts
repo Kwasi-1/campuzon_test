@@ -1,27 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, extractData, extractError } from '@/lib/api';
+import {
+  normalizeSellerWallet,
+  normalizeSellerWalletTransactionArray,
+  type SellerWallet,
+  type SellerWalletTransaction,
+} from '@/types-new';
 import toast from 'react-hot-toast';
-
-export interface Wallet {
-  id: string;
-  storeID: string;
-  balance: number;
-  pendingBalance: number;
-  currency: string;
-  lastWithdrawalAt: string | null;
-}
-
-export interface WalletTransaction {
-  id: string;
-  walletID: string;
-  amount: number;
-  type: 'credit' | 'debit';
-  subType: 'escrow_release' | 'withdrawal' | 'refund' | 'commission' | 'adjustment';
-  status: 'pending' | 'completed' | 'failed' | 'cancelled';
-  reference: string;
-  description: string;
-  dateCreated: string;
-}
 
 // Wallet Query Keys
 export const walletKeys = {
@@ -32,22 +17,27 @@ export const walletKeys = {
 
 // Get wallet summary (balance, etc.)
 export function useWallet() {
-  return useQuery<Wallet>({
+  return useQuery<SellerWallet>({
     queryKey: walletKeys.summary(),
-    queryFn: async (): Promise<Wallet> => {
+    queryFn: async (): Promise<SellerWallet> => {
       const response = await api.get('/store/wallet');
-      return extractData<Wallet>(response);
+      const data = extractData<unknown>(response);
+      return normalizeSellerWallet(data);
     },
   });
 }
 
 // Get wallet transactions
 export function useWalletTransactions() {
-  return useQuery<WalletTransaction[]>({
+  return useQuery<SellerWalletTransaction[]>({
     queryKey: walletKeys.transactions(),
-    queryFn: async (): Promise<WalletTransaction[]> => {
+    queryFn: async (): Promise<SellerWalletTransaction[]> => {
       const response = await api.get('/store/wallet/transactions');
-      return extractData<WalletTransaction[]>(response);
+      const data = extractData<{ items?: unknown[]; transactions?: unknown[] } | unknown[]>(response);
+      if (Array.isArray(data)) {
+        return normalizeSellerWalletTransactionArray(data);
+      }
+      return normalizeSellerWalletTransactionArray(data.items || data.transactions || []);
     },
   });
 }

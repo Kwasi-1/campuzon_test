@@ -164,7 +164,7 @@ export function SellerOrderDetailsView({
               {order.items?.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center gap-4 rounded-lg border border-gray-100 bg-gray-50/70 p-3"
+                  className="flex items-center flex-wrap gap-4 rounded-lg border border-gray-100 bg-gray-50/70 p-3"
                 >
                   <div className="h-16 w-16 overflow-hidden rounded-md border border-gray-100 bg-gray-100">
                     <img

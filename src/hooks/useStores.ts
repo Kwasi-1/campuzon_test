@@ -253,7 +253,12 @@ export function useMyStore() {
     queryKey: storeKeys.my(),
     queryFn: async (): Promise<Store> => {
       const response = await api.get('/stores/my');
-      return extractData<Store>(response);
+      const data = extractData<{ store?: unknown } | unknown>(response);
+      return normalizeStore(
+        data && typeof data === 'object' && 'store' in data
+          ? data.store
+          : data,
+      );
     },
   });
 }
