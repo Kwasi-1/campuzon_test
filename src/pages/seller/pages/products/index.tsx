@@ -404,23 +404,26 @@ export function SellerProductsPage() {
         activeKey={statusFilter}
         onChange={setStatusFilter}
       />
-
-      <div className="grid grid-cols-1 gap-3">
-        {[
-          // { label: "Total", value: statusCounts.all },
-          // { label: "Active", value: statusCounts.active },
-          // { label: "Draft", value: statusCounts.draft },
-          { label: "Low Stock", value: statusCounts.lowStock },
-        ].map(({ label, value }) => (
-          <div
-            key={label}
-            className="rounded-md md:rounded-2xl bg-gray-50 p-3 text-center md:text-left pl-6"
-          >
-            <p className="text-lg font-bold text-gray-900">{value}</p>
-            <p className="text-xs text-gray-500">{label}</p>
-          </div>
-        ))}
-      </div>
+      {statusCounts.lowStock > 0 ? (
+        <div className="grid grid-cols-1 gap-3">
+          {[
+            // { label: "Total", value: statusCounts.all },
+            // { label: "Active", value: statusCounts.active },
+            // { label: "Draft", value: statusCounts.draft },
+            { label: "Low Stock", value: statusCounts.lowStock },
+          ].map(({ label, value }) => (
+            <div
+              key={label}
+              className="rounded-md md:rounded-2xl bg-gray-50 p-3 text-center md:text-left pl-6"
+            >
+              <p className="text-lg font-bold text-gray-900">{value}</p>
+              <p className="text-xs text-gray-500">{label}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="h-3" />
+      )}
     </div>
   );
 
@@ -447,12 +450,19 @@ export function SellerProductsPage() {
             onClick={openAddProductModal}
           >
             <Plus className="h-4 w-4" />
-            Add Product
+            <span className="hidden lg:block">Add Product</span>
           </Button>
         </div>
       }
       sidebar={sidebar}
     >
+      <Button
+        variant="ghost"
+        className="absolute top-8 right-4 flex md:hidden rounded-full"
+        onClick={openAddProductModal}
+      >
+        <Plus className="h-4 w-4" />
+      </Button>
       {/* Bulk Actions */}
       {selectedProducts.length > 0 && (
         <motion.div
