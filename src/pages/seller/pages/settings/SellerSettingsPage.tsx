@@ -29,6 +29,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PillSidebar } from "@/components/ui/pill-sidebar";
 import {
   useSellerAutoResponder,
+  useSellerMyStore,
   useSellerUpdateAutoResponder,
 } from "@/hooks/useSellerPortal";
 import { useAuthStore } from "@/stores";
@@ -83,6 +84,7 @@ const SECTION_OPTIONS = [
 export function SellerSettingsPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
+  const { data: store } = useSellerMyStore();
   const { data: autoResponder } = useSellerAutoResponder();
   const updateAutoResponder = useSellerUpdateAutoResponder();
 
@@ -110,6 +112,22 @@ export function SellerSettingsPage() {
       }));
     }
   }, [autoResponder]);
+
+  useEffect(() => {
+    if (!store) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      id: store.id,
+      storeName: store.storeName || prev.storeName,
+      storeSlug: store.storeSlug || prev.storeSlug,
+      description: store.description || prev.description,
+      logo: store.logo || prev.logo,
+      banner: store.banner || prev.banner,
+      email: store.email || prev.email,
+      phoneNumber: store.phoneNumber || prev.phoneNumber,
+    }));
+  }, [store]);
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);

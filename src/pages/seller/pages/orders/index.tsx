@@ -36,21 +36,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { OrderCard } from "@/components/shared/OrderCard";
 import {
-  USE_PREVIEW_MOCK_DATA,
   applyOrderStatus,
-  applyPreviewOrderAction,
   getAvailableSellerOrderActions,
   getNextStatusForAction,
   getSellerWorkflowStatus,
   getSellerActionDescription,
   getSellerActionLabel,
   getStatusConfig,
-  loadPreviewOrders,
   type SellerOrderAction,
 } from "./orderWorkflow";
 import { downloadOrderReceipt } from "./receipt";
 import { SellerReceiptPreviewModal } from "./components/SellerReceiptPreviewModal";
 import { OrderReceiptActions } from "./components/OrderReceiptActions";
+import OrderCardSkeleton from "@/components/orders/orderCardSkeleton";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All Orders" },
@@ -74,9 +72,6 @@ export function SellerOrdersPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
   const { formatGHS } = useCurrency();
-  const [previewOrders, setPreviewOrders] = useState<Order[]>(() =>
-    loadPreviewOrders(),
-  );
 
   const [searchQuery, setSearchQuery] = useState("");
   const [mainFilter, setMainFilter] = useState<MainFilterKey>("all");
@@ -92,11 +87,8 @@ export function SellerOrdersPage() {
     store?.id || "",
   );
   const updateStatus = useSellerUpdateOrderStatus();
-  const storeOrders = useMemo(
-    () => (USE_PREVIEW_MOCK_DATA ? previewOrders : apiOrders || []),
-    [previewOrders, apiOrders],
-  );
-  const isLoading = USE_PREVIEW_MOCK_DATA ? false : ordersLoading;
+  const storeOrders = useMemo(() => apiOrders || [], [apiOrders]);
+  const isLoading = ordersLoading;
 
   const effectiveFilter = extraFilter !== "all" ? extraFilter : mainFilter;
 
@@ -161,23 +153,11 @@ export function SellerOrdersPage() {
     const shouldOpenReceipt = actionType === "deliver";
     let updatedForReceipt: Order | null = null;
 
-    if (USE_PREVIEW_MOCK_DATA) {
-      const updatedOrders = applyPreviewOrderAction(
-        previewOrders,
-        selectedOrder.id,
-        actionType,
-      );
-
-      setPreviewOrders(updatedOrders);
-      updatedForReceipt =
-        updatedOrders.find((order) => order.id === selectedOrder.id) || null;
-    } else {
-      await updateStatus.mutateAsync({
-        id: selectedOrder.id,
-        status: newStatus,
-      });
-      updatedForReceipt = applyOrderStatus(selectedOrder, newStatus);
-    }
+    await updateStatus.mutateAsync({
+      id: selectedOrder.id,
+      status: newStatus,
+    });
+    updatedForReceipt = applyOrderStatus(selectedOrder, newStatus);
 
     if (shouldOpenReceipt && updatedForReceipt) {
       setReceiptOrder(updatedForReceipt);
@@ -289,7 +269,7 @@ export function SellerOrdersPage() {
       {isLoading ? (
         <div className="space-y-6">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-[340px] w-full rounded-[28px]" />
+            <OrderCardSkeleton index={i} />
           ))}
         </div>
       ) : filteredOrders.length === 0 ? (

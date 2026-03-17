@@ -11,7 +11,6 @@ import { WishlistProvider } from "./contexts/WishlistContext";
 import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/client-new/home-page";
 import Products from "./pages/client-new/products";
-import TwoFactorAuth from "./pages/auth/TwoFactorAuth";
 import NotFound from "./pages/NotFound";
 import ContactUs from "./pages/client/contact/ContactUs";
 import FAQs from "./pages/client/contact/FAQs";
@@ -90,7 +89,6 @@ const App = () => (
                     <Routes>
                       {/* Updated Auth pages without layout */}
                       <Route path="/login" element={<Login />} />
-                      <Route path="/2fa-verify" element={<TwoFactorAuth />} />
                       <Route path="/register" element={<RegisterPage />} />
                       <Route
                         path="/become-seller"

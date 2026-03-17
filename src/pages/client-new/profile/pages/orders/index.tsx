@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Package, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/shared/Skeleton";
+import  OrderCardSkeleton  from "@/components/orders/orderCardSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { OrderCard } from "@/components/shared/OrderCard";
 import { useMyOrders } from "@/hooks";
@@ -158,22 +158,7 @@ export function OrdersPage() {
         {isLoading ? (
           <div className="space-y-6">
             {Array.from({ length: 3 }).map((_, index) => (
-              <div
-                key={index}
-                className="border border-gray-100 rounded md:rounded-3xl p-6 bg-white overflow-hidden shadow-sm"
-              >
-                <div className="flex justify-between mb-4">
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-24 rounded" />
-                    <Skeleton className="h-6 w-32 rounded" />
-                  </div>
-                  <Skeleton className="h-6 w-24 rounded-full" />
-                </div>
-                <div className="space-y-4">
-                  <Skeleton className="h-20 w-full rounded-2xl" />
-                  <Skeleton className="h-20 w-full rounded-2xl" />
-                </div>
-              </div>
+              <OrderCardSkeleton index={index} />
             ))}
           </div>
         ) : filteredOrders.length === 0 ? (

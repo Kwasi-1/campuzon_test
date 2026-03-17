@@ -39,8 +39,10 @@ import {
   useSellerStoreProducts,
   useSellerWallet,
 } from "@/hooks/useSellerPortal";
+import { useConversations } from "@/hooks/useChat";
 import { formatPrice } from "@/lib/utils";
 import { SellerPageTemplate } from "../../components/SellerPageTemplate";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 // Mock data for dashboard
 const mockStats = {
@@ -49,44 +51,6 @@ const mockStats = {
   productsChange: 0,
   customersChange: 0,
 };
-
-const mockTopProducts = [
-  { id: "1", name: "iPhone 14 Pro Max", sales: 45, revenue: 247500, stock: 12 },
-  { id: "2", name: "MacBook Air M2", sales: 28, revenue: 229600, stock: 8 },
-  { id: "3", name: "AirPods Pro", sales: 67, revenue: 56950, stock: 35 },
-  {
-    id: "4",
-    name: "Samsung Galaxy S24",
-    sales: 32,
-    revenue: 134400,
-    stock: 15,
-  },
-  { id: "5", name: 'iPad Pro 12.9"', sales: 18, revenue: 122400, stock: 6 },
-];
-
-const mockRecentMessages = [
-  {
-    id: "1",
-    customer: "Kwame Asante",
-    message: "Is the iPhone still available?",
-    time: "5 min ago",
-    unread: true,
-  },
-  {
-    id: "2",
-    customer: "Akosua Mensah",
-    message: "When will my order arrive?",
-    time: "1 hour ago",
-    unread: true,
-  },
-  {
-    id: "3",
-    customer: "Kofi Owusu",
-    message: "Thank you for the quick delivery!",
-    time: "3 hours ago",
-    unread: false,
-  },
-];
 
 const statusConfig = {
   pending: {
@@ -127,6 +91,9 @@ export function SellerDashboardPage() {
     store?.id || "",
   );
   const { data: wallet, isLoading: walletLoading } = useSellerWallet();
+  const { data: conversations = [] } = useConversations(
+    Boolean(isAuthenticated && user?.isOwner),
+  );
 
   const activeModal = searchParams.get("modal");
   const isAddProductOpen = activeModal === "add-product";
@@ -172,6 +139,17 @@ export function SellerDashboardPage() {
   };
 
   const recentOrders = orders?.slice(0, 5) || [];
+  const recentMessages = conversations.slice(0, 3);
+  const topProducts = [...(products || [])]
+    .sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0))
+    .slice(0, 5)
+    .map((product) => ({
+      id: product.id,
+      name: product.name,
+      sales: product.soldCount || 0,
+      revenue: (product.soldCount || 0) * product.price,
+      stock: product.quantity,
+    }));
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-GH", {
@@ -262,7 +240,7 @@ export function SellerDashboardPage() {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-6"
       >
-        <div className="hidden grid-cols-1 gap-3 sm:grid sm:grid-cols-3">
+        {/* <div className="hidden grid-cols-1 gap-3 sm:grid sm:grid-cols-3">
           <Button
             variant="outline"
             className="justify-between rounded-2xl border-gray-200 bg-white px-4 py-5"
@@ -296,7 +274,7 @@ export function SellerDashboardPage() {
             </span>
             <ChevronRight className="h-4 w-4" />
           </Button>
-        </div>
+        </div> */}
 
         {/* Stats Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -460,7 +438,7 @@ export function SellerDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockRecentMessages.map((msg) => (
+                {recentMessages.map((msg) => (
                   <div
                     key={msg.id}
                     className="flex cursor-pointer items-start gap-3 rounded-lg p-3 transition-colors hover:bg-muted/50"
@@ -474,25 +452,28 @@ export function SellerDashboardPage() {
                       }
                     }}
                   >
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-semibold shrink-0">
-                      {msg.customer.charAt(0)}
-                    </div>
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={msg.participant?.image} />
+                      <AvatarFallback>
+                        {(msg.participant?.name || "C").charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>                   
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p
-                          className={`font-medium truncate ${msg.unread ? "" : "text-muted-foreground"}`}
-                        >
-                          {msg.customer}
+                        <p className="font-medium truncate">
+                          {msg.participant?.name || "Customer"}
                         </p>
-                        {msg.unread && (
+                        {(msg.unreadCount || 0) > 0 && (
                           <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground truncate">
-                        {msg.message}
+                        {msg.lastMessage?.content || "No messages yet"}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {msg.time}
+                        {formatDate(
+                          msg.lastMessageAt || new Date().toISOString(),
+                        )}
                       </p>
                     </div>
                   </div>
@@ -542,7 +523,7 @@ export function SellerDashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {mockTopProducts.map((product, index) => (
+                  {topProducts.map((product, index) => (
                     <tr
                       key={product.id}
                       className="border-b border-border last:border-0 hover:bg-muted/50"
@@ -591,6 +572,16 @@ export function SellerDashboardPage() {
                       </td>
                     </tr>
                   ))}
+                  {topProducts.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="py-6 px-4 text-center text-sm text-muted-foreground"
+                      >
+                        No product performance data yet
+                      </td>
+                    </tr>
+                  ) : null}
                 </tbody>
               </table>
             </div>

@@ -184,7 +184,7 @@ export const sellerPortalService: SellerPortalService = {
     );
   },
 
-  async getStoreProducts() {
+  async getStoreProducts(_storeId?: string) {
     const response = await api.get('/store/products');
     const data = extractData<unknown>(response);
     return unwrapItems(data, ['products', 'items', 'results']).map(normalizeProduct);
@@ -206,7 +206,7 @@ export const sellerPortalService: SellerPortalService = {
     await api.delete(`/store/products/${id}`);
   },
 
-  async getStoreOrders() {
+  async getStoreOrders(_storeId?: string) {
     const response = await api.get('/store/orders');
     const data = extractData<{ orders?: unknown[]; items?: unknown[] } | unknown[]>(response);
     if (Array.isArray(data)) {

@@ -9,7 +9,7 @@ import {
 import { mockOrders } from "@/lib/mockData";
 import type { Order, OrderStatus } from "@/types-new";
 
-export const USE_PREVIEW_MOCK_DATA = true;
+export const USE_PREVIEW_MOCK_DATA = false;
 const PREVIEW_STORAGE_KEY = "seller-orders-preview-v1";
 
 export type SellerOrderAction =
@@ -124,6 +124,17 @@ export function getStatusConfig(status: OrderStatus): {
 export function getAvailableSellerOrderActions(
   order: Order,
 ): SellerOrderAction[] {
+  if (!USE_PREVIEW_MOCK_DATA) {
+    switch (getSellerWorkflowStatus(order.status)) {
+      case "pending":
+        return ["process", "deliver"];
+      case "processing":
+        return ["deliver"];
+      default:
+        return [];
+    }
+  }
+
   switch (getSellerWorkflowStatus(order.status)) {
     case "pending":
       return ["process", "deliver", "cancel"];

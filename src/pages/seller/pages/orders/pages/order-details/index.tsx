@@ -15,14 +15,10 @@ import { SellerPageTemplate } from "@/pages/seller/components/SellerPageTemplate
 import type { Order } from "@/types-new";
 import { SellerOrderDetailsView } from "../../components/SellerOrderDetailsView";
 import {
-  USE_PREVIEW_MOCK_DATA,
   applyOrderStatus,
-  applyPreviewOrderAction,
-  findPreviewOrder,
   getNextStatusForAction,
   getSellerActionDescription,
   getSellerActionLabel,
-  loadPreviewOrders,
   type SellerOrderAction,
 } from "../../orderWorkflow";
 import { SellerReceiptPreviewModal } from "../../components/SellerReceiptPreviewModal";
@@ -78,150 +74,6 @@ function useOrderSectionSidebar() {
   );
 
   return { sidebar };
-}
-
-function PreviewSellerOrderDetailContent({ orderId }: { orderId: string }) {
-  const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuthStore();
-  const { formatGHS } = useCurrency();
-  const [previewOrders, setPreviewOrders] = useState(loadPreviewOrders());
-  const [pendingAction, setPendingAction] = useState<SellerOrderAction | null>(
-    null,
-  );
-  const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
-  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
-  const { sidebar } = useOrderSectionSidebar();
-
-  const order = useMemo(
-    () =>
-      previewOrders.find((item) => item.id === orderId) ||
-      findPreviewOrder(orderId),
-    [orderId, previewOrders],
-  );
-
-  if (!isAuthenticated || !user?.isOwner) {
-    navigate("/login");
-    return null;
-  }
-
-  if (!order) {
-    return (
-      <SellerPageTemplate
-        title="Order Not Found"
-        description="The order you are looking for does not exist."
-        headerActions={
-          <Button
-            variant="outline"
-            className="rounded-full"
-            onClick={() => navigate("/seller/orders")}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Orders
-          </Button>
-        }
-      >
-        <div className="rounded-sm md:rounded-3xl border border-gray-100 bg-white p-10 text-center shadow-sm">
-          <p className="text-gray-600">
-            This preview order could not be found.
-          </p>
-        </div>
-      </SellerPageTemplate>
-    );
-  }
-
-  const confirmAction = () => {
-    if (!pendingAction) return;
-
-    const shouldOpenReceipt = pendingAction === "deliver";
-
-    setPreviewOrders((prev) => {
-      const updated = applyPreviewOrderAction(prev, order.id, pendingAction);
-      if (shouldOpenReceipt) {
-        const matched = updated.find((item) => item.id === order.id) || null;
-        setReceiptOrder(matched);
-        setIsReceiptModalOpen(true);
-      }
-      return updated;
-    });
-
-    setPendingAction(null);
-  };
-
-  return (
-    <SellerPageTemplate
-      title={`Order ${order.orderNumber}`}
-      description="Review and manage this order end to end."
-      sidebar={sidebar}
-      headerActions={
-        <Button
-          variant="outline"
-          className="rounded-full"
-          onClick={() => navigate("/seller/orders")}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Orders
-        </Button>
-      }
-    >
-      <SellerOrderDetailsView
-        order={order}
-        formatAmount={formatGHS}
-        onRequestAction={setPendingAction}
-        sectionIdPrefix={DETAIL_SECTION_PREFIX}
-        onViewReceipt={() => {
-          setReceiptOrder(order);
-          setIsReceiptModalOpen(true);
-        }}
-        onDownloadReceipt={() => downloadOrderReceipt(order, formatGHS)}
-      />
-
-      <Modal
-        isOpen={!!pendingAction}
-        onClose={() => setPendingAction(null)}
-        title={
-          pendingAction ? getSellerActionLabel(pendingAction) : "Order Action"
-        }
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600">
-            {pendingAction
-              ? getSellerActionDescription(
-                  pendingAction,
-                  order.orderNumber,
-                  order.status,
-                )
-              : ""}
-          </p>
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setPendingAction(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant={pendingAction === "cancel" ? "destructive" : "default"}
-              onClick={confirmAction}
-            >
-              {pendingAction ? getSellerActionLabel(pendingAction) : "Confirm"}
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      <SellerReceiptPreviewModal
-        isOpen={isReceiptModalOpen}
-        order={receiptOrder}
-        onClose={() => {
-          setIsReceiptModalOpen(false);
-          setReceiptOrder(null);
-        }}
-        onDownload={() => {
-          if (!receiptOrder) return;
-          downloadOrderReceipt(receiptOrder, formatGHS);
-        }}
-        formatAmount={formatGHS}
-        completionMessage="Delivery confirmed. This order is now complete and the receipt has been generated."
-      />
-    </SellerPageTemplate>
-  );
 }
 
 function LiveSellerOrderDetailContent({ orderId }: { orderId: string }) {
@@ -357,9 +209,5 @@ export function SellerOrderDetailPage() {
     return null;
   }
 
-  return USE_PREVIEW_MOCK_DATA ? (
-    <PreviewSellerOrderDetailContent orderId={orderId} />
-  ) : (
-    <LiveSellerOrderDetailContent orderId={orderId} />
-  );
+  return <LiveSellerOrderDetailContent orderId={orderId} />;
 }

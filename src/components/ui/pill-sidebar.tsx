@@ -31,7 +31,7 @@ export function PillSidebar({
             key={opt.key}
             type="button"
             onClick={() => onChange(opt.key)}
-            className={`flex items-center justify-between pl-5 pr-[2px] py-[3px] xl:py-1 xl:pr-1 rounded-full transition-all shrink-0 xl:shrink-auto whitespace-nowrap xl:whitespace-normal border shadow-sm ${
+            className={`flex items-center justify-between pl-5 pr-[2px] py-[3px] lg:py-1 lg:pr-1 rounded-full transition-all shrink-0 xl:shrink-auto whitespace-nowrap xl:whitespace-normal border shadow-sm lg:gap-6 ${
               isActive
                 ? "bg-[#1C1C1E] text-white border-[#1C1C1E]"
                 : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
@@ -40,7 +40,7 @@ export function PillSidebar({
             <span className="font-medium text-[15px]">{opt.label}</span>
             {typeof opt.count === "number" ? (
               <span
-                className={`h-10 w-10 xl:w-12 xl:h-12 ml-3 flex items-center justify-center rounded-full text-xs font-bold ${
+                className={`h-10 w-10 lg:w-12 lg:h-12 ml-3 flex items-center justify-center rounded-full text-xs font-bold ${
                   isActive ? "bg-white text-black" : "bg-gray-100 text-gray-600"
                 }`}
               >
@@ -48,7 +48,7 @@ export function PillSidebar({
               </span>
             ) : (
               <span
-                className={`h-10 w-10 xl:w-12 xl:h-12 ml-3 flex items-center justify-center rounded-full ${
+                className={`h-10 w-10 lg:w-12 lg:h-12 ml-3 flex items-center justify-center rounded-full ${
                   isActive ? "bg-white text-black" : "bg-gray-100 text-gray-600"
                 }`}
                 aria-hidden="true"

@@ -8,7 +8,6 @@ import {
   ImagePlus,
   MessageCircle,
   MoreVertical,
-  Package,
   Phone,
   Search,
   Send,
@@ -22,7 +21,15 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuthStore } from "@/stores";
 import { formatRelativeTime } from "@/lib/utils";
+import {
+  useConversations,
+  useMarkAsRead,
+  useMessages,
+  useSendMessage,
+  useUploadChatImage,
+} from "@/hooks/useChat";
 import { SellerPageTemplate } from "@/pages/seller/components/SellerPageTemplate";
+import type { ChatMessage, Conversation } from "@/types-new";
 
 type SellerConversationFilter =
   | "all"
@@ -31,235 +38,10 @@ type SellerConversationFilter =
   | "with-order"
   | "no-order";
 
-type SellerConversation = {
-  id: string;
-  customer: {
-    id: string;
-    name: string;
-    image: string | null;
-  };
-  product: {
-    id: string;
-    name: string;
-    image: string;
-    price: string;
-  } | null;
-  lastMessage: {
-    content: string;
-    timestamp: string;
-    isFromCustomer: boolean;
-  };
-  unreadCount: number;
-  hasOrder: boolean;
-  orderNumber?: string;
-  isStarred: boolean;
-};
-
-type SellerMessage = {
-  id: string;
-  sender: "customer" | "seller" | "system";
-  content: string;
-  timestamp: string;
-  isRead?: boolean;
-  imageUrl?: string;
-};
-
 type SelectedImage = {
   name: string;
   dataUrl: string;
-};
-
-const mockSellerConversations: SellerConversation[] = [
-  {
-    id: "conv-1",
-    customer: {
-      id: "user-1",
-      name: "Kwame Asante",
-      image:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100",
-    },
-    product: {
-      id: "prod-1",
-      name: "iPhone 14 Pro Max",
-      image:
-        "https://images.unsplash.com/photo-1678685888221-cda773a3dcdb?w=100",
-      price: "GHS 9,500",
-    },
-    lastMessage: {
-      content: "Is this still available? I need it urgently.",
-      timestamp: "2024-12-29T10:30:00Z",
-      isFromCustomer: true,
-    },
-    unreadCount: 2,
-    hasOrder: false,
-    isStarred: true,
-  },
-  {
-    id: "conv-2",
-    customer: {
-      id: "user-2",
-      name: "Akosua Mensah",
-      image: null,
-    },
-    product: {
-      id: "prod-2",
-      name: "AirPods Pro",
-      image:
-        "https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=100",
-      price: "GHS 2,150",
-    },
-    lastMessage: {
-      content: "I'll deliver it to Akuafo Hall by 5pm today.",
-      timestamp: "2024-12-29T09:15:00Z",
-      isFromCustomer: false,
-    },
-    unreadCount: 0,
-    hasOrder: true,
-    orderNumber: "CPZ-DEF456",
-    isStarred: false,
-  },
-  {
-    id: "conv-3",
-    customer: {
-      id: "user-3",
-      name: "Kofi Owusu",
-      image:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
-    },
-    product: {
-      id: "prod-3",
-      name: "MacBook Air M2",
-      image:
-        "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=100",
-      price: "GHS 14,800",
-    },
-    lastMessage: {
-      content: "Thank you! The laptop is amazing.",
-      timestamp: "2024-12-28T16:45:00Z",
-      isFromCustomer: true,
-    },
-    unreadCount: 0,
-    hasOrder: true,
-    orderNumber: "CPZ-GHI789",
-    isStarred: false,
-  },
-  {
-    id: "conv-4",
-    customer: {
-      id: "user-4",
-      name: "Ama Darko",
-      image: null,
-    },
-    product: {
-      id: "prod-4",
-      name: "Samsung Galaxy S24",
-      image:
-        "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=100",
-      price: "GHS 6,200",
-    },
-    lastMessage: {
-      content: "Can you do GHS 4,000 for it?",
-      timestamp: "2024-12-28T14:20:00Z",
-      isFromCustomer: true,
-    },
-    unreadCount: 1,
-    hasOrder: false,
-    isStarred: false,
-  },
-  {
-    id: "conv-5",
-    customer: {
-      id: "user-5",
-      name: "Yaw Boateng",
-      image:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100",
-    },
-    product: null,
-    lastMessage: {
-      content: "Do you have any iPhone 15 in stock?",
-      timestamp: "2024-12-27T11:00:00Z",
-      isFromCustomer: true,
-    },
-    unreadCount: 0,
-    hasOrder: false,
-    isStarred: true,
-  },
-];
-
-const initialMessagesByConversation: Record<string, SellerMessage[]> = {
-  "conv-1": [
-    {
-      id: "conv-1-msg-1",
-      sender: "customer",
-      content: "Hi, is the iPhone still available?",
-      timestamp: "2024-12-29T10:12:00Z",
-      isRead: true,
-    },
-    {
-      id: "conv-1-msg-2",
-      sender: "seller",
-      content: "Yes, it is still available and in excellent condition.",
-      timestamp: "2024-12-29T10:16:00Z",
-      isRead: true,
-    },
-    {
-      id: "conv-1-msg-3",
-      sender: "customer",
-      content: "Is this still available? I need it urgently.",
-      timestamp: "2024-12-29T10:30:00Z",
-      isRead: false,
-    },
-  ],
-  "conv-2": [
-    {
-      id: "conv-2-msg-1",
-      sender: "customer",
-      content: "Can you confirm when it will be delivered?",
-      timestamp: "2024-12-29T08:48:00Z",
-      isRead: true,
-    },
-    {
-      id: "conv-2-msg-2",
-      sender: "seller",
-      content: "I'll deliver it to Akuafo Hall by 5pm today.",
-      timestamp: "2024-12-29T09:15:00Z",
-      isRead: true,
-    },
-  ],
-  "conv-3": [
-    {
-      id: "conv-3-msg-1",
-      sender: "seller",
-      content: "Glad it arrived safely. Let me know if you need anything else.",
-      timestamp: "2024-12-28T15:58:00Z",
-      isRead: true,
-    },
-    {
-      id: "conv-3-msg-2",
-      sender: "customer",
-      content: "Thank you! The laptop is amazing.",
-      timestamp: "2024-12-28T16:45:00Z",
-      isRead: true,
-    },
-  ],
-  "conv-4": [
-    {
-      id: "conv-4-msg-1",
-      sender: "customer",
-      content: "Can you do GHS 4,000 for it?",
-      timestamp: "2024-12-28T14:20:00Z",
-      isRead: false,
-    },
-  ],
-  "conv-5": [
-    {
-      id: "conv-5-msg-1",
-      sender: "customer",
-      content: "Do you have any iPhone 15 in stock?",
-      timestamp: "2024-12-27T11:00:00Z",
-      isRead: true,
-    },
-  ],
+  file: File;
 };
 
 const FILTER_OPTIONS: Array<{
@@ -273,16 +55,49 @@ const FILTER_OPTIONS: Array<{
   { value: "no-order", label: "Without Order" },
 ];
 
+function formatAmount(value?: number | null): string {
+  if (typeof value !== "number") return "";
+  return new Intl.NumberFormat("en-GH", {
+    style: "currency",
+    currency: "GHS",
+    minimumFractionDigits: 0,
+  }).format(value);
+}
+
+function extractImageUrl(message: ChatMessage): string | null {
+  if (!message.attachments) return null;
+
+  if (message.attachments.startsWith("http")) return message.attachments;
+
+  try {
+    const parsed = JSON.parse(message.attachments) as unknown;
+    if (typeof parsed === "string" && parsed.startsWith("http")) {
+      return parsed;
+    }
+    if (Array.isArray(parsed)) {
+      const first = parsed.find(
+        (item) => typeof item === "string" && item.startsWith("http"),
+      );
+      return typeof first === "string" ? first : null;
+    }
+    if (parsed && typeof parsed === "object") {
+      const record = parsed as Record<string, unknown>;
+      const maybeUrl = record.url;
+      if (typeof maybeUrl === "string" && maybeUrl.startsWith("http")) {
+        return maybeUrl;
+      }
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 export function SellerMessagesPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
 
-  const [conversations, setConversations] = useState<SellerConversation[]>(
-    mockSellerConversations,
-  );
-  const [messagesByConversation, setMessagesByConversation] = useState(
-    initialMessagesByConversation,
-  );
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<SellerConversationFilter>("all");
   const [selectedConversationId, setSelectedConversationId] = useState<
@@ -292,49 +107,27 @@ export function SellerMessagesPage() {
   const [selectedImage, setSelectedImage] = useState<SelectedImage | null>(
     null,
   );
+  const [starredConversationIds, setStarredConversationIds] = useState<
+    Set<string>
+  >(new Set());
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const filteredConversations = useMemo(() => {
-    let nextConversations = [...conversations];
+  const { data: conversations = [] } = useConversations(
+    Boolean(isAuthenticated && user?.isOwner),
+  );
+  const { data: activeMessages = [] } = useMessages(
+    selectedConversationId || "",
+    Boolean(selectedConversationId),
+  );
+  const markAsRead = useMarkAsRead();
+  const sendMessage = useSendMessage();
+  const uploadImage = useUploadChatImage();
 
-    switch (filter) {
-      case "unread":
-        nextConversations = nextConversations.filter(
-          (conversation) => conversation.unreadCount > 0,
-        );
-        break;
-      case "starred":
-        nextConversations = nextConversations.filter(
-          (conversation) => conversation.isStarred,
-        );
-        break;
-      case "with-order":
-        nextConversations = nextConversations.filter(
-          (conversation) => conversation.hasOrder,
-        );
-        break;
-      case "no-order":
-        nextConversations = nextConversations.filter(
-          (conversation) => !conversation.hasOrder,
-        );
-        break;
-      default:
-        break;
-    }
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      nextConversations = nextConversations.filter(
-        (conversation) =>
-          conversation.customer.name.toLowerCase().includes(query) ||
-          conversation.product?.name.toLowerCase().includes(query) ||
-          conversation.lastMessage.content.toLowerCase().includes(query),
-      );
-    }
-
-    return nextConversations;
-  }, [conversations, filter, searchQuery]);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [activeMessages, selectedConversationId]);
 
   const selectedConversation = useMemo(
     () =>
@@ -344,33 +137,60 @@ export function SellerMessagesPage() {
     [conversations, selectedConversationId],
   );
 
-  const activeMessages = useMemo(() => {
-    if (!selectedConversationId) {
-      return [];
+  const filteredConversations = useMemo(() => {
+    let nextConversations = [...conversations];
+
+    switch (filter) {
+      case "unread":
+        nextConversations = nextConversations.filter(
+          (conversation) => (conversation.unreadCount || 0) > 0,
+        );
+        break;
+      case "starred":
+        nextConversations = nextConversations.filter((conversation) =>
+          starredConversationIds.has(conversation.id),
+        );
+        break;
+      case "with-order":
+        nextConversations = nextConversations.filter(
+          (conversation) => Boolean(conversation.orderID),
+        );
+        break;
+      case "no-order":
+        nextConversations = nextConversations.filter(
+          (conversation) => !conversation.orderID,
+        );
+        break;
+      default:
+        break;
     }
 
-    return messagesByConversation[selectedConversationId] || [];
-  }, [messagesByConversation, selectedConversationId]);
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      nextConversations = nextConversations.filter((conversation) => {
+        const participantName =
+          conversation.participant?.name?.toLowerCase() || "";
+        const productName = conversation.product?.name?.toLowerCase() || "";
+        const lastMessage = conversation.lastMessage?.content?.toLowerCase() || "";
+        return (
+          participantName.includes(query) ||
+          productName.includes(query) ||
+          lastMessage.includes(query)
+        );
+      });
+    }
+
+    return nextConversations;
+  }, [conversations, filter, searchQuery, starredConversationIds]);
 
   const unreadCount = conversations.filter(
-    (conversation) => conversation.unreadCount > 0,
+    (conversation) => (conversation.unreadCount || 0) > 0,
   ).length;
   const totalMessages = conversations.length;
-  const starredCount = conversations.filter(
-    (conversation) => conversation.isStarred,
-  ).length;
+  const starredCount = starredConversationIds.size;
   const withOrderCount = conversations.filter(
-    (conversation) => conversation.hasOrder,
+    (conversation) => Boolean(conversation.orderID),
   ).length;
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeMessages, selectedConversationId]);
-
-  if (!isAuthenticated || !user?.isOwner) {
-    navigate("/login");
-    return null;
-  }
 
   const getFilterCount = (value: SellerConversationFilter) => {
     switch (value) {
@@ -389,66 +209,49 @@ export function SellerMessagesPage() {
     }
   };
 
+  if (!isAuthenticated || !user?.isOwner) {
+    navigate("/login");
+    return null;
+  }
+
   const handleSelectConversation = (conversationId: string) => {
     setSelectedConversationId(conversationId);
-
-    setConversations((previousConversations) =>
-      previousConversations.map((conversation) =>
-        conversation.id === conversationId
-          ? { ...conversation, unreadCount: 0 }
-          : conversation,
-      ),
-    );
-
-    setMessagesByConversation((previousMessages) => ({
-      ...previousMessages,
-      [conversationId]: (previousMessages[conversationId] || []).map(
-        (message) =>
-          message.sender === "customer"
-            ? { ...message, isRead: true }
-            : message,
-      ),
-    }));
+    markAsRead.mutate(conversationId);
   };
 
-  const handleSendMessage = () => {
+  const toggleConversationStar = (conversationId: string) => {
+    setStarredConversationIds((previous) => {
+      const next = new Set(previous);
+      if (next.has(conversationId)) {
+        next.delete(conversationId);
+      } else {
+        next.add(conversationId);
+      }
+      return next;
+    });
+  };
+
+  const handleSendMessage = async () => {
     if (!selectedConversationId || (!newMessage.trim() && !selectedImage)) {
       return;
     }
 
-    const timestamp = new Date().toISOString();
-    const trimmedMessage = newMessage.trim();
-    const nextMessage: SellerMessage = {
-      id: `${selectedConversationId}-${Date.now()}`,
-      sender: "seller",
-      content: trimmedMessage,
-      timestamp,
-      isRead: true,
-      imageUrl: selectedImage?.dataUrl,
-    };
+    let attachmentUrl: string | undefined;
 
-    setMessagesByConversation((previousMessages) => ({
-      ...previousMessages,
-      [selectedConversationId]: [
-        ...(previousMessages[selectedConversationId] || []),
-        nextMessage,
-      ],
-    }));
+    if (selectedImage) {
+      attachmentUrl = await uploadImage.mutateAsync({
+        conversationId: selectedConversationId,
+        file: selectedImage.file,
+      });
+    }
 
-    setConversations((previousConversations) =>
-      previousConversations.map((conversation) =>
-        conversation.id === selectedConversationId
-          ? {
-              ...conversation,
-              lastMessage: {
-                content: trimmedMessage,
-                timestamp,
-                isFromCustomer: false,
-              },
-            }
-          : conversation,
-      ),
-    );
+    const content = newMessage.trim() || (attachmentUrl ? "Shared an image" : "");
+    await sendMessage.mutateAsync({
+      conversationId: selectedConversationId,
+      content,
+      type: attachmentUrl ? "image" : "text",
+      attachments: attachmentUrl ? [attachmentUrl] : [],
+    });
 
     setNewMessage("");
     setSelectedImage(null);
@@ -467,6 +270,7 @@ export function SellerMessagesPage() {
         setSelectedImage({
           name: file.name,
           dataUrl: result,
+          file,
         });
       }
     };
@@ -476,22 +280,7 @@ export function SellerMessagesPage() {
   };
 
   return (
-    <SellerPageTemplate
-      messagesPadding="true"
-      // title="Messages"
-      // description={
-      //   unreadCount > 0 ? (
-      //     <span>
-      //       <span className="font-medium text-primary">
-      //         {unreadCount} unread
-      //       </span>{" "}
-      //       · {totalMessages} total
-      //     </span>
-      //   ) : (
-      //     `${totalMessages} conversations`
-      //   )
-      // }
-    >
+    <SellerPageTemplate messagesPadding={true}>
       <div className="flex h-[calc(100vh-7rem)] md:h-[calc(100vh-16rem)] -mb-10 -mt-2 md:mb-auto md:mt-auto min-h-[500px] w-full overflow-hidden md:rounded-xl md:border bg-background md:shadow-sm md:min-h-[600px]">
         <div
           className={`w-full border-border md:flex md:min-w-[320px] md:max-w-[350px] md:flex-col md:border-r lg:min-w-[400px] lg:max-w-[450px] ${
@@ -546,75 +335,79 @@ export function SellerMessagesPage() {
                   <p>No conversations found</p>
                 </div>
               ) : (
-                filteredConversations.map((conversation) => (
-                  <button
-                    key={conversation.id}
-                    type="button"
-                    className={`mb-[2px] w-full overflow-hidden rounded-md border p-4 text-left transition-colors ${
-                      conversation.id === selectedConversationId
-                        ? "border-muted/50 bg-muted/50"
-                        : "border-transparent hover:bg-muted/40"
-                    }`}
-                    onClick={() => handleSelectConversation(conversation.id)}
-                  >
-                    <div className="flex min-w-0 items-center space-x-3">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage
-                          src={conversation.customer.image || undefined}
-                        />
-                        <AvatarFallback>
-                          {conversation.customer.name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
+                filteredConversations.map((conversation) => {
+                  const isStarred = starredConversationIds.has(conversation.id);
+                  const participantName = conversation.participant?.name || "Customer";
+                  const participantImage = conversation.participant?.image || undefined;
+                  const lastMessageContent = conversation.lastMessage?.content || "No messages yet";
+                  const lastMessageTimestamp =
+                    conversation.lastMessage?.dateCreated ||
+                    conversation.lastMessageAt ||
+                    new Date().toISOString();
+                  const isFromCustomer = conversation.lastMessage?.senderID !== user.id;
 
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <h3 className="min-w-0 flex-1 truncate font-medium text-foreground">
-                            {conversation.customer.name}
-                          </h3>
-                          <span className="max-w-[96px] truncate whitespace-nowrap text-right text-xs text-muted-foreground">
-                            {formatRelativeTime(
-                              conversation.lastMessage.timestamp,
-                            )}
-                          </span>
-                        </div>
+                  return (
+                    <button
+                      key={conversation.id}
+                      type="button"
+                      className={`mb-[2px] w-full overflow-hidden rounded-md border p-4 text-left transition-colors ${
+                        conversation.id === selectedConversationId
+                          ? "border-muted/50 bg-muted/50"
+                          : "border-transparent hover:bg-muted/40"
+                      }`}
+                      onClick={() => handleSelectConversation(conversation.id)}
+                    >
+                      <div className="flex min-w-0 items-center space-x-3">
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={participantImage} />
+                          <AvatarFallback>{participantName.charAt(0)}</AvatarFallback>
+                        </Avatar>
 
-                        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                          <Badge variant="outline" className="h-5 text-[10px]">
-                            {conversation.hasOrder ? "Order" : "Inquiry"}
-                          </Badge>
-                          {conversation.isStarred ? (
-                            <Star className="h-3.5 w-3.5 fill-yellow-500 text-yellow-500" />
-                          ) : null}
-                          {conversation.orderNumber ? (
-                            <span className="truncate">
-                              {conversation.orderNumber}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <h3 className="min-w-0 flex-1 truncate font-medium text-foreground">
+                              {participantName}
+                            </h3>
+                            <span className="max-w-[96px] truncate whitespace-nowrap text-right text-xs text-muted-foreground">
+                              {formatRelativeTime(lastMessageTimestamp)}
                             </span>
-                          ) : null}
-                        </div>
+                          </div>
 
-                        <div className="mt-1 flex items-center justify-between gap-2">
-                          <p className={` min-w-0 flex-1 truncate text-sm text-muted-foreground ${conversation.unreadCount > 0 ? "max-w-[180px] md:max-w-[190px] lg:max-w-[220px]" : "max-w-[220px]"}`}>
-                            {conversation.lastMessage.isFromCustomer
-                              ? ""
-                              : "You: "}
-                            {conversation.lastMessage.content}
-                          </p>
-                          {conversation.unreadCount > 0 ? (
-                            <Badge
-                              variant="default"
-                              className="ml-2 flex h-5 min-w-5 flex-shrink-0 items-center justify-center text-xs"
-                            >
-                              {conversation.unreadCount >= 100
-                                ? "99+"
-                                : conversation.unreadCount}
+                          <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                            <Badge variant="outline" className="h-5 text-[10px]">
+                              {conversation.orderID ? "Order" : "Inquiry"}
                             </Badge>
-                          ) : null}
+                            {isStarred ? (
+                              <Star className="h-3.5 w-3.5 fill-yellow-500 text-yellow-500" />
+                            ) : null}
+                            {conversation.orderID ? (
+                              <span className="truncate">{conversation.orderID}</span>
+                            ) : null}
+                          </div>
+
+                          <div className="mt-1 flex items-center justify-between gap-2">
+                            <p
+                              className={`min-w-0 flex-1 truncate text-sm text-muted-foreground ${(conversation.unreadCount || 0) > 0 ? "max-w-[180px] md:max-w-[190px] lg:max-w-[220px]" : "max-w-[220px]"}`}
+                            >
+                              {isFromCustomer ? "" : "You: "}
+                              {lastMessageContent}
+                            </p>
+                            {(conversation.unreadCount || 0) > 0 ? (
+                              <Badge
+                                variant="default"
+                                className="ml-2 flex h-5 min-w-5 flex-shrink-0 items-center justify-center text-xs"
+                              >
+                                {(conversation.unreadCount || 0) >= 100
+                                  ? "99+"
+                                  : conversation.unreadCount}
+                              </Badge>
+                            ) : null}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </button>
-                ))
+                    </button>
+                  );
+                })
               )}
             </div>
           </ScrollArea>
@@ -622,9 +415,7 @@ export function SellerMessagesPage() {
 
         <div
           className={`flex-1 overflow-hidden bg-muted/10 ${
-            selectedConversationId
-              ? "flex flex-col"
-              : "hidden md:flex md:flex-col"
+            selectedConversationId ? "flex flex-col" : "hidden md:flex md:flex-col"
           }`}
         >
           {selectedConversation ? (
@@ -643,37 +434,41 @@ export function SellerMessagesPage() {
 
                 <Avatar className="h-10 w-10">
                   <AvatarImage
-                    src={selectedConversation.customer.image || undefined}
+                    src={selectedConversation.participant?.image || undefined}
                   />
                   <AvatarFallback>
-                    {selectedConversation.customer.name.charAt(0)}
+                    {(selectedConversation.participant?.name || "C").charAt(0)}
                   </AvatarFallback>
                 </Avatar>
 
                 <div className="min-w-0 flex-1">
                   <h3 className="block truncate font-semibold">
-                    {selectedConversation.customer.name}
+                    {selectedConversation.participant?.name || "Customer"}
                   </h3>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Badge variant="outline" className="h-5 text-[10px]">
-                      {selectedConversation.hasOrder ? "order" : "inquiry"}
+                      {selectedConversation.orderID ? "order" : "inquiry"}
                     </Badge>
-                    {selectedConversation.orderNumber ? (
-                      <span>{selectedConversation.orderNumber}</span>
-                    ) : (
-                      <span>Direct customer chat</span>
-                    )}
+                    <span>
+                      {selectedConversation.orderID || "Direct customer chat"}
+                    </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="icon" aria-label="Call" title="Call">
+                    <Phone className="h-4 w-4" />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    aria-label="Call"
-                    title="Call"
+                    aria-label="Star conversation"
+                    title="Star conversation"
+                    onClick={() => toggleConversationStar(selectedConversation.id)}
                   >
-                    <Phone className="h-4 w-4" />
+                    <Star
+                      className={`h-4 w-4 ${starredConversationIds.has(selectedConversation.id) ? "fill-yellow-500 text-yellow-500" : ""}`}
+                    />
                   </Button>
                   <Button
                     variant="ghost"
@@ -691,19 +486,16 @@ export function SellerMessagesPage() {
                   <div className="p-2 px-4">
                     <div className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-muted/50">
                       <img
-                        src={selectedConversation.product.image}
+                        src={selectedConversation.product.thumbnail || ""}
                         alt={selectedConversation.product.name}
                         className="h-12 w-12 rounded-sm object-cover"
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">
-                          {selectedConversation.product.name}
-                        </p>
+                        <p className="truncate font-medium">{selectedConversation.product.name}</p>
                         <p className="text-sm font-semibold text-primary">
-                          {selectedConversation.product.price}
+                          {formatAmount(selectedConversation.product.price)}
                         </p>
                       </div>
-                      <Package className="h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
                 </div>
@@ -717,14 +509,15 @@ export function SellerMessagesPage() {
                 ) : (
                   <div className="space-y-4">
                     {activeMessages.map((message, index) => {
-                      const isOwnMessage = message.sender === "seller";
-                      const isSystemMessage = message.sender === "system";
+                      const isSystemMessage = message.isSystemMessage || message.messageType === "system";
+                      const isOwnMessage = !isSystemMessage && message.senderID === user.id;
                       const previousSender =
-                        index > 0 ? activeMessages[index - 1].sender : null;
+                        index > 0 ? activeMessages[index - 1].senderID : null;
                       const showAvatar =
                         !isOwnMessage &&
                         !isSystemMessage &&
-                        (index === 0 || previousSender !== message.sender);
+                        (index === 0 || previousSender !== message.senderID);
+                      const imageUrl = extractImageUrl(message);
 
                       if (isSystemMessage) {
                         return (
@@ -753,26 +546,19 @@ export function SellerMessagesPage() {
                           {!isOwnMessage && showAvatar ? (
                             <Avatar className="h-8 w-8">
                               <AvatarImage
-                                src={
-                                  selectedConversation.customer.image ||
-                                  undefined
-                                }
+                                src={selectedConversation.participant?.image || undefined}
                               />
                               <AvatarFallback>
-                                {selectedConversation.customer.name.charAt(0)}
+                                {(selectedConversation.participant?.name || "C").charAt(0)}
                               </AvatarFallback>
                             </Avatar>
                           ) : null}
 
-                          {!isOwnMessage && !showAvatar ? (
-                            <div className="w-8" />
-                          ) : null}
+                          {!isOwnMessage && !showAvatar ? <div className="w-8" /> : null}
 
                           <div
                             className={`max-w-[70%] ${
-                              isOwnMessage
-                                ? "ml-auto flex flex-col items-end"
-                                : ""
+                              isOwnMessage ? "ml-auto flex flex-col items-end" : ""
                             }`}
                           >
                             <div
@@ -782,9 +568,9 @@ export function SellerMessagesPage() {
                                   : "rounded-tl-sm bg-muted text-foreground"
                               }`}
                             >
-                              {message.imageUrl ? (
+                              {imageUrl ? (
                                 <img
-                                  src={message.imageUrl}
+                                  src={imageUrl}
                                   alt="Shared attachment"
                                   className="mb-2 max-h-[260px] max-w-[260px] rounded-md object-cover"
                                 />
@@ -799,7 +585,7 @@ export function SellerMessagesPage() {
                                     : "text-muted-foreground"
                                 }`}
                               >
-                                {formatRelativeTime(message.timestamp)}
+                                {formatRelativeTime(message.dateCreated)}
                               </p>
                             </div>
 
@@ -871,7 +657,7 @@ export function SellerMessagesPage() {
                     onKeyDown={(event) => {
                       if (event.key === "Enter") {
                         event.preventDefault();
-                        handleSendMessage();
+                        void handleSendMessage();
                       }
                     }}
                     placeholder="Reply to customer..."
@@ -879,8 +665,8 @@ export function SellerMessagesPage() {
                   />
 
                   <Button
-                    onClick={handleSendMessage}
-                    disabled={!newMessage.trim() && !selectedImage}
+                    onClick={() => void handleSendMessage()}
+                    disabled={(!newMessage.trim() && !selectedImage) || sendMessage.isPending}
                     className="flex h-10 w-10 items-center justify-center rounded-full p-0"
                   >
                     <Send className="h-4 w-4" />

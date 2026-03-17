@@ -29,10 +29,11 @@ import type { Product, ProductStatus } from "@/types-new";
 import { useCurrency } from "@/hooks";
 import {
   useSellerDeleteProduct,
+  useSellerCreateProduct,
   useSellerMyStore,
   useSellerStoreProducts,
+  useSellerUpdateProduct,
 } from "@/hooks/useSellerPortal";
-import { mockProducts } from "@/lib/mockData";
 import { Skeleton } from "@/components/shared/Skeleton";
 import {
   SellerPageSearchFilters,
@@ -53,44 +54,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-const USE_PREVIEW_MOCK_DATA = true;
-
-function createPreviewProducts(): Product[] {
-  const previewStatuses: ProductStatus[] = [
-    "active",
-    "active",
-    "draft",
-    "sold_out",
-    "paused",
-    "active",
-    "draft",
-    "active",
-    "sold_out",
-    "paused",
-    "active",
-    "active",
-  ];
-
-  return mockProducts.slice(0, 12).map((product, index) => ({
-    ...product,
-    id: `preview-${product.id}-${index}`,
-    status: previewStatuses[index % previewStatuses.length],
-    quantity:
-      previewStatuses[index % previewStatuses.length] === "sold_out"
-        ? 0
-        : previewStatuses[index % previewStatuses.length] === "paused"
-          ? Math.max(2, product.quantity)
-          : previewStatuses[index % previewStatuses.length] === "draft"
-            ? Math.max(1, Math.min(product.quantity, 4))
-            : product.quantity,
-    soldCount: (product.soldCount || 0) + index * 3,
-    viewCount: (product.viewCount || 0) + 120 + index * 37,
-    comparePrice:
-      product.comparePrice ?? (index % 2 === 0 ? product.price + 25 : null),
-    dateCreated: new Date(Date.now() - index * 86400000).toISOString(),
-  }));
-}
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest First" },
@@ -141,10 +104,6 @@ const getStatusConfig = (status: ProductStatus) => {
 export function SellerProductsPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
-  const [previewProducts, setPreviewProducts] = useState<Product[]>(() =>
-    createPreviewProducts(),
-  );
-
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
@@ -184,12 +143,11 @@ export function SellerProductsPage() {
   const { data: storeProducts, isLoading: productsLoading } = useSellerStoreProducts(
     store?.id || "",
   );
+  const createProduct = useSellerCreateProduct();
+  const updateProduct = useSellerUpdateProduct();
   const deleteProduct = useSellerDeleteProduct();
-  const products = useMemo(
-    () => (USE_PREVIEW_MOCK_DATA ? previewProducts : storeProducts || []),
-    [previewProducts, storeProducts],
-  );
-  const isLoading = USE_PREVIEW_MOCK_DATA ? false : productsLoading;
+  const products = useMemo(() => storeProducts || [], [storeProducts]);
+  const isLoading = productsLoading;
 
   const filteredProducts = useMemo(() => {
     let productsList = [...products];
@@ -266,104 +224,41 @@ export function SellerProductsPage() {
 
   const confirmDelete = async () => {
     if (productToDelete) {
-      if (USE_PREVIEW_MOCK_DATA) {
-        setPreviewProducts((prev) =>
-          prev.filter((item) => item.id !== productToDelete.id),
-        );
-      } else {
-        await deleteProduct.mutateAsync(productToDelete.id);
-      }
+      await deleteProduct.mutateAsync(productToDelete.id);
       setDeleteModalOpen(false);
       setProductToDelete(null);
     }
   };
 
-  const handlePreviewProductSave = async ({
+  const handleProductSave = async ({
     mode,
     productId,
+    productFiles,
     formData,
   }: AddProductModalSavePayload) => {
-    if (!USE_PREVIEW_MOCK_DATA) return;
+    const data = new FormData();
+    data.append("name", formData.name);
+    data.append("description", formData.description);
+    data.append("price", formData.price);
+    if (formData.comparePrice) data.append("compare_price", formData.comparePrice);
+    data.append("quantity", formData.quantity);
+    data.append("min_order_quantity", formData.minOrderQuantity || "1");
+    if (formData.maxOrderQuantity) {
+      data.append("max_order_quantity", formData.maxOrderQuantity);
+    }
+    data.append("category", formData.category);
+    data.append("status", formData.status);
+    data.append("is_featured", String(formData.isFeatured));
+    formData.tags.forEach((tag) => data.append("tags[]", tag));
+    productFiles.forEach((file) => data.append("images", file));
 
     if (mode === "add") {
-      const id = `preview-generated-${Date.now()}`;
-      const slug = formData.name
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9\s-]/g, "")
-        .replace(/\s+/g, "-")
-        .replace(/-+/g, "-");
-
-      const newProduct: Product = {
-        id,
-        storeID: store?.id || "preview-store",
-        name: formData.name,
-        slug: slug || id,
-        description: formData.description,
-        price: Number(formData.price),
-        comparePrice: formData.comparePrice
-          ? Number(formData.comparePrice)
-          : null,
-        quantity: Number(formData.quantity),
-        minOrderQuantity: Number(formData.minOrderQuantity) || 1,
-        maxOrderQuantity: formData.maxOrderQuantity
-          ? Number(formData.maxOrderQuantity)
-          : null,
-        images: formData.images,
-        thumbnail: formData.images[0] || null,
-        category: formData.category as Product["category"],
-        tags: formData.tags,
-        status: formData.status,
-        isActive: formData.status === "active",
-        isFeatured: formData.isFeatured,
-        rating: null,
-        reviewCount: 0,
-        soldCount: 0,
-        viewCount: 0,
-        dateCreated: new Date().toISOString(),
-      };
-
-      setPreviewProducts((prev) => [newProduct, ...prev]);
+      await createProduct.mutateAsync(data);
       return;
     }
 
     if (!productId) return;
-
-    setPreviewProducts((prev) =>
-      prev.map((item) => {
-        if (item.id !== productId) return item;
-
-        if (mode === "view") {
-          return {
-            ...item,
-            status: formData.status,
-            isActive: formData.status === "active",
-          };
-        }
-
-        return {
-          ...item,
-          name: formData.name,
-          description: formData.description,
-          price: Number(formData.price),
-          comparePrice: formData.comparePrice
-            ? Number(formData.comparePrice)
-            : null,
-          quantity: Number(formData.quantity),
-          minOrderQuantity: Number(formData.minOrderQuantity) || 1,
-          maxOrderQuantity: formData.maxOrderQuantity
-            ? Number(formData.maxOrderQuantity)
-            : null,
-          category: formData.category as Product["category"],
-          tags: formData.tags,
-          images: formData.images,
-          thumbnail: formData.images[0] || item.thumbnail,
-          status: formData.status,
-          isFeatured: formData.isFeatured,
-          isActive: formData.status === "active",
-        };
-      }),
-    );
+    await updateProduct.mutateAsync({ id: productId, data });
   };
 
   const toggleProductSelection = (productId: string) => {
@@ -422,7 +317,7 @@ export function SellerProductsPage() {
           ))}
         </div>
       ) : (
-        <div className="h-3" />
+        <div className="h-3 md:h-0 md:hidden" />
       )}
     </div>
   );
@@ -496,7 +391,7 @@ export function SellerProductsPage() {
           </div>
         </div>
       ) : filteredProducts.length === 0 ? (
-        <div className="border border-gray-100 bg-white rounded-[28px] overflow-hidden shadow-sm">
+        <div className="border border-gray-100 bg-white rounded-md md:rounded-3xl overflow-hidden shadow-sm">
           <div className="text-center py-16 flex flex-col justify-center h-full items-center">
             <EmptyState
               icon={<Package className="h-16 w-16" />}
@@ -679,7 +574,7 @@ export function SellerProductsPage() {
         onClose={closeProductModal}
         mode={productModalMode}
         product={selectedProduct}
-        onSave={USE_PREVIEW_MOCK_DATA ? handlePreviewProductSave : undefined}
+        onSave={handleProductSave}
       />
 
       {/* Delete Confirmation Modal */}
