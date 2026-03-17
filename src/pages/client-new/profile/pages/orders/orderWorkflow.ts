@@ -2,6 +2,7 @@ import { mockOrders, mockStores } from "@/lib/mockData";
 import type { Order, OrderStatus } from "@/types-new";
 
 export const USE_BUYER_PREVIEW_MOCK_DATA = true;
+const BUYER_PREVIEW_STORAGE_KEY = "buyer-orders-preview-v1";
 
 export type BuyerDisplayCategory = "active" | "completed" | "issues" | "all";
 
@@ -166,9 +167,68 @@ export function createBuyerPreviewOrders(): Order[] {
 }
 
 export function loadBuyerPreviewOrders(): Order[] {
-  return createBuyerPreviewOrders();
+  if (!canUseStorage()) {
+    return createBuyerPreviewOrders();
+  }
+
+  const stored = window.localStorage.getItem(BUYER_PREVIEW_STORAGE_KEY);
+  if (!stored) {
+    const initial = createBuyerPreviewOrders();
+    saveBuyerPreviewOrders(initial);
+    return initial;
+  }
+
+  try {
+    const parsed = JSON.parse(stored) as Order[];
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed;
+    }
+  } catch {
+    // Fall through to seed new preview data
+  }
+
+  const initial = createBuyerPreviewOrders();
+  saveBuyerPreviewOrders(initial);
+  return initial;
 }
 
 export function findBuyerPreviewOrder(orderId: string): Order | null {
   return loadBuyerPreviewOrders().find((order) => order.id === orderId) || null;
+}
+
+export function saveBuyerPreviewOrders(orders: Order[]) {
+  if (!canUseStorage()) return;
+  window.localStorage.setItem(BUYER_PREVIEW_STORAGE_KEY, JSON.stringify(orders));
+}
+
+export function applyBuyerPreviewOrderStatus(
+  orders: Order[],
+  orderId: string,
+  nextStatus: OrderStatus,
+): Order[] {
+  const timestamp = new Date().toISOString();
+
+  const updatedOrders = orders.map((order) => {
+    if (order.id !== orderId) return order;
+
+    return {
+      ...order,
+      status: nextStatus,
+      paidAt: order.paidAt || timestamp,
+      deliveredAt:
+        nextStatus === "completed" ? order.deliveredAt || timestamp : order.deliveredAt,
+      completedAt:
+        nextStatus === "completed" ? order.completedAt || timestamp : order.completedAt,
+    };
+  });
+
+  saveBuyerPreviewOrders(updatedOrders);
+  return updatedOrders;
+}
+
+function canUseStorage() {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.localStorage !== "undefined"
+  );
 }

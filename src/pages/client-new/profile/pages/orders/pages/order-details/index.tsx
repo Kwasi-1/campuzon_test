@@ -38,8 +38,9 @@ import { orderKeys } from "@/hooks/useOrders";
 import { formatPrice, formatDate } from "@/lib/utils";
 import type { Order, OrderStatus } from "@/types-new";
 import {
+  applyBuyerPreviewOrderStatus,
+  loadBuyerPreviewOrders,
   BUYER_ORDER_TIMELINE,
-  findBuyerPreviewOrder,
   getBuyerStatusMeta,
   getBuyerStatusStep,
   normalizeBuyerStatus,
@@ -55,10 +56,13 @@ export function OrderDetailPage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
   const { data: order, isLoading } = useOrder(id!);
-  const previewOrder = useMemo(
-    () => (id ? findBuyerPreviewOrder(id) : null),
-    [id],
+  const [previewOrders, setPreviewOrders] = useState<Order[]>(() =>
+    loadBuyerPreviewOrders(),
   );
+  const previewOrder = useMemo(() => {
+    if (!id) return null;
+    return previewOrders.find((item) => item.id === id) || null;
+  }, [id, previewOrders]);
 
   const displayOrder = USE_BUYER_PREVIEW_MOCK_DATA ? previewOrder : order;
   const pageLoading = USE_BUYER_PREVIEW_MOCK_DATA ? false : isLoading;
@@ -146,16 +150,32 @@ export function OrderDetailPage() {
   };
 
   const handleCancelOrder = async () => {
-    await cancelOrder.mutateAsync(displayOrder.id);
+    if (USE_BUYER_PREVIEW_MOCK_DATA) {
+      setPreviewOrders((prev) =>
+        applyBuyerPreviewOrderStatus(prev, displayOrder.id, "cancelled"),
+      );
+      toast.success("Order cancelled.");
+    } else {
+      await cancelOrder.mutateAsync(displayOrder.id);
+    }
+
     setShowCancelModal(false);
   };
 
   const handleDisputeOrder = async () => {
-    await disputeOrder.mutateAsync({
-      orderId: displayOrder.id,
-      reason: disputeReason,
-      description: disputeDescription,
-    });
+    if (USE_BUYER_PREVIEW_MOCK_DATA) {
+      setPreviewOrders((prev) =>
+        applyBuyerPreviewOrderStatus(prev, displayOrder.id, "disputed"),
+      );
+      toast.success("Dispute submitted.");
+    } else {
+      await disputeOrder.mutateAsync({
+        orderId: displayOrder.id,
+        reason: disputeReason,
+        description: disputeDescription,
+      });
+    }
+
     setShowDisputeModal(false);
     setDisputeDescription("");
   };
@@ -189,7 +209,9 @@ export function OrderDetailPage() {
             Placed on {formatDate(displayOrder.dateCreated)}
           </p>
         </div>
-        <Badge className={`${statusMeta.className} font-medium px-4 py-2 text-base`}>
+        <Badge
+          className={`${statusMeta.className} font-medium px-4 py-2 text-base`}
+        >
           {statusMeta.label}
         </Badge>
       </div>
@@ -639,9 +661,11 @@ export function OrderDetailPage() {
             <Button
               variant="destructive"
               onClick={handleCancelOrder}
-              disabled={cancelOrder.isPending}
+              disabled={!USE_BUYER_PREVIEW_MOCK_DATA && cancelOrder.isPending}
             >
-              {cancelOrder.isPending ? "Cancelling..." : "Cancel Order"}
+              {!USE_BUYER_PREVIEW_MOCK_DATA && cancelOrder.isPending
+                ? "Cancelling..."
+                : "Cancel Order"}
             </Button>
           </div>
         </div>
@@ -695,9 +719,14 @@ export function OrderDetailPage() {
             </Button>
             <Button
               onClick={handleDisputeOrder}
-              disabled={!disputeDescription.trim() || disputeOrder.isPending}
+              disabled={
+                !disputeDescription.trim() ||
+                (!USE_BUYER_PREVIEW_MOCK_DATA && disputeOrder.isPending)
+              }
             >
-              {disputeOrder.isPending ? "Submitting..." : "Submit Dispute"}
+              {!USE_BUYER_PREVIEW_MOCK_DATA && disputeOrder.isPending
+                ? "Submitting..."
+                : "Submit Dispute"}
             </Button>
           </div>
         </div>

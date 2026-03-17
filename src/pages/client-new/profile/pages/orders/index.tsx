@@ -65,12 +65,10 @@ export function OrdersPage() {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] =
     useState<BuyerDisplayCategory>("all");
+  const [previewOrders] = useState<Order[]>(() => loadBuyerPreviewOrders());
   const { isAuthenticated } = useAuthStore();
 
   const { data: rawOrders, isLoading } = useMyOrders();
-
-  // Create preview orders for mock data mode
-  const previewOrders = useMemo(() => loadBuyerPreviewOrders(), []);
 
   // Select between preview and API data using useMemo for stability
   const displayOrders = useMemo(
