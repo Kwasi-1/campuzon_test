@@ -91,10 +91,10 @@ export function SellLayout() {
               <img src={logo} alt="Campuzon" className="h-12 w-auto" />
             </Link>
 
-              {store?.name && (
-                <div className="hidden md:flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+              {store?.storeName && (
+                <div className="hidden md:flex lg:hidden items-center gap-1.5 rounded-full bg-gray100 px-3 py-2 text-xs font-medium text-gray-600 border">
                   <Store className="h-3.5 w-3.5 shrink-0" />
-                  <span className="max-w-[160px] truncate">{store.name}</span>
+                  <span className="max-w-[160px] truncate">{store.storeName}</span>
                 </div>
               )}
             </div>
@@ -146,7 +146,7 @@ export function SellLayout() {
                           className="h-10 w-10 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-900 text-sm font-bold text-white">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-sm font-bold text-muted-foreground">
                           {initials}
                         </div>
                       )}
@@ -308,7 +308,7 @@ export function SellLayout() {
         toastOptions={{
           duration: 4000,
           style: {
-            background: "var(--color-background)",
+            background: "white",
             color: "var(--color-foreground)",
             border: "1px solid var(--color-border)",
           },

@@ -252,7 +252,7 @@ export function useMyStore() {
   return useQuery<Store>({
     queryKey: storeKeys.my(),
     queryFn: async (): Promise<Store> => {
-      const response = await api.get('/stores/my');
+      const response = await api.get('/store/my-store');
       const data = extractData<{ store?: unknown } | unknown>(response);
       return normalizeStore(
         data && typeof data === 'object' && 'store' in data
