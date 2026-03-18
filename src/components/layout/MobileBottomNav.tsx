@@ -73,7 +73,7 @@ export function MobileBottomNav() {
   };
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-sm border-t border-border safe-area-pb">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background backdrop-blur-sm border-t border-border safe-area-pb">
       <div className="flex items-stretch h-[58px]">
         {navItems.map((item) => {
           const isActive = isTabActive(item);
@@ -100,7 +100,7 @@ export function MobileBottomNav() {
                 ) : (
                   <Icon
                     className={`h-5 w-5 transition-all ${
-                      isActive ? 'text-foreground stroke-[2.5px]' : 'text-muted-foreground'
+                      isActive ? 'text-foreground stroke-[2.5px]' : 'text-muted-foreground/70'
                     }`}
                   />
                 )}
@@ -112,17 +112,17 @@ export function MobileBottomNav() {
                 )}
               </div>
 
-              <span
+              {/* <span
                 className={`text-[10px] leading-tight font-medium transition-colors ${
                   isActive ? 'text-foreground font-semibold' : 'text-muted-foreground'
                 }`}
               >
                 {item.label}
-              </span>
+              </span> */}
 
-              {isActive && (
+              {/* {isActive && (
                 <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-foreground" />
-              )}
+              )} */}
             </NavLink>
           );
         })}

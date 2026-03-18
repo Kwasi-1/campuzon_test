@@ -3,7 +3,13 @@ import { Header } from "./Header";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { Toaster } from "react-hot-toast";
 
-const BOTTOM_NAV_PATHS = new Set(["/", "/products", "wishlist", "/cart", "/profile"]);
+const BOTTOM_NAV_PATHS = new Set([
+  "/",
+  "/products",
+  "/wishlist",
+  "/cart",
+  "/profile",
+]);
 
 function normalizePath(pathname: string): string {
   if (pathname === "/") return pathname;
@@ -27,7 +33,7 @@ export function Layout() {
         toastOptions={{
           duration: 4000,
           style: {
-            background: "var(--color-background)",
+            background: "white",
             color: "var(--color-foreground)",
             border: "1px solid var(--color-border)",
           },

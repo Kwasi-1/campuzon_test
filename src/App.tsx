@@ -223,10 +223,10 @@ const App = () => (
                       {/* Pages with main layout */}
                       <Route element={<Layout />}>
                         <Route element={<LayoutWithFooter />}>
-                          <Route path="/" element={<Home />} />
-                          <Route path="/products" element={<Products />} />
-                          <Route path="/categories" element={<Products />} />
+                          <Route path="/" element={<Home />} />                          
                         </Route>
+                        <Route path="/products" element={<Products />} />
+                        <Route path="/categories" element={<Products />} />
                         <Route
                           path="/categories/:categoryName"
                           element={<Products />}
