@@ -21,6 +21,23 @@ interface CartStore {
   getItem: (productID: string) => CartItem | undefined;
 }
 
+function resolveProductStoreID(product: Product): string | null {
+  const runtimeProduct = product as Product & {
+    storeId?: string;
+    store_id?: string;
+    store?: { id?: string };
+  };
+
+  const resolved =
+    runtimeProduct.storeID ||
+    runtimeProduct.storeId ||
+    runtimeProduct.store_id ||
+    runtimeProduct.store?.id ||
+    null;
+
+  return resolved ? String(resolved) : null;
+}
+
 export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
@@ -42,9 +59,15 @@ export const useCartStore = create<CartStore>()(
 
       addItem: (product, quantity = 1) => {
         const { items, storeID } = get();
+        const productStoreID = resolveProductStoreID(product);
+
+        if (!productStoreID) {
+          toast.error('This item is missing store information and cannot be added right now.');
+          return;
+        }
         
         // Check if adding from different store
-        if (storeID && storeID !== product.storeID) {
+        if (storeID && storeID !== productStoreID) {
           toast.error('You can only order from one store at a time. Clear your cart first.');
           return;
         }
@@ -75,7 +98,7 @@ export const useCartStore = create<CartStore>()(
           }
 
           set({
-            storeID: product.storeID,
+            storeID: productStoreID,
             storeName: product.store?.name || null,
             storeSlug: product.store?.slug || null,
             items: [...items, { product, quantity }],

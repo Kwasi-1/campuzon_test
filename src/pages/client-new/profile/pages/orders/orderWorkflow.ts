@@ -1,7 +1,7 @@
 import { mockOrders, mockStores } from "@/lib/mockData";
 import type { Order, OrderStatus } from "@/types-new";
 
-export const USE_BUYER_PREVIEW_MOCK_DATA = true;
+export const USE_BUYER_PREVIEW_MOCK_DATA = false;
 const BUYER_PREVIEW_STORAGE_KEY = "buyer-orders-preview-v1";
 
 export type BuyerDisplayCategory = "active" | "completed" | "issues" | "all";

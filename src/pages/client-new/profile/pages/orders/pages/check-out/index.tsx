@@ -29,7 +29,12 @@ import { useCartStore, useAuthStore } from "@/stores";
 import { useCreateOrder, usePayment } from "@/hooks";
 import { extractError } from "@/lib/api";
 import { formatPrice } from "@/lib/utils";
-import type { DeliveryMethod, Order } from "@/types-new";
+import type { CartItem, DeliveryMethod, Order } from "@/types-new";
+
+type CreateOrderResponse = {
+  order?: Order;
+  conversationID?: string;
+};
 
 type PaymentMethod = "mobile_money" | "card";
 type CheckoutStep = "delivery" | "payment" | "review";
@@ -49,6 +54,36 @@ const MOBILE_MONEY_PROVIDERS = [
     prefix: "027, 057, 026, 056",
   },
 ];
+
+function resolveCartStoreID(
+  cartStoreID: string | null,
+  items: CartItem[],
+): string | null {
+  if (cartStoreID) {
+    return String(cartStoreID);
+  }
+
+  for (const item of items) {
+    const product = item.product as unknown as Record<string, unknown>;
+    const nestedStore =
+      typeof product.store === "object" && product.store !== null
+        ? (product.store as Record<string, unknown>)
+        : null;
+
+    const candidate =
+      product.storeID ||
+      product.storeId ||
+      product.store_id ||
+      nestedStore?.id ||
+      null;
+
+    if (candidate) {
+      return String(candidate);
+    }
+  }
+
+  return null;
+}
 
 export function CheckoutPage() {
   const navigate = useNavigate();
@@ -130,10 +165,10 @@ export function CheckoutPage() {
   };
 
   const handlePlaceOrder = async () => {
-    const resolvedStoreID = storeID || items[0]?.product.storeID || null;
+    const resolvedStoreID = resolveCartStoreID(storeID, items);
     if (!resolvedStoreID) {
       setError(
-        "Unable to determine the seller for this cart. Please refresh and try again.",
+        "Unable to determine seller for this cart. Please remove this item and add it again.",
       );
       return;
     }
@@ -159,9 +194,23 @@ export function CheckoutPage() {
         hallID: user?.hallID || undefined,
       };
 
-      const order = (await createOrder.mutateAsync(
+      const createdPayload = (await createOrder.mutateAsync(
         orderData,
-      )) as unknown as Order;
+      )) as unknown as CreateOrderResponse | Order;
+
+      const order =
+        createdPayload &&
+        typeof createdPayload === "object" &&
+        "order" in createdPayload
+          ? createdPayload.order
+          : (createdPayload as Order);
+
+      if (!order?.id) {
+        throw new Error(
+          "Order was created, but no valid order ID was returned for payment initialization.",
+        );
+      }
+
       setServerOrderTotals({
         subtotal: order.subtotal || 0,
         deliveryFee: order.deliveryFee || 0,
@@ -257,8 +306,8 @@ export function CheckoutPage() {
       </div>
 
       {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
+        <Alert variant="destructive" className="mb-6 flex items-center gap-4">
+          {/* <AlertCircle className="h-4 w-4" /> */}
           {error}
         </Alert>
       )}
