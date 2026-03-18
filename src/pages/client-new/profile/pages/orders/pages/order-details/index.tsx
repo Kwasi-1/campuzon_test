@@ -33,7 +33,14 @@ import { Skeleton } from "@/components/shared/Skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Modal } from "@/components/shared/Modal";
-import { useOrder, useCancelOrder, useDisputeOrder, usePayment } from "@/hooks";
+import {
+  useOrder,
+  useCancelOrder,
+  useConfirmDelivery,
+  useDisputeOrder,
+  usePayment,
+  useReleaseFunds,
+} from "@/hooks";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/stores";
 import { orderKeys } from "@/hooks/useOrders";
@@ -74,7 +81,9 @@ export function OrderDetailPage() {
   const hasEscrowSection = Boolean(displayOrder?.escrow);
 
   const cancelOrder = useCancelOrder();
+  const confirmDelivery = useConfirmDelivery();
   const disputeOrder = useDisputeOrder();
+  const releaseFunds = useReleaseFunds();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const { verifyPayment } = usePayment();
@@ -86,6 +95,7 @@ export function OrderDetailPage() {
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [disputeReason, setDisputeReason] = useState<string>("other");
   const [disputeDescription, setDisputeDescription] = useState("");
+  const [disputeEvidence, setDisputeEvidence] = useState<File | null>(null);
   const [activeSection, setActiveSection] = useState("overview");
 
   // Ref instead of state — mutates instantly with no re-render or race condition
@@ -216,8 +226,18 @@ export function OrderDetailPage() {
   const statusMeta = getBuyerStatusMeta(displayOrder.status);
   const currentStep = getBuyerStatusStep(displayOrder.status);
   const canCancel = normalizedStatus === "pending";
-  const canDispute = normalizedStatus === "completed";
+  const canConfirmDelivery = normalizedStatus === "shipped";
+  const canReleaseFunds =
+    normalizedStatus === "delivered" &&
+    displayOrder.escrow?.status === "holding";
+  const canDispute = ["paid", "processing", "shipped", "delivered"].includes(
+    normalizedStatus,
+  );
+  const canViewReceipt =
+    normalizedStatus === "delivered" || normalizedStatus === "completed";
   const canReview = normalizedStatus === "completed";
+  const requiresDisputeEvidence =
+    normalizedStatus === "delivered" || normalizedStatus === "completed";
   const isTerminalStatus =
     displayOrder.status === "cancelled" ||
     displayOrder.status === "refunded" ||
@@ -237,8 +257,8 @@ export function OrderDetailPage() {
     const node = document.getElementById(elId);
     if (!node) return;
 
-    setActiveSection(sectionKey);  // immediate UI update
-    isScrollingTo.current = true;  // block observer instantly, no re-render
+    setActiveSection(sectionKey); // immediate UI update
+    isScrollingTo.current = true; // block observer instantly, no re-render
 
     node.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -262,6 +282,11 @@ export function OrderDetailPage() {
   };
 
   const handleDisputeOrder = async () => {
+    if (requiresDisputeEvidence && !disputeEvidence) {
+      toast.error("Evidence image is required for this dispute.");
+      return;
+    }
+
     if (USE_BUYER_PREVIEW_MOCK_DATA) {
       setPreviewOrders((prev) =>
         applyBuyerPreviewOrderStatus(prev, displayOrder.id, "disputed"),
@@ -272,11 +297,37 @@ export function OrderDetailPage() {
         orderId: displayOrder.id,
         reason: disputeReason,
         description: disputeDescription,
+        evidence: disputeEvidence || undefined,
       });
     }
 
     setShowDisputeModal(false);
     setDisputeDescription("");
+    setDisputeEvidence(null);
+  };
+
+  const handleConfirmDelivery = async () => {
+    if (USE_BUYER_PREVIEW_MOCK_DATA) {
+      setPreviewOrders((prev) =>
+        applyBuyerPreviewOrderStatus(prev, displayOrder.id, "delivered"),
+      );
+      toast.success("Delivery confirmed.");
+      return;
+    }
+
+    await confirmDelivery.mutateAsync(displayOrder.id);
+  };
+
+  const handleReleaseFunds = async () => {
+    if (USE_BUYER_PREVIEW_MOCK_DATA) {
+      setPreviewOrders((prev) =>
+        applyBuyerPreviewOrderStatus(prev, displayOrder.id, "completed"),
+      );
+      toast.success("Funds released to seller.");
+      return;
+    }
+
+    await releaseFunds.mutateAsync(displayOrder.id);
   };
 
   if (!isAuthenticated) {
@@ -750,7 +801,39 @@ export function OrderDetailPage() {
                   </Button>
                 ) : null}
 
-                {normalizedStatus === "completed" ? (
+                {canConfirmDelivery ? (
+                  <Button
+                    variant="outline"
+                    className="w-full rounded-full"
+                    onClick={handleConfirmDelivery}
+                    disabled={
+                      !USE_BUYER_PREVIEW_MOCK_DATA && confirmDelivery.isPending
+                    }
+                  >
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    {!USE_BUYER_PREVIEW_MOCK_DATA && confirmDelivery.isPending
+                      ? "Confirming..."
+                      : "Confirm Delivery"}
+                  </Button>
+                ) : null}
+
+                {canReleaseFunds ? (
+                  <Button
+                    variant="outline"
+                    className="w-full rounded-full"
+                    onClick={handleReleaseFunds}
+                    disabled={
+                      !USE_BUYER_PREVIEW_MOCK_DATA && releaseFunds.isPending
+                    }
+                  >
+                    <Shield className="mr-2 h-4 w-4" />
+                    {!USE_BUYER_PREVIEW_MOCK_DATA && releaseFunds.isPending
+                      ? "Releasing..."
+                      : "Release Funds Early"}
+                  </Button>
+                ) : null}
+
+                {canViewReceipt ? (
                   <>
                     <Button
                       variant="outline"
@@ -785,7 +868,9 @@ export function OrderDetailPage() {
                 ) : null}
 
                 {!canCancel &&
-                normalizedStatus !== "completed" &&
+                !canViewReceipt &&
+                !canConfirmDelivery &&
+                !canReleaseFunds &&
                 !canDispute ? (
                   <p className="rounded-2xl bg-gray-50 px-4 py-3 text-sm text-gray-500">
                     No additional actions are available for this order right
@@ -865,10 +950,29 @@ export function OrderDetailPage() {
             />
           </div>
 
+          <div className="space-y-2">
+            <label htmlFor="dispute-evidence" className="text-sm font-medium">
+              Evidence {requiresDisputeEvidence ? "*" : "(Optional)"}
+            </label>
+            <input
+              id="dispute-evidence"
+              type="file"
+              accept="image/*"
+              className="w-full rounded-md border p-2 text-sm"
+              onChange={(e) => setDisputeEvidence(e.target.files?.[0] || null)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Upload photo evidence to support your claim.
+            </p>
+          </div>
+
           <div className="flex justify-end gap-3">
             <Button
               variant="outline"
-              onClick={() => setShowDisputeModal(false)}
+              onClick={() => {
+                setShowDisputeModal(false);
+                setDisputeEvidence(null);
+              }}
             >
               Cancel
             </Button>
@@ -876,6 +980,7 @@ export function OrderDetailPage() {
               onClick={handleDisputeOrder}
               disabled={
                 !disputeDescription.trim() ||
+                (requiresDisputeEvidence && !disputeEvidence) ||
                 (!USE_BUYER_PREVIEW_MOCK_DATA && disputeOrder.isPending)
               }
             >

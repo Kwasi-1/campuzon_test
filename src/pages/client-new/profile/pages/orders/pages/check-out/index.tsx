@@ -68,6 +68,10 @@ export function CheckoutPage() {
     useState<PaymentMethod>("mobile_money");
   const [selectedProvider, setSelectedProvider] = useState("mtn");
   const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || "");
+  const [serverOrderTotals, setServerOrderTotals] = useState<Pick<
+    Order,
+    "subtotal" | "deliveryFee" | "serviceFee" | "totalAmount"
+  > | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -79,6 +83,10 @@ export function CheckoutPage() {
   const deliveryFee = deliveryMethod === "delivery" ? 15 : 0; // GHS 15 delivery fee
   const serviceFee = subtotal * 0.05; // 5% platform fee
   const total = subtotal + deliveryFee + serviceFee;
+  const finalSubtotal = serverOrderTotals?.subtotal ?? subtotal;
+  const finalDeliveryFee = serverOrderTotals?.deliveryFee ?? deliveryFee;
+  const finalServiceFee = serverOrderTotals?.serviceFee ?? serviceFee;
+  const finalTotal = serverOrderTotals?.totalAmount ?? total;
 
   // Redirect if not authenticated or cart is empty
   useEffect(() => {
@@ -154,6 +162,12 @@ export function CheckoutPage() {
       const order = (await createOrder.mutateAsync(
         orderData,
       )) as unknown as Order;
+      setServerOrderTotals({
+        subtotal: order.subtotal || 0,
+        deliveryFee: order.deliveryFee || 0,
+        serviceFee: order.serviceFee || 0,
+        totalAmount: order.totalAmount || 0,
+      });
 
       // 2. Initialize Payment (Paystack)
       const paymentResponse = await initializePayment.mutateAsync({
@@ -718,7 +732,7 @@ export function CheckoutPage() {
                     Processing...
                   </>
                 ) : (
-                  <>Place Order - {formatPrice(total)}</>
+                  <>Place Order - {formatPrice(finalTotal)}</>
                 )}
               </Button>
             )}
@@ -769,13 +783,13 @@ export function CheckoutPage() {
               <div className="border-t pt-4 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span>{formatPrice(subtotal)}</span>
+                  <span>{formatPrice(finalSubtotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Delivery</span>
                   <span>
-                    {deliveryMethod === "delivery"
-                      ? formatPrice(deliveryFee)
+                    {finalDeliveryFee > 0
+                      ? formatPrice(finalDeliveryFee)
                       : "Free"}
                   </span>
                 </div>
@@ -783,14 +797,16 @@ export function CheckoutPage() {
                   <span className="text-muted-foreground">
                     Service Fee (5%)
                   </span>
-                  <span>{formatPrice(serviceFee)}</span>
+                  <span>{formatPrice(finalServiceFee)}</span>
                 </div>
               </div>
 
               <div className="border-t pt-4">
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span className="text-primary">{formatPrice(total)}</span>
+                  <span className="text-primary">
+                    {formatPrice(finalTotal)}
+                  </span>
                 </div>
               </div>
 

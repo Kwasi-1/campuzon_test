@@ -127,8 +127,26 @@ export function useDisputeOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ orderId, reason, description }: { orderId: string; reason: string; description: string }) => {
-      const response = await api.post(`/orders/${orderId}/dispute`, { reason, description });
+    mutationFn: async ({
+      orderId,
+      reason,
+      description,
+      evidence,
+    }: {
+      orderId: string;
+      reason: string;
+      description: string;
+      evidence?: File;
+    }) => {
+      const formData = new FormData();
+      formData.append('reason', reason);
+      formData.append('description', description);
+
+      if (evidence) {
+        formData.append('evidence', evidence);
+      }
+
+      const response = await api.post(`/orders/${orderId}/dispute`, formData);
       return extractData(response);
     },
     onSuccess: (_, { orderId }) => {
