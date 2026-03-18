@@ -50,8 +50,8 @@ export function SellerPageTemplate({
         {headerActions}
       </div>
 
-      <div className="flex flex-col xl:flex-row gap-4 md:gap-8 pb-10">
-        {sidebar ? <aside className="xl:w-72 shrink-0">{sidebar}</aside> : null}
+      <div className="flex flex-col lg:flex-row gap-4 md:gap-8 pb-10">
+        {sidebar ? <aside className="lg:w-64 xl:w-72 shrink-0">{sidebar}</aside> : null}
         <section className="flex-1 min-w-0">{children}</section>
       </div>
     </div>

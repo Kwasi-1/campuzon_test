@@ -259,7 +259,7 @@ export function SellerSettingsPage() {
     activeSection === "all" || activeSection === section;
 
   const sidebar = (
-    <div className="hidden md:block space-y-4 md:space-y-6 xl:sticky xl:top-48">
+    <div className="hidden md:block space-y-4 md:space-y-6 lg:sticky lg:top-48">
       <PillSidebar
         options={SECTION_OPTIONS.map((option) => ({
           key: option.key,

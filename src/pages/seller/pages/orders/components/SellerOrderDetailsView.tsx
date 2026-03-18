@@ -149,7 +149,7 @@ export function SellerOrderDetailsView({
       </div>
 
       <div
-        className={`grid gap-4 md:gap-6 ${isCompact ? "lg:grid-cols-1" : "lg:grid-cols-[1.5fr_1fr]"}`}
+        className={`grid gap-4 md:gap-6 ${isCompact ? "lg:grid-cols-1" : "xl:grid-cols-[1.5fr_1fr]"}`}
       >
         <div className="space-y-6">
           <section

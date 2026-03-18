@@ -61,7 +61,7 @@ function useOrderSectionSidebar() {
   };
 
   const sidebar = (
-    <div className="hidden md:block space-y-4 md:space-y-6 xl:sticky xl:top-48">
+    <div className="hidden md:block space-y-4 md:space-y-6 lg:sticky lg:top-48">
       <PillSidebar
         options={DETAIL_SECTION_OPTIONS.map((section) => ({
           key: section.key,
