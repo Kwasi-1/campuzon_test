@@ -1,6 +1,5 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import api, { extractData } from '@/lib/api';
-import type { ApiResponse } from '@/types-new';
 
 interface PaymentResponse {
   authorizationUrl?: string;
@@ -16,16 +15,31 @@ interface VerifyPaymentResponse {
   amount: number;
 }
 
-export function usePayment() {
-  const queryClient = useQueryClient();
+interface InitializePaymentInput {
+  orderId: string;
+  callbackUrl?: string;
+  paymentMethod?: 'mobile_money' | 'card' | string;
+  selectedProvider?: string;
+  phoneNumber?: string;
+}
 
+export function usePayment() {
   const initializePayment = useMutation({
-    mutationFn: async ({ orderId, callbackUrl }: { orderId: string; callbackUrl?: string }) => {
+    mutationFn: async ({
+      orderId,
+      callbackUrl,
+      paymentMethod,
+      selectedProvider,
+      phoneNumber,
+    }: InitializePaymentInput) => {
       const resolvedCallbackUrl =
         callbackUrl || `${window.location.origin}/orders/${orderId}`;
 
       const response = await api.post(`/orders/${orderId}/pay`, {
         callbackUrl: resolvedCallbackUrl,
+        paymentMethod,
+        selectedProvider,
+        phoneNumber,
       });
       return extractData<PaymentResponse>(response);
     },

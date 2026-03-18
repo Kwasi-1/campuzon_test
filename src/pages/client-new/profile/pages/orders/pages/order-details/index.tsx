@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useParams,
@@ -89,6 +89,11 @@ export function OrderDetailPage() {
   const { verifyPayment } = usePayment();
   const paymentRef =
     searchParams.get("reference") || searchParams.get("trxref");
+  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
+  const [paymentVerificationError, setPaymentVerificationError] = useState<
+    string | null
+  >(null);
+  const activeVerificationRef = useRef<string | null>(null);
 
   const [copied, setCopied] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -178,23 +183,73 @@ export function OrderDetailPage() {
   // Verify payment if redirect from Paystack
   const queryClient = useQueryClient();
 
+  const clearPaymentQueryParams = useCallback(() => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete("reference");
+      next.delete("trxref");
+      return next;
+    });
+  }, [setSearchParams]);
+
+  const verifyPaymentReference = useCallback(
+    async (reference: string, options?: { force?: boolean }) => {
+      if (!id) return;
+
+      const cacheKey = `payment-verify:${reference}`;
+      const cachedState = sessionStorage.getItem(cacheKey);
+      const force = options?.force || false;
+
+      if (!force && cachedState === "success") {
+        clearPaymentQueryParams();
+        return;
+      }
+
+      if (!force && cachedState === "failed") {
+        setPaymentVerificationError(
+          "Payment verification previously failed. Tap retry after confirming the payment was completed.",
+        );
+        return;
+      }
+
+      if (activeVerificationRef.current === reference) {
+        return;
+      }
+
+      activeVerificationRef.current = reference;
+      setIsVerifyingPayment(true);
+      setPaymentVerificationError(null);
+
+      try {
+        await verifyPayment.mutateAsync(reference);
+        sessionStorage.setItem(cacheKey, "success");
+        toast.success("Payment verified successfully!");
+        clearPaymentQueryParams();
+        queryClient.invalidateQueries({ queryKey: orderKeys.all });
+        queryClient.invalidateQueries({ queryKey: orderKeys.detail(id) });
+      } catch (error) {
+        sessionStorage.setItem(cacheKey, "failed");
+        setPaymentVerificationError(
+          "Payment verification failed. You can retry after confirming the debit in your wallet or bank app.",
+        );
+
+        // Show failure toast only on active verification attempts.
+        if (force || cachedState !== "failed") {
+          toast.error("Payment verification failed. Please retry.");
+        }
+      } finally {
+        activeVerificationRef.current = null;
+        setIsVerifyingPayment(false);
+      }
+    },
+    [id, clearPaymentQueryParams, verifyPayment, queryClient],
+  );
+
   useEffect(() => {
     if (paymentRef) {
-      const verify = async () => {
-        try {
-          await verifyPayment.mutateAsync(paymentRef);
-          toast.success("Payment verified successfully!");
-          setSearchParams({});
-          queryClient.invalidateQueries({ queryKey: orderKeys.all });
-          queryClient.invalidateQueries({ queryKey: orderKeys.detail(id!) });
-        } catch (error) {
-          toast.error("Payment verification failed. Please contact support.");
-          setSearchParams({});
-        }
-      };
-      verify();
+      verifyPaymentReference(paymentRef, { force: false });
     }
-  }, [paymentRef, verifyPayment, setSearchParams, queryClient, id]);
+  }, [paymentRef, verifyPaymentReference]);
 
   if (pageLoading) {
     return (
@@ -368,6 +423,42 @@ export function OrderDetailPage() {
             {statusMeta.label}
           </Badge>
         </div>
+
+        {paymentRef ? (
+          <div className="rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm">
+            {isVerifyingPayment ? (
+              <p className="text-gray-600">Verifying payment...</p>
+            ) : paymentVerificationError ? (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-red-600">{paymentVerificationError}</p>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      verifyPaymentReference(paymentRef, { force: true })
+                    }
+                  >
+                    Retry Verification
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={clearPaymentQueryParams}
+                  >
+                    Dismiss
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-emerald-700">
+                Payment callback received. Verification completed.
+              </p>
+            )}
+          </div>
+        ) : null}
 
         <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-[260px_1fr]">
           <aside className="lg:sticky lg:top-36 lg:self-start overflow-y-auto">

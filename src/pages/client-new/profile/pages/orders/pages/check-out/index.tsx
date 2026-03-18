@@ -173,6 +173,10 @@ export function CheckoutPage() {
       const paymentResponse = await initializePayment.mutateAsync({
         orderId: order.id,
         callbackUrl: `${window.location.origin}/orders/${order.id}`,
+        paymentMethod,
+        selectedProvider:
+          paymentMethod === "mobile_money" ? selectedProvider : undefined,
+        phoneNumber: paymentMethod === "mobile_money" ? phoneNumber : undefined,
       });
       const authorizationUrl =
         paymentResponse.authorizationUrl || paymentResponse.authorization_url;
