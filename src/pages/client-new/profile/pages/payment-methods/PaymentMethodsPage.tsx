@@ -21,6 +21,7 @@ import { useAuthStore } from "@/stores";
 import profilePaymentMethodsService, {
   type ProfilePaymentMethod,
 } from "@/services/profilePaymentMethodsService";
+import { PillSidebar } from "@/components/ui/pill-sidebar";
 
 const MOBILE_MONEY_PROVIDERS = [
   { id: "mtn", name: "MTN Mobile Money", icon: "🟡" },
@@ -157,11 +158,7 @@ export function PaymentMethodsPage() {
       ? paymentMethods
       : paymentMethods.filter((m) => m.type === filter);
 
-  const sidebarCategories: {
-    key: "all" | "mobile_money" | "card";
-    label: string;
-    count: number;
-  }[] = [
+  const sidebarOptions = [
     { key: "all", label: "All Methods", count: paymentMethods.length },
     { key: "mobile_money", label: "Mobile Money", count: mobileMoneyCount },
     { key: "card", label: "Cards", count: cardCount },
@@ -201,38 +198,17 @@ export function PaymentMethodsPage() {
       </Alert>
 
       {/* Body: sidebar + content */}
-      <div className="flex flex-col xl:flex-row gap-8 pb-12">
+      <div className="flex flex-col lg:flex-row gap-8 pb-12">
         {/* Sidebar Filters */}
-        <div className="xl:w-64 shrink-0">
-          <div className="flex xl:flex-col lg:sticky lg:top-36 gap-3 overflow-x-auto xl:overflow-visible pb-2 xl:pb-0 scrollbar-hide xl:sticky xl:top-36">
-            {sidebarCategories.map((cat) => {
-              const isActive = filter === cat.key;
-              return (
-                <button
-                  key={cat.key}
-                  type="button"
-                  onClick={() => setFilter(cat.key)}
-                  className={`flex items-center justify-between pl-5 pr-[2px] py-[3px] xl:py-1 xl:pr-1 rounded-full transition-all shrink-0 xl:shrink-auto whitespace-nowrap xl:whitespace-normal border shadow-sm ${
-                    isActive
-                      ? "bg-[#1C1C1E] text-white border-[#1C1C1E]"
-                      : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                  }`}
-                >
-                  <span className="font-medium text-[15px]">{cat.label}</span>
-                  <span
-                    className={`h-10 w-10 xl:w-12 xl:h-12 ml-3 flex items-center justify-center rounded-full text-xs font-bold ${
-                      isActive
-                        ? "bg-white text-black"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    {cat.count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <aside className="lg:w-64 xl:w-72 shrink-0 xl:sticky xl:top-36 xl:self-start">
+          <PillSidebar
+            options={sidebarOptions}
+            activeKey={filter}
+            onChange={(key) =>
+              setFilter(key as "all" | "mobile_money" | "card")
+            }
+          />
+        </aside>
 
         {/* Payment Methods List */}
         <div className="flex-1">
@@ -261,36 +237,36 @@ export function PaymentMethodsPage() {
             </div>
           ) : filteredMethods.length === 0 ? (
             <div className="border border-gray-100 bg-white rounded-[28px] overflow-hidden shadow-sm">
-            <div className="text-center py-16 flex flex-col justify-center h-full items-center">
-            <EmptyState
-              icon={<CreditCard className="h-16 w-16" />}
-              title="No payment methods"
-              description={
-                filter !== "all"
-                  ? `No ${filter === "mobile_money" ? "mobile money" : "card"} methods added`
-                  : "Add a payment method to make checkout faster"
-              }
-              action={
-                filter === "all" ? (
-                  <Button
-                    onClick={() => setShowAddModal(true)}
-                    className="rounded-full px-6 bg-[#1C1C1E] hover:bg-black text-white"
-                  >
-                    Add Payment Method
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    onClick={() => setFilter("all")}
-                    className="rounded-full"
-                  >
-                    View All
-                  </Button>
-                )
-              }
-            />
+              <div className="text-center py-16 flex flex-col justify-center h-full items-center">
+                <EmptyState
+                  icon={<CreditCard className="h-16 w-16" />}
+                  title="No payment methods"
+                  description={
+                    filter !== "all"
+                      ? `No ${filter === "mobile_money" ? "mobile money" : "card"} methods added`
+                      : "Add a payment method to make checkout faster"
+                  }
+                  action={
+                    filter === "all" ? (
+                      <Button
+                        onClick={() => setShowAddModal(true)}
+                        className="rounded-full px-6 bg-[#1C1C1E] hover:bg-black text-white"
+                      >
+                        Add Payment Method
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        onClick={() => setFilter("all")}
+                        className="rounded-full"
+                      >
+                        View All
+                      </Button>
+                    )
+                  }
+                />
+              </div>
             </div>
-          </div>
           ) : (
             <div className="space-y-5">
               {filteredMethods.map((method, index) => (

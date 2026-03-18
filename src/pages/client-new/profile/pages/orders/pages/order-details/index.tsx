@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useParams,
@@ -88,6 +88,9 @@ export function OrderDetailPage() {
   const [disputeDescription, setDisputeDescription] = useState("");
   const [activeSection, setActiveSection] = useState("overview");
 
+  // Ref instead of state — mutates instantly with no re-render or race condition
+  const isScrollingTo = useRef(false);
+
   const sectionIds = useMemo(
     () => ({
       overview: "buyer-order-overview",
@@ -120,30 +123,42 @@ export function OrderDetailPage() {
     return base;
   }, [hasEscrowSection, itemCountForSidebar]);
 
+  // Observer is never torn down mid-scroll because isScrollingTo is a ref,
+  // not state, so it's not in the dependency array.
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (isScrollingTo.current) return;
 
-        if (visible?.target?.id) {
+        let topEntry: IntersectionObserverEntry | null = null;
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          if (
+            !topEntry ||
+            entry.boundingClientRect.top < topEntry.boundingClientRect.top
+          ) {
+            topEntry = entry;
+          }
+        }
+
+        if (topEntry?.target?.id) {
           const matched = sectionOptions.find(
             (option) =>
               sectionIds[option.key as keyof typeof sectionIds] ===
-              visible.target.id,
+              topEntry!.target.id,
           );
-          if (matched) {
-            setActiveSection(matched.key);
-          }
+          if (matched) setActiveSection(matched.key);
         }
       },
-      { threshold: [0.25, 0.5, 0.75], rootMargin: "-72px 0px -35% 0px" },
+      {
+        threshold: 0.15,
+        rootMargin: "-80px 0px -50% 0px",
+      },
     );
 
     sectionOptions.forEach((option) => {
-      const id = sectionIds[option.key as keyof typeof sectionIds];
-      const el = document.getElementById(id);
+      const elId = sectionIds[option.key as keyof typeof sectionIds];
+      const el = document.getElementById(elId);
       if (el) observer.observe(el);
     });
 
@@ -153,16 +168,13 @@ export function OrderDetailPage() {
   // Verify payment if redirect from Paystack
   const queryClient = useQueryClient();
 
-  // Verify payment if redirect from Paystack
   useEffect(() => {
     if (paymentRef) {
       const verify = async () => {
         try {
           await verifyPayment.mutateAsync(paymentRef);
           toast.success("Payment verified successfully!");
-          // Remove query params
           setSearchParams({});
-          // Invalidate queries
           queryClient.invalidateQueries({ queryKey: orderKeys.all });
           queryClient.invalidateQueries({ queryKey: orderKeys.detail(id!) });
         } catch (error) {
@@ -173,11 +185,6 @@ export function OrderDetailPage() {
       verify();
     }
   }, [paymentRef, verifyPayment, setSearchParams, queryClient, id]);
-
-  // Use mock order ONLY if dev environment and no order found/loading?
-  // Actually, let's stick to real data if id exists.
-  // If isLoading, we return skeleton.
-  // If !order, we should show "Order not found".
 
   if (pageLoading) {
     return (
@@ -226,12 +233,19 @@ export function OrderDetailPage() {
   };
 
   const scrollToSection = (sectionKey: string) => {
-    const id = sectionIds[sectionKey as keyof typeof sectionIds];
-    const node = document.getElementById(id);
+    const elId = sectionIds[sectionKey as keyof typeof sectionIds];
+    const node = document.getElementById(elId);
     if (!node) return;
 
-    setActiveSection(sectionKey);
+    setActiveSection(sectionKey);  // immediate UI update
+    isScrollingTo.current = true;  // block observer instantly, no re-render
+
     node.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    // 1000ms gives comfortable headroom for slow devices & long scroll distances
+    setTimeout(() => {
+      isScrollingTo.current = false;
+    }, 1000);
   };
 
   const handleCancelOrder = async () => {
@@ -315,6 +329,7 @@ export function OrderDetailPage() {
           </aside>
 
           <div className="space-y-4 md:space-y-6">
+            {/* Overview */}
             <section
               id={sectionIds.overview}
               className="scroll-mt-28 rounded-md md:rounded-3xl border border-gray-100 bg-white p-6 shadow-sm"
@@ -394,6 +409,7 @@ export function OrderDetailPage() {
               </div>
             </section>
 
+            {/* Timeline */}
             <section
               id={sectionIds.timeline}
               className="scroll-mt-28 rounded-md md:rounded-3xl border border-gray-100 bg-white p-6 shadow-sm"
@@ -459,6 +475,7 @@ export function OrderDetailPage() {
               )}
             </section>
 
+            {/* Items */}
             <section
               id={sectionIds.items}
               className="scroll-mt-28 rounded-md md:rounded-3xl border border-gray-100 bg-white p-6 shadow-sm"
@@ -521,6 +538,7 @@ export function OrderDetailPage() {
               </div>
             </section>
 
+            {/* Delivery */}
             <section
               id={sectionIds.delivery}
               className="scroll-mt-28 rounded-md md:rounded-3xl border border-gray-100 bg-white p-6 shadow-sm"
@@ -568,6 +586,7 @@ export function OrderDetailPage() {
               </div>
             </section>
 
+            {/* Payment */}
             <section
               id={sectionIds.payment}
               className="scroll-mt-28 rounded-md md:rounded-3xl border border-gray-100 bg-white p-6 shadow-sm"
@@ -609,6 +628,7 @@ export function OrderDetailPage() {
               </div>
             </section>
 
+            {/* Seller */}
             {displayOrder.store ? (
               <section
                 id={sectionIds.seller}
@@ -677,6 +697,7 @@ export function OrderDetailPage() {
               </section>
             ) : null}
 
+            {/* Escrow Protection */}
             {displayOrder.escrow ? (
               <section
                 id={sectionIds.protection}
@@ -711,6 +732,7 @@ export function OrderDetailPage() {
               </section>
             ) : null}
 
+            {/* Actions */}
             <section
               id={sectionIds.actions}
               className="scroll-mt-28 rounded-md md:rounded-3xl border border-gray-100 bg-white p-6 shadow-sm"
