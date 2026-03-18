@@ -301,6 +301,75 @@ export function OrderDetailPage() {
     displayOrder.items?.reduce((sum, item) => sum + (item.quantity || 0), 0) ||
     0;
 
+  const nextStepHint = (() => {
+    switch (normalizedStatus) {
+      case "pending":
+        return "Next step: seller reviews your order. You can still cancel while it is pending.";
+      case "paid":
+      case "processing":
+        return "Next step: wait for seller dispatch. Confirm Delivery unlocks once the order is marked shipped.";
+      case "shipped":
+        return "Next step: when you receive the item, tap Confirm Delivery to move the order to delivered.";
+      case "delivered":
+        return "Next step: you can release funds early to the seller, open a dispute, or view your receipt.";
+      case "completed":
+        return "Order completed. You can view/download receipt and leave a product review.";
+      case "disputed":
+        return "This order is under dispute review. Our team will contact both parties if more details are needed.";
+      case "cancelled":
+      case "refunded":
+        return "This order is closed. No further buyer actions are available.";
+      default:
+        return "Check order updates in this page. Available actions unlock as status changes.";
+    }
+  })();
+
+  const actionAvailabilityHints = (() => {
+    const hints: string[] = [];
+
+    if (!canConfirmDelivery) {
+      if (["pending", "paid", "processing"].includes(normalizedStatus)) {
+        hints.push(
+          "Confirm Delivery is unavailable until seller marks the order as shipped.",
+        );
+      } else if (["delivered", "completed"].includes(normalizedStatus)) {
+        hints.push("Confirm Delivery is already completed for this order.");
+      }
+    }
+
+    if (!canReleaseFunds) {
+      if (normalizedStatus === "shipped") {
+        hints.push(
+          "Release Funds Early unlocks after you confirm delivery (order must be delivered first).",
+        );
+      } else if (normalizedStatus === "delivered") {
+        if (!displayOrder.escrow) {
+          hints.push(
+            "Release Funds Early is unavailable because this order has no escrow hold.",
+          );
+        } else if (displayOrder.escrow.status !== "holding") {
+          hints.push(
+            `Release Funds Early is unavailable because escrow is ${displayOrder.escrow.status}.`,
+          );
+        }
+      }
+    }
+
+    if (!canDispute) {
+      if (normalizedStatus === "completed") {
+        hints.push("Dispute is unavailable after order completion.");
+      } else if (["cancelled", "refunded"].includes(normalizedStatus)) {
+        hints.push("Dispute is unavailable for cancelled or refunded orders.");
+      } else if (normalizedStatus === "disputed") {
+        hints.push("A dispute is already active for this order.");
+      }
+    } else if (requiresDisputeEvidence) {
+      hints.push("Dispute submission requires image evidence for this status.");
+    }
+
+    return hints;
+  })();
+
   const handleCopyOrderNumber = () => {
     navigator.clipboard.writeText(displayOrder.orderNumber);
     setCopied(true);
@@ -880,6 +949,18 @@ export function OrderDetailPage() {
               className="scroll-mt-28 rounded-md md:rounded-3xl border border-gray-100 bg-white p-6 shadow-sm"
             >
               <h2 className="text-lg font-semibold text-gray-900">Actions</h2>
+              <div className="mt-3 rounded-lg borde border-blue-100 bg-muted/60 px-4 py-3 text-sm textblue-800">
+                {nextStepHint}
+              </div>
+
+              {actionAvailabilityHints.length > 0 ? (
+                <div className="mt-3 rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                  {actionAvailabilityHints.map((hint) => (
+                    <p key={hint}>{hint}</p>
+                  ))}
+                </div>
+              ) : null}
+
               <div className="mt-4 flex flex-col gap-3">
                 {canCancel ? (
                   <Button

@@ -184,7 +184,7 @@ export function NotificationsPage() {
   return (
     <div className=" mx-auto lg:py-8">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-row md:items-center justify-between gap-4 mb-6">
         <div className="space-y-1">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
             Notifications
@@ -204,8 +204,8 @@ export function NotificationsPage() {
               className="rounded-full border-gray-200"
               onClick={handleMarkAllAsRead}
             >
-              <CheckCheck className="h-4 w-4 mr-1" />
-              Mark all read
+              <CheckCheck className="h-4 w-4" />
+              <span className="hidden lg:block ml-1">Mark all read</span>
             </Button>
           )}
           <Link to="/settings/notifications">
