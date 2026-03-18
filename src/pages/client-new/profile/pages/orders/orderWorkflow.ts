@@ -14,15 +14,7 @@ export const BUYER_CATEGORY_MAP: Record<BuyerDisplayCategory, OrderStatus[]> = {
 };
 
 export function normalizeBuyerStatus(status: OrderStatus): OrderStatus {
-  switch (status) {
-    case "paid":
-      return "pending";
-    case "shipped":
-    case "delivered":
-      return "completed";
-    default:
-      return status;
-  }
+  return status;
 }
 
 export function getBuyerCategory(status: OrderStatus): BuyerDisplayCategory {
@@ -42,13 +34,28 @@ export function getBuyerStatusMeta(status: OrderStatus): {
   switch (normalized) {
     case "pending":
       return {
-        label: "Pending Delivery",
+        label: "Pending Payment",
         className: "bg-yellow-50 text-yellow-700",
+      };
+    case "paid":
+      return {
+        label: "Paid",
+        className: "bg-sky-50 text-sky-700",
       };
     case "processing":
       return {
         label: "Processing",
         className: "bg-indigo-50 text-indigo-700",
+      };
+    case "shipped":
+      return {
+        label: "Shipped",
+        className: "bg-violet-50 text-violet-700",
+      };
+    case "delivered":
+      return {
+        label: "Delivered",
+        className: "bg-emerald-50 text-emerald-700",
       };
     case "completed":
       return {
@@ -71,10 +78,13 @@ export function getBuyerStatusMeta(status: OrderStatus): {
         className: "bg-red-50 text-red-700",
       };
     default:
-      return {
-        label: normalized,
-        className: "bg-gray-100 text-gray-700",
-      };
+      {
+        const fallback = String(normalized);
+        return {
+          label: fallback.charAt(0).toUpperCase() + fallback.slice(1),
+          className: "bg-gray-100 text-gray-700",
+        };
+      }
   }
 }
 

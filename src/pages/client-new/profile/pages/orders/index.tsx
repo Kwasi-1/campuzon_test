@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Package, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import  OrderCardSkeleton  from "@/components/orders/orderCardSkeleton";
+import OrderCardSkeleton from "@/components/orders/orderCardSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { OrderCard } from "@/components/shared/OrderCard";
 import { useMyOrders } from "@/hooks";
@@ -20,45 +20,14 @@ import {
 const getStatusBadge = (status: OrderStatus) => {
   const statusMeta = getBuyerStatusMeta(status);
 
-  switch (statusMeta.label) {
-    case "Pending Delivery":
-      return (
-        <div className="flex items-center gap-1.5 rounded-full bg-yellow-50 px-2.5 py-1 text-xs font-medium text-yellow-700">
-          <div className="h-1.5 w-1.5 rounded-full bg-yellow-700" />
-          {statusMeta.label}
-        </div>
-      );
-    case "Processing":
-      return (
-        <div className="flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700">
-          <div className="h-1.5 w-1.5 rounded-full bg-indigo-700" />
-          {statusMeta.label}
-        </div>
-      );
-    case "Completed":
-      return (
-        <div className="flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
-          <div className="h-1.5 w-1.5 rounded-full bg-green-700" />
-          {statusMeta.label}
-        </div>
-      );
-    case "Cancelled":
-      return (
-        <div className="flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
-          <div className="h-1.5 w-1.5 rounded-full bg-gray-600" />
-          {statusMeta.label}
-        </div>
-      );
-    default:
-      return (
-        <div
-          className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${statusMeta.className}`}
-        >
-          <div className="h-1.5 w-1.5 rounded-full bg-current" />
-          {statusMeta.label}
-        </div>
-      );
-  }
+  return (
+    <div
+      className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${statusMeta.className}`}
+    >
+      <div className="h-1.5 w-1.5 rounded-full bg-current" />
+      {statusMeta.label}
+    </div>
+  );
 };
 
 export function OrdersPage() {

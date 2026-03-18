@@ -3,6 +3,7 @@ import {
   CheckCircle,
   Clock,
   Package,
+  Truck,
   XCircle,
   type LucideIcon,
 } from "lucide-react";
@@ -73,9 +74,7 @@ export function getStatusConfig(status: OrderStatus): {
   color: string;
   icon: LucideIcon;
 } {
-  const normalizedStatus = getSellerWorkflowStatus(status);
-
-  switch (normalizedStatus) {
+  switch (status) {
     case "pending":
       return {
         label: "Pending",
@@ -83,12 +82,32 @@ export function getStatusConfig(status: OrderStatus): {
           "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
         icon: Clock,
       };
+    case "paid":
+      return {
+        label: "Paid",
+        color: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400",
+        icon: CheckCircle,
+      };
     case "processing":
       return {
         label: "Processing",
         color:
           "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
         icon: Package,
+      };
+    case "shipped":
+      return {
+        label: "Shipped",
+        color:
+          "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+        icon: Truck,
+      };
+    case "delivered":
+      return {
+        label: "Delivered",
+        color:
+          "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+        icon: CheckCircle,
       };
     case "completed":
       return {
@@ -117,7 +136,11 @@ export function getStatusConfig(status: OrderStatus): {
         icon: AlertCircle,
       };
     default:
-      return { label: status, color: "bg-gray-100 text-gray-700", icon: Clock };
+      return {
+        label: String(status).charAt(0).toUpperCase() + String(status).slice(1),
+        color: "bg-gray-100 text-gray-700",
+        icon: Clock,
+      };
   }
 }
 

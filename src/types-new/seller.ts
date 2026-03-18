@@ -132,6 +132,37 @@ function normalizeOrderItem(rawValue: unknown): OrderItem {
   };
 }
 
+function normalizeOrderStore(rawValue: unknown): Order['store'] {
+  const raw = toRecord(rawValue);
+  const id = toString(raw.id);
+  if (!id) return undefined;
+
+  return {
+    id,
+    storeName: toString(raw.storeName ?? raw.store_name ?? raw.name),
+    storeSlug: toString(raw.storeSlug ?? raw.store_slug ?? raw.slug),
+    description: toNullableString(raw.description),
+    logo: toNullableString(raw.logo),
+    banner: toNullableString(raw.banner),
+    email: toString(raw.email),
+    phoneNumber: toString(raw.phoneNumber ?? raw.phone_number),
+    status: toString(raw.status, 'active') as Order['store']['status'],
+    isVerified: toBoolean(raw.isVerified ?? raw.is_verified, false),
+    rating: raw.rating === null ? null : toNumber(raw.rating, 0),
+    totalSales: toNumber(raw.totalSales ?? raw.total_sales, 0),
+    totalOrders: toNumber(raw.totalOrders ?? raw.total_orders, 0),
+    institutionID: toNullableString(raw.institutionID ?? raw.institution_id),
+    autoResponderEnabled: toBoolean(
+      raw.autoResponderEnabled ?? raw.auto_responder_enabled,
+      false,
+    ),
+    autoResponderName: toNullableString(
+      raw.autoResponderName ?? raw.auto_responder_name,
+    ),
+    dateCreated: toString(raw.dateCreated ?? raw.date_created),
+  };
+}
+
 export function normalizeSellerOrder(rawValue: unknown): Order {
   const raw = toRecord(rawValue);
   const itemsSource = raw.items ?? raw.order_items;
@@ -164,6 +195,7 @@ export function normalizeSellerOrder(rawValue: unknown): Order {
     completedAt: toNullableString(raw.completedAt ?? raw.completed_at),
     dateCreated: toString(raw.dateCreated ?? raw.date_created),
     items,
+    store: normalizeOrderStore(raw.store),
     conversationID: toNullableString(raw.conversationID ?? raw.conversation_id) ?? undefined,
   };
 }

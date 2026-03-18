@@ -44,6 +44,7 @@ import {
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/stores";
 import { orderKeys } from "@/hooks/useOrders";
+import { extractError } from "@/lib/api";
 import { formatPrice, formatDate } from "@/lib/utils";
 import type { Order, OrderStatus } from "@/types-new";
 import {
@@ -86,7 +87,7 @@ export function OrderDetailPage() {
   const releaseFunds = useReleaseFunds();
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const { verifyPayment } = usePayment();
+  const { initializePayment, verifyPayment } = usePayment();
   const paymentRef =
     searchParams.get("reference") || searchParams.get("trxref");
   const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
@@ -281,6 +282,7 @@ export function OrderDetailPage() {
   const statusMeta = getBuyerStatusMeta(displayOrder.status);
   const currentStep = getBuyerStatusStep(displayOrder.status);
   const canCancel = normalizedStatus === "pending";
+  const canRetryPayment = normalizedStatus === "pending";
   const canConfirmDelivery = normalizedStatus === "shipped";
   const canReleaseFunds =
     normalizedStatus === "delivered" &&
@@ -452,6 +454,32 @@ export function OrderDetailPage() {
     }
 
     await releaseFunds.mutateAsync(displayOrder.id);
+  };
+
+  const handleRetryPayment = async () => {
+    if (USE_BUYER_PREVIEW_MOCK_DATA) {
+      toast.success("Payment retry simulated in preview mode.");
+      return;
+    }
+
+    try {
+      const paymentResponse = await initializePayment.mutateAsync({
+        orderId: displayOrder.id,
+        callbackUrl: `${window.location.origin}/orders/${displayOrder.id}`,
+      });
+
+      const authorizationUrl =
+        paymentResponse.authorizationUrl || paymentResponse.authorization_url;
+
+      if (authorizationUrl) {
+        window.location.href = authorizationUrl;
+        return;
+      }
+
+      toast.error("Unable to initialize payment. Please try again.");
+    } catch (error) {
+      toast.error(extractError(error));
+    }
   };
 
   if (!isAuthenticated) {
@@ -892,17 +920,18 @@ export function OrderDetailPage() {
                         Message Seller
                       </Button>
                     </Link>
-                    {displayOrder.store.phoneNumber ? (
-                      <a href={`tel:${displayOrder.store.phoneNumber}`}>
-                        <Button
-                          variant="outline"
-                          className="w-full rounded-full bg-transparent"
-                        >
-                          <Phone className="mr-2 h-4 w-4" />
-                          Call Seller
-                        </Button>
-                      </a>
-                    ) : null}
+
+                    <Button
+                      variant="outline"
+                      className="w-full rounded-full bg-transparent"
+                      disabled={!displayOrder.store.phoneNumber}
+                      onClick={() =>
+                        (window.location.href = `tel:${displayOrder.store.phoneNumber}`)
+                      }
+                    >
+                      <Phone className="mr-2 h-4 w-4" />
+                      Call Seller
+                    </Button>
                   </div>
                 </div>
               </section>
@@ -970,6 +999,23 @@ export function OrderDetailPage() {
                   >
                     <Ban className="mr-2 h-4 w-4" />
                     Cancel Order
+                  </Button>
+                ) : null}
+
+                {canRetryPayment ? (
+                  <Button
+                    variant="outline"
+                    className="w-full rounded-full"
+                    onClick={handleRetryPayment}
+                    disabled={
+                      !USE_BUYER_PREVIEW_MOCK_DATA &&
+                      initializePayment.isPending
+                    }
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    {!USE_BUYER_PREVIEW_MOCK_DATA && initializePayment.isPending
+                      ? "Redirecting to Paystack..."
+                      : "Retry Payment"}
                   </Button>
                 ) : null}
 
