@@ -1,13 +1,22 @@
 import type { Product } from "@/types-new";
 import { ProductCard } from "./ProductCard";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 interface SimilarProductsProps {
   products: Product[];
-  wishlistProductIds: Set<any>;
-  onWishlistToggle: (productId: any) => void; // Added this to make sure it build successfully on vercel
+  title?: string;
 }
 
-export function SimilarProducts({ products }: SimilarProductsProps) {
+export function SimilarProducts({
+  products,
+  title = "More from this store",
+}: SimilarProductsProps) {
   if (!products || products.length === 0) {
     return null;
   }
@@ -15,19 +24,29 @@ export function SimilarProducts({ products }: SimilarProductsProps) {
   return (
     <div className="mt-12 pt-8 border-t border-gray-200">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Similar Items</h2>
+        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {products.map((product, index) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            index={index}
-            variant="grid"
-          />
-        ))}
-      </div>
+      <Carousel
+        opts={{
+          align: "start",
+          dragFree: true,
+        }}
+        className="w-full"
+      >
+        <CarouselContent>
+          {products.map((product, index) => (
+            <CarouselItem
+              key={product.id}
+              className="basis-[68%] sm:basis-[45%] md:basis-[34%] lg:basis-[25%] xl:basis-[20%]"
+            >
+              <ProductCard product={product} index={index} variant="grid" />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious className="hidden md:flex -left-4" />
+        <CarouselNext className="hidden md:flex -right-4" />
+      </Carousel>
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthStore } from "@/stores";
+import { useCurrency } from "@/hooks";
 import { useStartConversation, useSendMessage, useMessages } from "@/hooks";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import type { Product, ChatMessage, Conversation } from "@/types-new";
@@ -18,9 +19,15 @@ import type { Product, ChatMessage, Conversation } from "@/types-new";
 interface ProductChatProps {
   product: Product;
   onLoginRequired?: () => void;
+  bottomOffsetClass?: string;
 }
 
-export function ProductChat({ product, onLoginRequired }: ProductChatProps) {
+export function ProductChat({
+  product,
+  onLoginRequired,
+  bottomOffsetClass = "bottom-20",
+}: ProductChatProps) {
+  const { formatGHS } = useCurrency();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [message, setMessage] = useState("");
@@ -151,7 +158,7 @@ export function ProductChat({ product, onLoginRequired }: ProductChatProps) {
             exit={{ scale: 0, opacity: 0 }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            className="fixed bottom-6 right-6 z-50"
+            className={cn("hidden md:fixed right-6 z-50", bottomOffsetClass)}
           >
             <button
               onClick={handleOpen}
@@ -186,7 +193,10 @@ export function ProductChat({ product, onLoginRequired }: ProductChatProps) {
             }}
             exit={{ opacity: 0, y: 100, scale: 0.9 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-6 right-6 z-50 w-[360px] bg-background rounded-2xl shadow-2xl border overflow-hidden flex flex-col"
+            className={cn(
+              "fixed right-6 z-50 w-[360px] bg-background rounded-2xl shadow-2xl border overflow-hidden flex flex-col",
+              bottomOffsetClass,
+            )}
           >
             {/* Header */}
             <div className="bg-primary text-primary-foreground p-4 flex items-center justify-between">
@@ -248,11 +258,9 @@ export function ProductChat({ product, onLoginRequired }: ProductChatProps) {
                         {product.name}
                       </p>
                       <p className="text-sm text-primary font-semibold">
-                        GH₵{" "}
-                        {(Number.isFinite(product.price)
-                          ? product.price
-                          : 0
-                        ).toLocaleString()}
+                        {formatGHS(
+                          Number.isFinite(product.price) ? product.price : 0,
+                        )}
                       </p>
                     </div>
                   </div>

@@ -17,6 +17,7 @@ import {
   useRemoveFromWishlist,
   useIsInWishlist,
   useStartConversation,
+  useCurrency,
 } from "@/hooks";
 import { useCartStore, useAuthStore } from "@/stores";
 import { useAuthPromptStore } from "@/stores/authPromptStore";
@@ -38,6 +39,7 @@ export function ProductDetailPage() {
   const addToWishlist = useAddToWishlist();
   const removeFromWishlist = useRemoveFromWishlist();
   const startConversation = useStartConversation();
+  const { formatGHS } = useCurrency();
 
   const [quantity, setQuantity] = useState(1);
 
@@ -136,7 +138,7 @@ export function ProductDetailPage() {
     relatedProducts?.filter((p) => p.id !== product.id).slice(0, 4) || [];
 
   return (
-    <div className=" min-h-screen">
+    <div className="min-h-screen pb-28">
       <div className="container mx-auto px-4 py-6 max-w-[1408px]">
         {/* Breadcrumb */}
         {/* <Breadcrumb
@@ -234,6 +236,7 @@ export function ProductDetailPage() {
                 onAddToWatchlist={handleWishlistToggle}
                 onContactSeller={handleContactSeller}
                 isInWishlist={isInWishlist}
+                hideActionButtons
               />
             </div>
           </div>
@@ -246,22 +249,7 @@ export function ProductDetailPage() {
           {/* Similar Products */}
           {similarProducts.length > 0 && (
             <div className="border-t border-gray-200 p-6 lg:p-8">
-              <SimilarProducts
-                products={similarProducts}
-                onWishlistToggle={(productId) => {
-                  if (!isAuthenticated) {
-                    openAuthPrompt(
-                      getCurrentPath(),
-                      "Sign in to add items to your wishlist.",
-                    );
-                    return;
-                  }
-                  // Toggle wishlist for similar products
-                  // In a real app, you'd track wishlist status for each product
-                  addToWishlist.mutate(productId);
-                }}
-                wishlistProductIds={new Set()}
-              />
+              <SimilarProducts products={similarProducts} />
             </div>
           )}
         </div>
@@ -273,6 +261,36 @@ export function ProductDetailPage() {
             openAuthPrompt(getCurrentPath(), "Sign in to message this seller.")
           }
         />
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white backdrop-blur supports-[backdrop-filter]:bg-white">
+        <div className="mx-auto flex max-w-[1408px] items-center gap-3 px-4 py-3">
+          {/* <div className="hidden md:block min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-gray-900">
+              {product.name}
+            </p>
+            <p className="text-base font-bold text-gray-900">
+              {formatGHS(Number.isFinite(product.price) ? product.price : 0)}
+            </p>
+          </div> */}
+          <Button
+            onClick={handleAddToCart}
+            variant="outline"
+            size="lg"
+            disabled={isOutOfStock}
+            className="h-12 flex-1 rounded-full text-base font-semibold md:max-w-1/4 "
+          >
+            Add to Cart
+          </Button>
+          <Button
+            onClick={handleBuyNow}
+            size="lg"
+            disabled={isOutOfStock}
+            className="h-12 flex-1 rounded-full text-base font-semibold"
+          >
+            Buy It Now
+          </Button>
+        </div>
       </div>
     </div>
   );

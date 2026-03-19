@@ -2,7 +2,8 @@ import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import type { Product, ProductCondition } from "@/types-new";
-import { cn, formatPrice } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { useCurrency } from "@/hooks";
 import { useAuthStore } from "@/stores";
 import { useAuthPromptStore } from "@/stores/authPromptStore";
 import {
@@ -66,6 +67,7 @@ export function ProductCard({
   index = 0,
   variant = "grid",
 }: ProductCardProps) {
+  const { formatGHS } = useCurrency();
   const { isAuthenticated } = useAuthStore();
   const { openAuthPrompt } = useAuthPromptStore();
   const { data: isInWishlist } = useIsInWishlist(product.id);
@@ -167,7 +169,7 @@ export function ProductCard({
             {/* Price */}
             <div className="mt-1">
               <span className="text-[20px] font-bold text-gray-900">
-                {formatPrice(product.price)}
+                {formatGHS(product.price)}
               </span>
             </div>
 
@@ -205,6 +207,7 @@ function ListCard({
   index: number;
   specString: string;
 }) {
+  const { formatGHS } = useCurrency();
   const { isAuthenticated } = useAuthStore();
   const { openAuthPrompt } = useAuthPromptStore();
   const { data: isInWishlist } = useIsInWishlist(product.id);
@@ -281,7 +284,7 @@ function ListCard({
 
               <div className="mt-1 space-y-0.5">
                 <span className="text-[22px] font-bold text-gray-900 block mb-0.5">
-                  {formatPrice(product.price)}
+                  {formatGHS(product.price)}
                 </span>
 
                 <p className="text-[13px] text-[#1a8a2a] font-bold">

@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/hooks";
 import type { Product } from "@/types-new";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -26,6 +27,7 @@ interface ProductInfoProps {
   onAddToWatchlist: () => void;
   onContactSeller: () => void;
   isInWishlist?: boolean;
+  hideActionButtons?: boolean;
 }
 
 export function ProductInfo({
@@ -37,7 +39,9 @@ export function ProductInfo({
   onAddToWatchlist,
   onContactSeller,
   isInWishlist,
+  hideActionButtons = false,
 }: ProductInfoProps) {
+  const { formatGHS } = useCurrency();
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [selectedCondition, setSelectedCondition] = useState<string>(
     product.condition || "new",
@@ -126,18 +130,17 @@ export function ProductInfo({
       {/* Price Section */}
       <div>
         <div className="flex items-baseline gap-2">
-          <span className="text-sm text-gray-600">US</span>
           <span className="text-3xl font-bold text-gray-900">
-            ${currentPrice.toFixed(2)}
+            {formatGHS(currentPrice)}
           </span>
         </div>
         {savings && savingsPercent && (
           <div className="mt-2 flex items-center gap-2">
             <span className="text-sm text-gray-500 line-through">
-              ${comparePrice!.toFixed(2)}
+              {formatGHS(comparePrice!)}
             </span>
             <Badge variant="destructive" className="text-xs">
-              Save ${savings.toFixed(2)} ({savingsPercent}% off)
+              Save {formatGHS(savings)} ({savingsPercent}% off)
             </Badge>
           </div>
         )}
@@ -195,37 +198,39 @@ export function ProductInfo({
       </div>
 
       {/* Action Buttons */}
-      <div className="space-y-3">
-        <Button
-          onClick={onBuyNow}
-          className="w-full h-12 rounded-[24px] text-base font-semibold"
-          size="lg"
-        >
-          Buy It Now
-        </Button>
-        <Button
-          onClick={onAddToCart}
-          variant="outline"
-          className="w-full h-12 rounded-[24px] text-base font-semibold  text-primary hover:bg-primary/5"
-          size="lg"
-        >
-          Add to cart
-        </Button>
-        <Button
-          onClick={onAddToWatchlist}
-          variant="outline"
-          className={cn(
-            "w-full h-12 rounded-[24px] text-base font-semibold",
-            isInWishlist
-              ? "border-red-500 text-red-500 hover:bg-red-50"
-              : "border-primary text-primary hover:bg-primary/5",
-          )}
-          size="lg"
-        >
-          <Eye className="w-5 h-5 mr-2" />
-          {isInWishlist ? "Remove from Watchlist" : "Add to Watchlist"}
-        </Button>
-      </div>
+      {!hideActionButtons && (
+        <div className="space-y-3">
+          <Button
+            onClick={onBuyNow}
+            className="w-full h-12 rounded-[24px] text-base font-semibold"
+            size="lg"
+          >
+            Buy It Now
+          </Button>
+          <Button
+            onClick={onAddToCart}
+            variant="outline"
+            className="w-full h-12 rounded-[24px] text-base font-semibold  text-primary hover:bg-primary/5"
+            size="lg"
+          >
+            Add to cart
+          </Button>
+          <Button
+            onClick={onAddToWatchlist}
+            variant="outline"
+            className={cn(
+              "w-full h-12 rounded-[24px] text-base font-semibold",
+              isInWishlist
+                ? "border-red-500 text-red-500 hover:bg-red-50"
+                : "border-primary text-primary hover:bg-primary/5",
+            )}
+            size="lg"
+          >
+            <Eye className="w-5 h-5 mr-2" />
+            {isInWishlist ? "Remove from Watchlist" : "Add to Watchlist"}
+          </Button>
+        </div>
+      )}
 
       {/* Activity Indicators */}
       <div className="flex flex-wrap gap-4 py-4 border-y border-gray-200">
