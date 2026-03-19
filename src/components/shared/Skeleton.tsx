@@ -14,7 +14,7 @@ export function ProductCardSkeleton() {
   return (
     <div className="flex flex-col">
       {/* Image placeholder */}
-      <div className="aspect-square rounded-2xl bg-[#f8f9fa] animate-pulse mb-3" />
+      <div className="aspect-square rounded-[6px] md:rounded-md bg-[#f8f9fa] animate-pulse mb-3" />
 
       {/* Content */}
       <div className="flex flex-col px-1 gap-1 mt-1">
@@ -34,7 +34,7 @@ export function ProductCardListSkeleton() {
   return (
     <div className="flex flex-col sm:flex-row gap-5 py-4 border-b border-gray-100">
       {/* Image placeholder */}
-      <Skeleton className="w-full sm:w-[200px] aspect-square rounded-2xl shrink-0 bg-[#f8f9fa]" />
+      <Skeleton className="w-full sm:w-[200px] aspect-square rounded-lg shrink-0 bg-[#f8f9fa]" />
 
       {/* Content */}
       <div className="flex-1 flex flex-col justify-between sm:py-2">

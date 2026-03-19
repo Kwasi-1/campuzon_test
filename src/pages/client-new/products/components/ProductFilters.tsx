@@ -11,6 +11,7 @@ interface ProductFiltersProps {
   onFilterChange: (filters: FilterState) => void;
   isOpen: boolean;
   onClose: () => void;
+  onAdvancedFilterClick?: () => void;
 }
 
 export interface FilterState {
@@ -133,6 +134,7 @@ interface FilterContentProps {
   onConditionChange: (value: string) => void;
   onMinPriceChange: (value: string) => void;
   onMaxPriceChange: (value: string) => void;
+  onAdvancedFilterClick?: () => void;
 }
 
 function FilterContent({
@@ -141,6 +143,7 @@ function FilterContent({
   onConditionChange,
   onMinPriceChange,
   onMaxPriceChange,
+  onAdvancedFilterClick,
 }: FilterContentProps) {
   const [showAllCategories, setShowAllCategories] = useState(false);
   
@@ -166,6 +169,13 @@ function FilterContent({
               onClick={() => onCategoryChange(category.value)}
             />
           ))}
+          {onAdvancedFilterClick && (
+            <CategoryLink
+              label="Custom"
+              onClick={onAdvancedFilterClick}
+            />
+          )}
+
           {CATEGORY_OPTIONS.length > 5 && (
             <button 
               onClick={() => setShowAllCategories(!showAllCategories)}
@@ -231,6 +241,7 @@ export function ProductFilters({
   onFilterChange,
   isOpen,
   onClose,
+  onAdvancedFilterClick,
 }: ProductFiltersProps) {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -287,6 +298,7 @@ export function ProductFilters({
       handleFilterChange("minPrice", value ? Number(value) : undefined),
     onMaxPriceChange: (value) =>
       handleFilterChange("maxPrice", value ? Number(value) : undefined),
+    onAdvancedFilterClick: onAdvancedFilterClick,
   };
 
   return (

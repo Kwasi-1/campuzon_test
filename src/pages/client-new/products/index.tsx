@@ -6,6 +6,7 @@ import {
   ProductGrid,
   ProductFilters,
   ProductsToolbar,
+  ProductAdvancedFiltersModal,
   type FilterState,
 } from "./components";
 import { useProducts } from "@/hooks/useProducts";
@@ -21,6 +22,7 @@ export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { filtersOpen, setFiltersOpen } = useUIStore();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
 
   const [filters, setFilters] = useState<FilterState>({
     category: (searchParams.get("category") as Category) || undefined,
@@ -129,6 +131,7 @@ export default function Products() {
               onFilterChange={handleFilterChange}
               isOpen={filtersOpen}
               onClose={() => setFiltersOpen(false)}
+              onAdvancedFilterClick={() => setAdvancedFiltersOpen(true)}
              />
           </div>
 
@@ -145,6 +148,7 @@ export default function Products() {
                 onViewModeChange={setViewMode}
                 sortBy={`${filters.sortBy || "date_created"}:${filters.sortOrder || "desc"}`}
                 onSortChange={handleSortChange}
+                onFilterClick={() => setAdvancedFiltersOpen(true)}
               />
             </div>
 
@@ -197,6 +201,12 @@ export default function Products() {
           </div>
         </div>
       </div>
+      <ProductAdvancedFiltersModal
+        isOpen={advancedFiltersOpen}
+        onClose={() => setAdvancedFiltersOpen(false)}
+        initialFilters={filters}
+        onApply={handleFilterChange}
+      />
     </div>
   );
 }

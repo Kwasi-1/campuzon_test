@@ -16,6 +16,7 @@ interface ProductsToolbarProps {
   onViewModeChange: (mode: ViewMode) => void;
   sortBy: string;
   onSortChange: (value: SortOption) => void;
+  onFilterClick?: () => void;
   className?: string;
 }
 
@@ -34,6 +35,7 @@ export function ProductsToolbar({
   onViewModeChange,
   sortBy,
   onSortChange,
+  onFilterClick,
   className,
 }: ProductsToolbarProps) {
   const currentSort =
@@ -58,12 +60,12 @@ export function ProductsToolbar({
         <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
       </div>
 
-      {/* View Mode Toggle */}
-      <div className="flex items-center bg-gray-100 p-1 rounded-sm ml-2">
+      {/* View Mode Toggle (Desktop Only) */}
+      <div className="hidden md:flex items-center bg-gray-100 p-1 rounded-sm ml-2">
         <button
           onClick={() => onViewModeChange("grid")}
           className={cn(
-            "p-1.5 rounded transition-all duration-200",
+            "p-1.5 rounded-[7px] transition-all duration-200",
             viewMode === "grid"
               ? "bg-white text-gray-900 shadow-[0_1px_2px_rgba(0,0,0,0.1)]"
               : "text-gray-500 hover:text-gray-900",
@@ -76,7 +78,7 @@ export function ProductsToolbar({
         <button
           onClick={() => onViewModeChange("list")}
           className={cn(
-            "p-1.5 rounded transition-all duration-200",
+            "p-1.5 rounded-[7px] transition-all duration-200",
             viewMode === "list"
               ? "bg-white text-gray-900 shadow-[0_1px_2px_rgba(0,0,0,0.1)]"
               : "text-gray-500 hover:text-gray-900",
@@ -87,6 +89,20 @@ export function ProductsToolbar({
           <Menu className="w-4 h-4" />
         </button>
       </div>
+
+      {/* Mobile Filter Button */}
+      {onFilterClick && (
+        <button
+          onClick={onFilterClick}
+          className="md:hidden flex items-center justify-center p-1.5 px-3 bg-gray-100 rounded-[5px] text-gray-700 hover:bg-gray-200 hover:text-gray-900 transition-colors"
+          aria-label="Open filters"
+        >
+          <span className="text-[13px] font-medium flex items-center gap-1.5">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+            Filter
+          </span>
+        </button>
+      )}
     </div>
   );
 }

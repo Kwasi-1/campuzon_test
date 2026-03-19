@@ -7,3 +7,4 @@ export { ProductImageGallery } from './ProductImageGallery';
 export { ProductInfo } from './ProductInfo';
 export * from './SimilarProducts';
 export * from './ProductReviews';
+export * from './ProductAdvancedFiltersModal';
