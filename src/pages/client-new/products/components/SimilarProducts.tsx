@@ -22,9 +22,9 @@ export function SimilarProducts({
   }
 
   return (
-    <div className="mt-12 pt-8 border-t border-gray-200">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+    <div className="mt-8 sm:mt-10 md:mt-12 pt-6 sm:pt-8 border-t border-gray-200">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{title}</h2>
       </div>
 
       <Carousel
@@ -34,18 +34,18 @@ export function SimilarProducts({
         }}
         className="w-full"
       >
-        <CarouselContent>
+        <CarouselContent className="-ml-2 sm:-ml-3 md:-ml-4">
           {products.map((product, index) => (
             <CarouselItem
               key={product.id}
-              className="basis-[68%] sm:basis-[45%] md:basis-[34%] lg:basis-[25%] xl:basis-[20%]"
+              className="pl-2 sm:pl-3 md:pl-4 basis-[calc(50%-4px)] sm:basis-[calc(50%-6px)] md:basis-[calc(33.333%-8px)] lg:basis-[calc(25%-8px)] xl:basis-[calc(20%-8px)]"
             >
               <ProductCard product={product} index={index} variant="grid" />
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="hidden md:flex -left-4" />
-        <CarouselNext className="hidden md:flex -right-4" />
+        <CarouselPrevious className="hidden md:flex -left-3 lg:-left-5" />
+        <CarouselNext className="hidden md:flex -right-3 lg:-right-5" />
       </Carousel>
     </div>
   );

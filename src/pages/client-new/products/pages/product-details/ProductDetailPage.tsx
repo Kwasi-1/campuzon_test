@@ -138,8 +138,8 @@ export function ProductDetailPage() {
     relatedProducts?.filter((p) => p.id !== product.id).slice(0, 4) || [];
 
   return (
-    <div className="min-h-screen pb-28">
-      <div className="container mx-auto px-4 py-6 max-w-[1408px]">
+    <div className="min-h-screen pb-24 md:pb-28">
+      <div className="container mx-auto px-4 sm:px-4 md:px-6 py-4 sm:py-6">
         {/* Breadcrumb */}
         {/* <Breadcrumb
           items={[
@@ -154,8 +154,8 @@ export function ProductDetailPage() {
         /> */}
 
         {/* Main Content */}
-        <div className="bg-white overflow-hidden">
-          <div className="grid lg:grid-cols-[1fr_auto] gap-8 p-6 lg:p-8">
+        <div className="bg-white overflow-hidden rounded-lg sm:rounded-xl">
+          <div className="grid lg:grid-cols-[1.2fr_1fr] gap-4 sm:gap-6 md:gap-8 lg:gap-16 py-3 sm:py-4 md:py-6 lg:py-8">
             {/* Left Section - Image Gallery */}
             <div className="lg:max-w-[884px]">
               <ProductImageGallery
@@ -172,8 +172,10 @@ export function ProductDetailPage() {
               />
 
               {/* Product Description Section */}
-              <div className="hidden lg:block border-t border-gray-200 p-6 lg:p-8 mt-8">
-                <h2 className="text-xl font-bold mb-4">About this product</h2>
+              <div className="hidden lg:block border-t border-gray-200 p-4 md:p-6 lg:p-8 mt-6 lg:mt-8">
+                <h2 className="text-lg md:text-xl font-bold mb-3 md:mb-4">
+                  About this product
+                </h2>
                 <div className="prose prose-sm max-w-none text-gray-700">
                   <p className="whitespace-pre-wrap">{product.description}</p>
                 </div>
@@ -224,9 +226,7 @@ export function ProductDetailPage() {
             </div>
 
             {/* Right Section - Product Info */}
-
-            {/* Right Section - Product Info */}
-            <div className="lg:w-[550px] lg:pt-8 ">
+            <div className="lg:w-[540px] lg:pt-2 w-full">
               <ProductInfo
                 product={product}
                 quantity={quantity}
@@ -242,13 +242,13 @@ export function ProductDetailPage() {
           </div>
 
           {/* Product Reviews */}
-          <div className="border-t border-gray-200 p-6 lg:p-8">
+          <div className="border-t border-gray-200 p-4 sm:p-6 lg:p-8">
             <ProductReviews productId={id!} />
           </div>
 
           {/* Similar Products */}
           {similarProducts.length > 0 && (
-            <div className="border-t border-gray-200 p-6 lg:p-8">
+            <div className="border-t border-gray-200 p-4 sm:p-6 lg:p-8">
               <SimilarProducts products={similarProducts} />
             </div>
           )}
@@ -263,30 +263,30 @@ export function ProductDetailPage() {
         />
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white backdrop-blur supports-[backdrop-filter]:bg-white">
-        <div className="mx-auto flex max-w-[1408px] items-center gap-3 px-4 py-3">
-          {/* <div className="hidden md:block min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-gray-900">
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white/98 backdrop-blur-md supports-[backdrop-filter]:bg-white/95 shadow-lg">
+        <div className="mx-auto flex w-full max-w-[1408px] items-center gap-2 px-3 sm:px-4 md:px-6 py-2.5 sm:py-3">
+          <div className="hidden sm:flex min-w-0 flex-1 flex-col">
+            <p className="truncate text-xs sm:text-sm font-medium text-gray-700">
               {product.name}
             </p>
-            <p className="text-base font-bold text-gray-900">
+            <p className="text-sm sm:text-base font-bold text-gray-900">
               {formatGHS(Number.isFinite(product.price) ? product.price : 0)}
             </p>
-          </div> */}
+          </div>
           <Button
             onClick={handleAddToCart}
             variant="outline"
             size="lg"
             disabled={isOutOfStock}
-            className="h-12 flex-1 rounded-full text-base font-semibold md:max-w-1/4 "
+            className="h-12 sm:h-12 md:h-14 flex-1 rounded-full text-sm sm:text-sm md:text-base font-semibold"
           >
             Add to Cart
           </Button>
           <Button
             onClick={handleBuyNow}
-            size="lg"
+            size="sm"
             disabled={isOutOfStock}
-            className="h-12 flex-1 rounded-full text-base font-semibold"
+            className="h-12 sm:h-12 md:h-14 flex-1 rounded-full text-sm sm:text-sm md:text-base font-semibold"
           >
             Buy It Now
           </Button>

@@ -25,7 +25,7 @@ interface ProductChatProps {
 export function ProductChat({
   product,
   onLoginRequired,
-  bottomOffsetClass = "bottom-20",
+  bottomOffsetClass = "bottom-28",
 }: ProductChatProps) {
   const { formatGHS } = useCurrency();
   const [isOpen, setIsOpen] = useState(false);
@@ -158,20 +158,23 @@ export function ProductChat({
             exit={{ scale: 0, opacity: 0 }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            className={cn("hidden md:fixed right-6 z-50", bottomOffsetClass)}
+            className={cn(
+              "hidden md:block fixed right-4 lg:right-6 z-50",
+              bottomOffsetClass,
+            )}
           >
             <button
               onClick={handleOpen}
-              className="group relative flex items-center justify-center h-14 w-14 bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground rounded-2xl shadow-lg hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 rotate-0 hover:rotate-6"
+              className="group relative flex items-center justify-center h-12 md:h-14 w-12 md:w-14 bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground rounded-full shadow-lg hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 rotate-0 hover:rotate-6"
             >
               {/* Glow effect */}
               <span className="absolute inset-0 rounded-2xl bg-primary/40 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
               {/* Icon */}
-              <MessageCircle className="relative h-6 w-6 transition-transform duration-300 group-hover:scale-110" />
+              <MessageCircle className="relative h-5 md:h-6 w-5 md:w-6 transition-transform duration-300 group-hover:scale-110" />
 
               {/* Online indicator */}
-              <span className="absolute -top-1 -right-1 flex h-4 w-4">
+              <span className="absolute -top-0.5 -right-0.5 flex h-3.5 md:h-4 w-3.5 md:w-4">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500 border-2 border-white shadow-sm" />
               </span>
@@ -189,19 +192,19 @@ export function ProductChat({
               opacity: 1,
               y: 0,
               scale: 1,
-              height: isMinimized ? "auto" : 480,
+              height: isMinimized ? "auto" : "calc(100dvh - 120px)",
             }}
             exit={{ opacity: 0, y: 100, scale: 0.9 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className={cn(
-              "fixed right-6 z-50 w-[360px] bg-background rounded-2xl shadow-2xl border overflow-hidden flex flex-col",
+              "fixed md:right-4 lg:right-6 z-50 inset-x-0 md:inset-x-auto md:w-[360px] bg-background rounded-b-2xl md:rounded-2xl shadow-2xl md:border border-t border-gray-200 md:border-gray-200 overflow-hidden flex flex-col",
               bottomOffsetClass,
             )}
           >
             {/* Header */}
-            <div className="bg-primary text-primary-foreground p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-12 w-12">
+            <div className="border text-foreground p-3 sm:p-4 flex items-center justify-between">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Avatar className="h-10 sm:h-12 w-10 sm:w-12">
                   <AvatarImage
                     src={product.store?.logo}
                     alt={product.store?.name}
@@ -210,11 +213,11 @@ export function ProductChat({
                     {product.store?.name?.charAt(0) || "S"}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <p className="font-medium text-sm">
+                <div className="min-w-0">
+                  <p className="font-medium text-xs sm:text-sm truncate">
                     {product.store?.name || "Seller"}
                   </p>
-                  <p className="text-xs opacity-80">
+                  <p className="text-xs opacity-80 hidden sm:block">
                     Usually responds within an hour
                   </p>
                 </div>
@@ -224,9 +227,9 @@ export function ProductChat({
                   onClick={() => setIsMinimized(!isMinimized)}
                   aria-label={isMinimized ? "Expand chat" : "Minimize chat"}
                   title={isMinimized ? "Expand chat" : "Minimize chat"}
-                  className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                  className="hidden sm:block p-1.5 rounded-lg hover:bg-white/10 transition-colors"
                 >
-                  <Minimize2 className="h-4 w-4" />
+                  <Minimize2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
@@ -234,7 +237,7 @@ export function ProductChat({
                   title="Close chat"
                   className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
               </div>
             </div>
@@ -242,8 +245,8 @@ export function ProductChat({
             {!isMinimized && (
               <>
                 {/* Product Context */}
-                <div className="p-3 border-b bg-muted/30">
-                  <div className="flex items-center gap-3">
+                <div className="p-2.5 sm:p-3 border-b bg-muted/30">
+                  <div className="flex items-center gap-2.5 sm:gap-3">
                     <img
                       src={
                         product.thumbnail ||
@@ -251,13 +254,13 @@ export function ProductChat({
                         "/placeholder-product.jpg"
                       }
                       alt={product.name}
-                      className="w-12 h-12 rounded-lg object-cover"
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
+                      <p className="text-xs sm:text-sm font-medium truncate">
                         {product.name}
                       </p>
-                      <p className="text-sm text-primary font-semibold">
+                      <p className="text-xs sm:text-sm text-primary font-semibold">
                         {formatGHS(
                           Number.isFinite(product.price) ? product.price : 0,
                         )}
@@ -330,7 +333,7 @@ export function ProductChat({
                               className={cn(
                                 "max-w-[75%] px-3 py-2 rounded-2xl text-sm",
                                 isMe
-                                  ? "bg-primary text-primary-foreground rounded-br-md"
+                                  ? "bg-blue-500 text-primary-foreground rounded-br-md"
                                   : "bg-muted rounded-bl-md",
                               )}
                             >

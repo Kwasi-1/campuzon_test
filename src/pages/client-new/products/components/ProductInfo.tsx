@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { useCurrency } from "@/hooks";
 import type { Product } from "@/types-new";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { CustomSelectField } from "@/components/shared/text-field";
 
 interface ProductInfoProps {
   product: Product;
@@ -72,16 +73,16 @@ export function ProductInfo({
     : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Product Title */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 leading-tight tracking-normal">
+        <h1 className="text-xl sm:text-2xl lg:text-2xl font-bold text-gray-900 leading-tight tracking-normal">
           {product.name}
         </h1>
       </div>
 
       {/* Seller Info Card */}
-      <div className="p-4 border-y border-gray-200">
+      <div className="p-3 sm:p-4 border border-gray-200 rounded-lg">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <Link to={`/stores/${product.store?.slug}`}>
@@ -122,7 +123,6 @@ export function ProductInfo({
             className="flex items-center gap-1"
           >
             <MessageCircle className="w-4 h-4" />
-            Contact
           </Button>
         </div>
       </div>
@@ -130,12 +130,12 @@ export function ProductInfo({
       {/* Price Section */}
       <div>
         <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-bold text-gray-900">
+          <span className="text-2xl sm:text-3xl lg:text-3xl font-bold text-gray-900">
             {formatGHS(currentPrice)}
           </span>
         </div>
         {savings && savingsPercent && (
-          <div className="mt-2 flex items-center gap-2">
+          <div className="mt-2 sm:mt-3 flex items-center gap-2">
             <span className="text-sm text-gray-500 line-through">
               {formatGHS(comparePrice!)}
             </span>
@@ -147,51 +147,49 @@ export function ProductInfo({
       </div>
 
       {/* Condition */}
-      <div>
+      <div className="py-1">
         <div className="flex items-center gap-2 mb-2">
-          <label className="text-sm font-medium text-gray-700">
+          <label className="text-xs sm:text-sm font-medium text-gray-700">
             Condition:
           </label>
           <button
             className="text-gray-400 hover:text-gray-600"
             aria-label="Condition information"
           >
-            <Info className="w-4 h-4" />
+            <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
         </div>
-        <select
+        <CustomSelectField
           value={selectedCondition}
-          onChange={(e) => setSelectedCondition(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-full hover:border-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm"
-          aria-label="Product condition"
-        >
-          <option value="new">New</option>
-          <option value="like-new">Like New</option>
-          <option value="used-excellent">Used - Excellent</option>
-          <option value="used-good">Used - Good</option>
-          <option value="open-box">Open box</option>
-        </select>
+          inputProps={{
+            onChange: (e) => setSelectedCondition(e.target.value),
+          }}
+          className="w-full"
+          options={[
+            { label: "New", value: "new" },
+            { label: "Like New", value: "like-new" },
+            { label: "Used - Excellent", value: "used-excellent" },
+            { label: "Used - Good", value: "used-good" },
+            { label: "Open box", value: "open-box" },
+          ]}
+        />
       </div>
 
       {/* Quantity */}
-      <div>
-        <label className="text-sm font-medium text-gray-700 block mb-2">
+      <div className="py-1">
+        <label className="text-xs sm:text-sm font-medium text-gray-700 block mb-2">
           Quantity:
         </label>
-        <select
+        <CustomSelectField
           value={quantity.toString()}
-          onChange={(e) => onQuantityChange(parseInt(e.target.value))}
-          className="w-32 px-4 py-2 border border-gray-300 rounded-full hover:border-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm"
-          aria-label="Product quantity"
-        >
-          {quantityOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+          inputProps={{
+            onChange: (e) => onQuantityChange(parseInt(e.target.value)),
+          }}
+          className="w-28 sm:w-32"
+          options={quantityOptions}
+        />
         {product.quantity && product.quantity < 10 && (
-          <p className="text-sm text-orange-600 mt-2">
+          <p className="text-xs sm:text-sm text-orange-600 mt-2">
             Only {product.quantity} left in stock
           </p>
         )}
@@ -233,7 +231,7 @@ export function ProductInfo({
       )}
 
       {/* Activity Indicators */}
-      <div className="flex flex-wrap gap-4 py-4 border-y border-gray-200">
+      <div className="flex flex-wrap gap-3 sm:gap-4 py-3 sm:py-4 border-y border-gray-200">
         {product.soldCount && product.soldCount > 0 && (
           <div className="flex items-center gap-2 text-sm">
             <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center">
