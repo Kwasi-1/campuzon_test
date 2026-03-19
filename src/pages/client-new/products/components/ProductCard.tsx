@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import type { Product, ProductCondition } from "@/types-new";
 import { cn, formatPrice } from "@/lib/utils";
 import { useAuthStore } from "@/stores";
+import { useAuthPromptStore } from "@/stores/authPromptStore";
 import {
   useAddToWishlist,
   useRemoveFromWishlist,
@@ -66,6 +67,7 @@ export function ProductCard({
   variant = "grid",
 }: ProductCardProps) {
   const { isAuthenticated } = useAuthStore();
+  const { openAuthPrompt } = useAuthPromptStore();
   const { data: isInWishlist } = useIsInWishlist(product.id);
   const addToWishlist = useAddToWishlist();
   const removeFromWishlist = useRemoveFromWishlist();
@@ -75,7 +77,11 @@ export function ProductCard({
   const handleWishlistToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      openAuthPrompt(currentPath, "Sign in to add items to your wishlist.");
+      return;
+    }
 
     if (isInWishlist) {
       removeFromWishlist.mutate(product.id);
@@ -123,6 +129,10 @@ export function ProductCard({
             {/* Wishlist Button - Inside grid image, top right */}
             <button
               onClick={handleWishlistToggle}
+              aria-label={
+                isInWishlist ? "Remove from wishlist" : "Add to wishlist"
+              }
+              title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
               className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white flex items-center justify-center hover:bg-gray-50 transition-colors"
             >
               <Heart
@@ -196,6 +206,7 @@ function ListCard({
   specString: string;
 }) {
   const { isAuthenticated } = useAuthStore();
+  const { openAuthPrompt } = useAuthPromptStore();
   const { data: isInWishlist } = useIsInWishlist(product.id);
   const addToWishlist = useAddToWishlist();
   const removeFromWishlist = useRemoveFromWishlist();
@@ -204,7 +215,11 @@ function ListCard({
   const handleWishlistToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      openAuthPrompt(currentPath, "Sign in to add items to your wishlist.");
+      return;
+    }
     if (isInWishlist) removeFromWishlist.mutate(product.id);
     else addToWishlist.mutate(product.id);
   };
@@ -237,6 +252,10 @@ function ListCard({
             {/* Wishlist - Inside image top right */}
             <button
               onClick={handleWishlistToggle}
+              aria-label={
+                isInWishlist ? "Remove from wishlist" : "Add to wishlist"
+              }
+              title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
               className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white flex items-center justify-center hover:bg-gray-50"
             >
               <Heart

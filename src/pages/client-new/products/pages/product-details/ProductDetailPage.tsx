@@ -19,12 +19,14 @@ import {
   useStartConversation,
 } from "@/hooks";
 import { useCartStore, useAuthStore } from "@/stores";
+import { useAuthPromptStore } from "@/stores/authPromptStore";
 import type { Conversation } from "@/types-new";
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
+  const { openAuthPrompt } = useAuthPromptStore();
   const { addItem, getItem } = useCartStore();
 
   const { data: product, isLoading, error } = useProduct(id!);
@@ -41,9 +43,15 @@ export function ProductDetailPage() {
 
   const isOutOfStock = product?.quantity === 0;
 
+  const getCurrentPath = () =>
+    `${window.location.pathname}${window.location.search}${window.location.hash}`;
+
   const handleWishlistToggle = () => {
     if (!isAuthenticated) {
-      navigate("/login");
+      openAuthPrompt(
+        getCurrentPath(),
+        "Sign in to add items to your wishlist.",
+      );
       return;
     }
     if (isInWishlist) {
@@ -62,7 +70,7 @@ export function ProductDetailPage() {
   const handleBuyNow = () => {
     if (!product || isOutOfStock) return;
     if (!isAuthenticated) {
-      navigate("/login");
+      openAuthPrompt(getCurrentPath(), "Sign in to continue with checkout.");
       return;
     }
     addItem(product, quantity);
@@ -71,7 +79,7 @@ export function ProductDetailPage() {
 
   const handleContactSeller = async () => {
     if (!isAuthenticated) {
-      navigate("/login");
+      openAuthPrompt(getCurrentPath(), "Sign in to message this seller.");
       return;
     }
     if (!product?.id) return;
@@ -242,7 +250,10 @@ export function ProductDetailPage() {
                 products={similarProducts}
                 onWishlistToggle={(productId) => {
                   if (!isAuthenticated) {
-                    navigate("/login");
+                    openAuthPrompt(
+                      getCurrentPath(),
+                      "Sign in to add items to your wishlist.",
+                    );
                     return;
                   }
                   // Toggle wishlist for similar products
@@ -258,7 +269,9 @@ export function ProductDetailPage() {
         {/* Chat Widget */}
         <ProductChat
           product={product}
-          onLoginRequired={() => navigate("/login")}
+          onLoginRequired={() =>
+            openAuthPrompt(getCurrentPath(), "Sign in to message this seller.")
+          }
         />
       </div>
     </div>

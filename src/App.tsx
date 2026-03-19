@@ -70,6 +70,7 @@ import { Layout } from "./components/layout/Layout";
 import { LayoutWithFooter } from "./components/layout/LayoutWithFooter";
 import { StoreLayout } from "./components/layout/StoreLayout";
 import { CartPage } from "./pages/client-new/profile/pages/cart/CartPage";
+import { RequireAuthPrompt } from "./components/auth/RequireAuthPrompt";
 
 const queryClient = new QueryClient();
 
@@ -223,7 +224,7 @@ const App = () => (
                       {/* Pages with main layout */}
                       <Route element={<Layout />}>
                         <Route element={<LayoutWithFooter />}>
-                          <Route path="/" element={<Home />} />                          
+                          <Route path="/" element={<Home />} />
                         </Route>
                         <Route path="/products" element={<Products />} />
                         <Route path="/categories" element={<Products />} />
@@ -258,40 +259,51 @@ const App = () => (
                         <Route path="/about" element={<AboutUs />} />
                         <Route path="*" element={<NotFound />} />
 
-                        {/* Profile pages wrapped in new layout */}
-                        <Route element={<ProfileLayout />}>
-                          <Route path="/profile" element={<ProfilePage />} />
-                          <Route path="/settings" element={<SettingsPage />} />
-                          <Route
-                            path="/settings/security"
-                            element={<Navigate to="/settings" replace />}
-                          />
-                          <Route
-                            path="/notifications"
-                            element={<NotificationsPage />}
-                          />
-                          <Route path="/wishlist" element={<WishlistPage />} />
-                          <Route
-                            path="/addresses"
-                            element={<AddressesPage />}
-                          />
-                          <Route path="/messages" element={<MessagesPage />} />
-                          <Route
-                            path="/messages/:id"
-                            element={<MessagesPage />}
-                          />
-                          <Route
-                            path="/payments"
-                            element={<PaymentMethodsPage />}
-                          />
-                          <Route path="/orders" element={<OrdersPage />} />
-                          <Route
-                            path="/orders/:id"
-                            element={<OrderDetailPage />}
-                          />
-                        </Route>
+                        <Route element={<RequireAuthPrompt />}>
+                          {/* Profile pages wrapped in new layout */}
+                          <Route element={<ProfileLayout />}>
+                            <Route path="/profile" element={<ProfilePage />} />
+                            <Route
+                              path="/settings"
+                              element={<SettingsPage />}
+                            />
+                            <Route
+                              path="/settings/security"
+                              element={<Navigate to="/settings" replace />}
+                            />
+                            <Route
+                              path="/notifications"
+                              element={<NotificationsPage />}
+                            />
+                            <Route
+                              path="/wishlist"
+                              element={<WishlistPage />}
+                            />
+                            <Route
+                              path="/addresses"
+                              element={<AddressesPage />}
+                            />
+                            <Route
+                              path="/messages"
+                              element={<MessagesPage />}
+                            />
+                            <Route
+                              path="/messages/:id"
+                              element={<MessagesPage />}
+                            />
+                            <Route
+                              path="/payments"
+                              element={<PaymentMethodsPage />}
+                            />
+                            <Route path="/orders" element={<OrdersPage />} />
+                            <Route
+                              path="/orders/:id"
+                              element={<OrderDetailPage />}
+                            />
+                          </Route>
 
-                        <Route path="/checkout" element={<CheckoutPage />} />
+                          <Route path="/checkout" element={<CheckoutPage />} />
+                        </Route>
                       </Route>
 
                       <Route path="" element={<StoreLayout />}>

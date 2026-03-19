@@ -1,19 +1,27 @@
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Home, LayoutGrid, ShoppingCart, User, Heart, Flame } from 'lucide-react';
-import { useAuthStore } from '@/stores';
-import { useCartStore } from '@/stores';
+import { NavLink, useLocation } from "react-router-dom";
+import {
+  Home,
+  LayoutGrid,
+  ShoppingCart,
+  User,
+  Heart,
+  Flame,
+} from "lucide-react";
+import { useAuthStore } from "@/stores";
+import { useCartStore } from "@/stores";
+import { useAuthPromptStore } from "@/stores/authPromptStore";
 
 const baseNavStart = [
   {
-    path: '/',
-    label: 'Shop',
+    path: "/",
+    label: "Shop",
     icon: Home,
     requiresAuth: false,
     exactMatch: true,
   },
   {
-    path: '/products',
-    label: 'Category',
+    path: "/products",
+    label: "Category",
     icon: LayoutGrid,
     requiresAuth: false,
     exactMatch: false,
@@ -22,15 +30,15 @@ const baseNavStart = [
 
 const baseNavEnd = [
   {
-    path: '/cart',
-    label: 'Cart',
+    path: "/cart",
+    label: "Cart",
     icon: ShoppingCart,
     requiresAuth: false,
     exactMatch: false,
   },
   {
-    path: '/profile',
-    label: 'Profile',
+    path: "/profile",
+    label: "Profile",
     icon: User,
     requiresAuth: true,
     exactMatch: false,
@@ -39,47 +47,63 @@ const baseNavEnd = [
 
 export function MobileBottomNav() {
   const location = useLocation();
-  const navigate = useNavigate();
   const { isAuthenticated, user } = useAuthStore();
+  const { openAuthPrompt } = useAuthPromptStore();
   const cartItems = useCartStore((state) => state.items);
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   // Dynamic middle tab — built inside the component where hooks are available
   const middleTab = isAuthenticated
-    ? { path: '/wishlist', label: 'Wishlist', icon: Heart, requiresAuth: true, exactMatch: false }
-    : { path: '/products?sort=hot', label: 'Hot Deals', icon: Flame, requiresAuth: false, exactMatch: false };
+    ? {
+        path: "/wishlist",
+        label: "Wishlist",
+        icon: Heart,
+        requiresAuth: true,
+        exactMatch: false,
+      }
+    : {
+        path: "/products?sort=hot",
+        label: "Hot Deals",
+        icon: Flame,
+        requiresAuth: false,
+        exactMatch: false,
+      };
 
   const navItems = [...baseNavStart, middleTab, ...baseNavEnd];
 
-  const handleNavClick = (e: React.MouseEvent, path: string, requiresAuth: boolean) => {
+  const handleNavClick = (
+    e: React.MouseEvent,
+    path: string,
+    requiresAuth: boolean,
+  ) => {
     if (requiresAuth && !isAuthenticated) {
       e.preventDefault();
-      navigate('/login', { state: { from: path } });
+      openAuthPrompt(path, "Sign in to access this feature.");
     }
   };
 
-  const isTabActive = (item: typeof navItems[number]) => {
+  const isTabActive = (item: (typeof navItems)[number]) => {
     if (item.exactMatch) {
       return location.pathname === item.path;
     }
-    if (item.path === '/products') {
+    if (item.path === "/products") {
       const isTrends =
-        location.pathname === '/products' &&
-        location.search.includes('sort=popular');
-      return location.pathname.startsWith('/products') && !isTrends;
+        location.pathname === "/products" &&
+        location.search.includes("sort=popular");
+      return location.pathname.startsWith("/products") && !isTrends;
     }
-    const pathSegment = item.path.split('?')[0];
+    const pathSegment = item.path.split("?")[0];
     return location.pathname.startsWith(pathSegment);
   };
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background backdrop-blur-sm border-t border-border safe-area-pb">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-background backdrop-blur-sm border-t border-border safe-area-pb">
       <div className="flex items-stretch h-[58px]">
         {navItems.map((item) => {
           const isActive = isTabActive(item);
           const Icon = item.icon;
-          const isCart = item.path === '/cart';
-          const isProfile = item.path === '/profile';
+          const isCart = item.path === "/cart";
+          const isProfile = item.path === "/profile";
 
           return (
             <NavLink
@@ -94,20 +118,24 @@ export function MobileBottomNav() {
                     src={user.profileImage}
                     alt={user.displayName || user.firstName}
                     className={`h-5 w-5 rounded-full object-cover ${
-                      isActive ? 'ring-2 ring-foreground ring-offset-1 ring-offset-background' : ''
+                      isActive
+                        ? "ring-2 ring-foreground ring-offset-1 ring-offset-background"
+                        : ""
                     }`}
                   />
                 ) : (
                   <Icon
                     className={`h-5 w-5 transition-all ${
-                      isActive ? 'text-foreground stroke-[2.5px]' : 'text-muted-foreground/70'
+                      isActive
+                        ? "text-foreground stroke-[2.5px]"
+                        : "text-muted-foreground/70"
                     }`}
                   />
                 )}
 
                 {isCart && cartCount > 0 && (
                   <span className="absolute -top-1.5 -right-2 h-4 min-w-4 px-0.5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[9px] font-bold leading-none">
-                    {cartCount > 99 ? '99+' : cartCount}
+                    {cartCount > 99 ? "99+" : cartCount}
                   </span>
                 )}
               </div>

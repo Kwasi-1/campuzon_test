@@ -72,7 +72,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 w-full bg-background">
       {/* Top Navigation Bar */}
-      <div className="border-b border-border">
+      <div className="md:border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex h-18 items-center justify-between py-3">
             {/* Left: Hamburger Menu */}
@@ -225,7 +225,7 @@ export function Header() {
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="bg-background border-b border-border">
+      <div className="hidden md:block bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-3 h-14 overflow-x-auto scrollbar-hide">
             {/* Category Dropdown */}

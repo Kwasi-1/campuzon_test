@@ -1,5 +1,7 @@
 import axios, { type AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
+import toast from 'react-hot-toast';
 import { useAuthStore } from '@/stores/authStore';
+import { useAuthPromptStore } from '@/stores/authPromptStore';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -10,6 +12,65 @@ export const api = axios.create({
   },
   timeout: 30000,
 });
+
+const AUTH_STORAGE_KEY = 'campuzon-auth';
+const RETURN_TO_STORAGE_KEY = 'auth:returnTo';
+const SESSION_EXPIRED_SHOWN_KEY = 'auth:sessionExpiredShown';
+const SESSION_EXPIRED_TOAST_ID = 'session-expired';
+const SESSION_EXPIRED_TOAST_MESSAGE = 'Session expired. Please sign in again to continue.';
+
+let sessionExpiryHandled = false;
+
+function isAuthRoute(url?: string): boolean {
+  if (!url) return false;
+  return (
+    url.includes('/auth/login') ||
+    url.includes('/auth/register') ||
+    url.includes('/auth/refresh') ||
+    url.includes('/auth/verify-2fa')
+  );
+}
+
+function handleUnauthorizedOnce() {
+  if (sessionExpiryHandled) return;
+  sessionExpiryHandled = true;
+
+  const authState = useAuthStore.getState();
+  const hadAuthenticatedSession =
+    Boolean(authState.isAuthenticated) ||
+    Boolean(authState.accessToken) ||
+    Boolean(authState.refreshToken);
+
+  try {
+    if (typeof window !== 'undefined') {
+      const hasShownSessionExpired =
+        window.sessionStorage.getItem(SESSION_EXPIRED_SHOWN_KEY) === '1';
+      const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      if (currentPath && currentPath !== '/login') {
+        window.sessionStorage.setItem(RETURN_TO_STORAGE_KEY, currentPath);
+      }
+
+      useAuthStore.getState().logout();
+      window.localStorage.removeItem(AUTH_STORAGE_KEY);
+
+      if (hadAuthenticatedSession && !hasShownSessionExpired) {
+        toast.error(SESSION_EXPIRED_TOAST_MESSAGE, {
+          id: SESSION_EXPIRED_TOAST_ID,
+        });
+        useAuthPromptStore
+          .getState()
+          .openAuthPrompt(currentPath, SESSION_EXPIRED_TOAST_MESSAGE);
+        window.sessionStorage.setItem(SESSION_EXPIRED_SHOWN_KEY, '1');
+      }
+
+      return;
+    }
+  } catch {
+    // Fall back to in-memory logout in non-browser or restricted environments
+    useAuthStore.getState().logout();
+    return;
+  }
+}
 
 // Request interceptor - Add auth token
 api.interceptors.request.use(
@@ -25,37 +86,16 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - Handle errors and token refresh
+// Response interceptor - Handle global unauthorized states
 api.interceptors.response.use(
   (response: AxiosResponse) => {
     return response;
   },
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as InternalAxiosRequestConfig | undefined;
 
-    // Handle 401 - Token expired
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const refreshToken = useAuthStore.getState().refreshToken;
-        if (refreshToken) {
-          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-            refreshToken,
-          });
-
-          const { accessToken, refreshToken: newRefreshToken } = response.data.success.data;
-          useAuthStore.getState().setTokens(accessToken, newRefreshToken);
-
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-          return api(originalRequest);
-        }
-      } catch (refreshError) {
-        // Refresh failed - logout user
-        useAuthStore.getState().logout();
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
+    if (error.response?.status === 401 && !isAuthRoute(originalRequest?.url)) {
+      handleUnauthorizedOnce();
     }
 
     return Promise.reject(error);

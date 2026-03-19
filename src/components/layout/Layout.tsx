@@ -2,6 +2,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { Header } from "./Header";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { Toaster } from "react-hot-toast";
+import { AuthRequiredModal } from "@/components/auth/AuthRequiredModal";
 
 const BOTTOM_NAV_PATHS = new Set([
   "/",
@@ -28,6 +29,7 @@ export function Layout() {
         <Outlet />
       </main>
       {showBottomNav ? <MobileBottomNav /> : null}
+      <AuthRequiredModal />
       <Toaster
         position="top-right"
         toastOptions={{

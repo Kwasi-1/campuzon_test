@@ -71,7 +71,7 @@ export function ProductInfo({
     <div className="space-y-6">
       {/* Product Title */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 leading-tight">
+        <h1 className="text-2xl font-bold text-gray-900 leading-tight tracking-normal">
           {product.name}
         </h1>
       </div>
