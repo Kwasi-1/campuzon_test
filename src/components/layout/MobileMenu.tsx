@@ -39,13 +39,18 @@ export function MobileMenu({
   return (
     <>
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
-      <div className="fixed left-0 top-0 bottom-0 w-[90%] max-w-sm lg:max-w-md bg-background z-[999] shadow-xl overflow-y-auto scrollbar-hide">
+      <div className="fixed left-0 top-0 bottom-0 w-[85%] max-w-sm lg:max-w-md bg-background z-[999] shadow-xl overflow-y-auto scrollbar-hide">
         <div className="p-4 border-b border-border/50 flex items-center justify-between">
-          <img
-            src={logo}
-            alt="Campuzon"
-            className="h-8 md:h-10 object-contain"
-          />
+          <Link
+            to="/"
+            onClick={onClose}
+          >
+            <img
+              src={logo}
+              alt="Campuzon"
+              className="h-8 md:h-10 object-contain"
+            />
+          </Link>
           <button
             onClick={onClose}
             className="p-2 hover:bg-muted rounded-lg"
