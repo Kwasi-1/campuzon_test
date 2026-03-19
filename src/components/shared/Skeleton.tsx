@@ -9,72 +9,49 @@ export function Skeleton({ className }: SkeletonProps) {
   return <div className={cn("animate-pulse rounded-lg bg-muted", className)} />;
 }
 
-// eBay-style product card skeleton for grid view
+// Minimalist product card skeleton for grid view
 export function ProductCardSkeleton() {
   return (
     <div className="flex flex-col">
       {/* Image placeholder */}
-      <div className="aspect-square rounded-lg border border-border bg-muted animate-pulse" />
+      <div className="aspect-square rounded-2xl bg-[#f8f9fa] animate-pulse mb-3" />
 
       {/* Content */}
-      <div className="pt-3 space-y-2">
+      <div className="flex flex-col px-1 gap-1 mt-1">
         {/* Title */}
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-3/4" />
 
-        {/* Specs */}
-        <Skeleton className="h-3 w-1/2" />
-
         {/* Price */}
-        <Skeleton className="h-6 w-20 mt-2" />
-
-        {/* Buy It Now */}
-        <Skeleton className="h-3 w-16" />
-
-        {/* Delivery */}
-        <Skeleton className="h-3 w-24" />
-
-        {/* Location */}
-        <Skeleton className="h-3 w-32" />
+        <Skeleton className="h-5 w-24 mt-1" />
       </div>
     </div>
   );
 }
 
-// eBay-style product card skeleton for list view
+// Minimalist product card skeleton for list view
 export function ProductCardListSkeleton() {
   return (
-    <div className="flex gap-4 py-4 border-b border-border">
-      {/* Wishlist placeholder */}
-      <Skeleton className="w-7 h-7 rounded-full shrink-0" />
-
+    <div className="flex flex-col sm:flex-row gap-5 py-4 border-b border-gray-100">
       {/* Image placeholder */}
-      <Skeleton className="w-[120px] h-[120px] md:w-[140px] md:h-[140px] shrink-0 rounded-lg" />
+      <Skeleton className="w-full sm:w-[200px] aspect-square rounded-2xl shrink-0 bg-[#f8f9fa]" />
 
       {/* Content */}
-      <div className="flex-1 space-y-2">
-        {/* Title */}
-        <Skeleton className="h-4 w-3/4" />
+      <div className="flex-1 flex flex-col justify-between sm:py-2">
+        <div className="flex flex-col gap-2 mt-2">
+          {/* Title */}
+          <Skeleton className="h-4 w-full max-w-[400px]" />
+          <Skeleton className="h-4 w-3/4 max-w-[300px]" />
 
-        {/* Specs */}
-        <Skeleton className="h-3 w-1/3" />
+          {/* Price */}
+          <Skeleton className="h-6 w-32 mt-2" />
+        </div>
+        <div className="flex flex-col gap-2">
+          {/* Title */}
+          {/* <Skeleton className="h-4 w-3/4 max-w-[200px]" /> */}
 
-        {/* Price */}
-        <Skeleton className="h-6 w-24 mt-2" />
-
-        {/* Buy It Now */}
-        <Skeleton className="h-3 w-16" />
-
-        {/* Delivery */}
-        <Skeleton className="h-3 w-32" />
-
-        {/* Location */}
-        <Skeleton className="h-3 w-40" />
-
-        {/* Returns & Sold */}
-        <div className="flex gap-4">
-          <Skeleton className="h-3 w-20" />
-          <Skeleton className="h-3 w-16" />
+          {/* Price */}
+          <Skeleton className="h-6 w-40 mt-2 mb-10" />
         </div>
       </div>
     </div>

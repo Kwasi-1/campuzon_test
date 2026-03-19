@@ -29,12 +29,6 @@ const conditionOptions = [
   { value: "used_fair", label: "Used - Fair" },
 ];
 
-const shippingOptions = [
-  { id: "fast_delivery", label: "Arrives in 2-4 days" },
-  { id: "free_shipping", label: "Free International Shipping" },
-  { id: "local_pickup", label: "Local Pickup" },
-];
-
 // Collapsible filter section
 interface FilterSectionProps {
   title: string;
@@ -148,6 +142,12 @@ function FilterContent({
   onMinPriceChange,
   onMaxPriceChange,
 }: FilterContentProps) {
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  
+  // Show first 5 categories by default
+  const displayedCategories = showAllCategories 
+    ? CATEGORY_OPTIONS 
+    : CATEGORY_OPTIONS.slice(0, 5);
   return (
     <div>
       {/* Category Section */}
@@ -158,7 +158,7 @@ function FilterContent({
             isActive={!filters.category}
             onClick={() => onCategoryChange("")}
           />
-          {CATEGORY_OPTIONS.map((category) => (
+          {displayedCategories.map((category) => (
             <CategoryLink
               key={category.value}
               label={category.label}
@@ -166,31 +166,14 @@ function FilterContent({
               onClick={() => onCategoryChange(category.value)}
             />
           ))}
-          <button className="text-sm text-primary hover:underline mt-1">
-            Show More +
-          </button>
-        </div>
-      </FilterSection>
-
-      {/* Update shipping location */}
-      <div className="border-b border-border pb-4 mb-4">
-        <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-          <MapPin className="w-4 h-4" />
-          <span>Update your shipping location</span>
-        </button>
-      </div>
-
-      {/* Shipping and pickup */}
-      <FilterSection title="Shipping and pickup">
-        <div className="space-y-1">
-          {shippingOptions.map((option) => (
-            <CheckboxOption
-              key={option.id}
-              label={option.label}
-              checked={false}
-              onChange={() => {}}
-            />
-          ))}
+          {CATEGORY_OPTIONS.length > 5 && (
+            <button 
+              onClick={() => setShowAllCategories(!showAllCategories)}
+              className="text-sm text-primary hover:underline mt-1 font-medium transition-colors"
+            >
+              {showAllCategories ? "Show Less -" : "Show More +"}
+            </button>
+          )}
         </div>
       </FilterSection>
 

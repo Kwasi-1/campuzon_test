@@ -42,52 +42,49 @@ export function ProductsToolbar({
   return (
     <div className={cn("flex items-center justify-end gap-4", className)}>
       {/* Sort Dropdown */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Sort:</span>
-        <div className="relative">
-          <select
-            value={sortBy}
-            onChange={(e) => onSortChange(e.target.value as SortOption)}
-            aria-label="Sort products"
-            className="appearance-none bg-transparent pr-6 text-sm font-medium cursor-pointer focus:outline-none"
-          >
-            {sortOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-        </div>
+      <div className="relative border border-gray-200 rounded text-gray-800 hover:border-gray-300 transition-colors">
+        <select
+          value={sortBy}
+          onChange={(e) => onSortChange(e.target.value as SortOption)}
+          aria-label="Sort products"
+          className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-xs font-medium cursor-pointer focus:outline-none"
+        >
+          {sortOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
       </div>
 
       {/* View Mode Toggle */}
-      <div className="flex items-center border-l border-border pl-4">
+      <div className="flex items-center bg-gray-100 p-1 rounded-sm ml-2">
         <button
           onClick={() => onViewModeChange("grid")}
           className={cn(
-            "p-1.5 transition-colors",
+            "p-1.5 rounded transition-all duration-200",
             viewMode === "grid"
-              ? "text-foreground"
-              : "text-muted-foreground hover:text-foreground",
+              ? "bg-white text-gray-900 shadow-[0_1px_2px_rgba(0,0,0,0.1)]"
+              : "text-gray-500 hover:text-gray-900",
           )}
           aria-label="Grid view"
           title="Grid view"
         >
-          <Grid3X3 className="w-5 h-5" />
+          <Grid3X3 className="w-4 h-4" />
         </button>
         <button
           onClick={() => onViewModeChange("list")}
           className={cn(
-            "p-1.5 transition-colors",
+            "p-1.5 rounded transition-all duration-200",
             viewMode === "list"
-              ? "text-foreground"
-              : "text-muted-foreground hover:text-foreground",
+              ? "bg-white text-gray-900 shadow-[0_1px_2px_rgba(0,0,0,0.1)]"
+              : "text-gray-500 hover:text-gray-900",
           )}
           aria-label="List view"
           title="List view"
         >
-          <Menu className="w-5 h-5" />
+          <Menu className="w-4 h-4" />
         </button>
       </div>
     </div>

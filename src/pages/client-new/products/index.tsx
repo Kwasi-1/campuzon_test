@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { Heart } from "lucide-react";
 import { Pagination } from "@/components/shared/Pagination";
 import {
   ProductGrid,
   ProductFilters,
   ProductsToolbar,
-  ProductFilterTabs,
   type FilterState,
 } from "./components";
 import { useProducts } from "@/hooks/useProducts";
@@ -22,7 +21,6 @@ export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { filtersOpen, setFiltersOpen } = useUIStore();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [activeTab, setActiveTab] = useState("all");
 
   const [filters, setFilters] = useState<FilterState>({
     category: (searchParams.get("category") as Category) || undefined,
@@ -88,66 +86,59 @@ export default function Products() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 md:px-6  py-4">
-        {/* Breadcrumb */}
-        {/* <Breadcrumb
-          items={[
-            { label: "Home", href: "/" },
-            ...(currentCategory
-              ? [
-                  {
-                    label:
-                      currentCategory.charAt(0).toUpperCase() +
-                      currentCategory.slice(1),
-                  },
-                ]
-              : []),
-            ...(currentSearch
-              ? [{ label: `"${currentSearch}"` }]
-              : [{ label: "Products" }]),
-          ]}
-          className="mb-4"
-        /> */}
+        {/* Top Header Row: Breadcrumbs + Sort */}
+        <div className="hidden md:flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-4 border-b border-gray-200">
+          {/* Breadcrumb matching Oraimo style */}
+          <div className="text-xs md:text-sm font-medium text-gray-800 flex items-center gap-2 flex-wrap">
+            <Link to="/" className="hover:underline text-gray-900 font-bold">Home</Link>
+            <span className="text-gray-400">»</span> 
+            <Link to="/products" className="hover:underline text-gray-900 font-bold">Product</Link>
+            {currentCategory && (
+              <>
+                <span className="text-gray-400">»</span>
+                <Link to={`/products?category=${currentCategory}`} className="capitalize hover:underline">{currentCategory.replace(/_/g, " ")}</Link>
+              </>
+            )}
+            {currentSearch && (
+              <>
+                <span className="text-gray-400">»</span> Search: "{currentSearch}"
+              </>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+             <span className="text-[13px] text-gray-800 font-medium">Sort by</span>
+             <ProductsToolbar
+                totalResults={data?.total || 0}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                sortBy={`${filters.sortBy || "date_created"}:${filters.sortOrder || "desc"}`}
+                onSortChange={handleSortChange}
+              />
+          </div>
+        </div>
 
         {/* Main Layout: Sidebar + Content */}
-        <div className="flex gap-8 pt-4">
+        <div className="flex gap-8">
           {/* Left Sidebar - Filters */}
-          <ProductFilters
-            onFilterChange={handleFilterChange}
-            isOpen={filtersOpen}
-            onClose={() => setFiltersOpen(false)}
-          />
+          <div className="hidden lg:block w-60 shrink-0">
+             <h3 className="text-[14px] font-bold text-gray-900 mb-6 pb-3 border-b border-gray-200 uppercase tracking-wide">
+                Shopping Options {data?.total ? `(${data.total} Results)` : ""}
+             </h3>
+             <ProductFilters
+              onFilterChange={handleFilterChange}
+              isOpen={filtersOpen}
+              onClose={() => setFiltersOpen(false)}
+             />
+          </div>
 
           {/* Main Content Area */}
           <div className="flex-1 min-w-0">
-            {/* Results header with save search */}
-            <div className="flex items-center gap-3 mb-4">
-              <h1 className="text-base text-foreground">
-                <span className="font-semibold">
-                  {data?.total?.toLocaleString() || "0"}+
-                </span>{" "}
-                results
-                {currentSearch && (
-                  <>
-                    {" "}
-                    for <span className="font-semibold">{currentSearch}</span>
-                  </>
-                )}
+            {/* Mobile Header (Hidden on Desktop) */}
+            <div className="md:hidden flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
+              <h1 className="text-sm text-gray-900 font-semibold">
+                {data?.total?.toLocaleString() || "0"} results
               </h1>
-              <button className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
-                <Heart className="w-4 h-4" />
-                Save this search
-              </button>
-            </div>
-
-            {/* Filter Tabs + Sort/View Toggle Row */}
-            <div className="flex items-center justify-between gap-4 mb-4 pb-4 borderb border-border">
-              {/* Left: Filter Tabs */}
-              <ProductFilterTabs
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-              />
-
-              {/* Right: Sort and View Toggle */}
               <ProductsToolbar
                 totalResults={data?.total || 0}
                 viewMode={viewMode}
@@ -169,6 +160,21 @@ export default function Products() {
               }
             />
 
+            {/* Clear Filters Button */}
+            {!isLoading && data?.items?.length === 0 && (
+              <div className="flex justify-center mt-6">
+                <button
+                  onClick={() => {
+                    setSearchParams(new URLSearchParams());
+                    setFilters({});
+                  }}
+                  className="px-6 py-2.5 border border-gray-300 text-gray-700 bg-white rounded-full text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm"
+                >
+                  Clear search & filters
+                </button>
+              </div>
+            )}
+
             {/* Pagination */}
             {data && data.pages > 1 && (
               <div className="mt-8 flex justify-center">
@@ -182,7 +188,7 @@ export default function Products() {
 
             {/* Results summary */}
             {data && data.total > 0 && (
-              <p className="text-center text-sm text-muted-foreground mt-4">
+              <p className="text-center text-sm text-muted-foreground mt-10 mb-4 md:my-14">
                 Showing {(page - 1) * 24 + 1} -{" "}
                 {Math.min(page * 24, data.total)} of{" "}
                 {data.total.toLocaleString()} results

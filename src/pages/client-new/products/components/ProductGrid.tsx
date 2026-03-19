@@ -44,7 +44,7 @@ export function ProductGrid({
     <div
       className={cn(
         viewMode === "grid"
-          ? `grid grid-cols-2 sm:grid-cols-3 ${isStorePage ? "lg:grid-cols-5" : "lg:grid-cols-4"} gap-x-4 gap-y-6`
+          ? `grid grid-cols-2 sm:grid-cols-3 ${isStorePage ? "lg:grid-cols-5" : "lg:grid-cols-4"} gap-x-3 md:gap-x-4 gap-y-6`
           : "flex flex-col",
         className,
       )}

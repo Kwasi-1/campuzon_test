@@ -87,7 +87,7 @@ export function ProductImageGallery({
 
       {/* Main Image Container */}
       <div className="flex-1">
-        <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-gray-50">
+        <div className="relative aspect-[4/3] rounded-md md:rounded-xl overflow-hidden bg-gray-50">
           <AnimatePresence mode="wait">
             <motion.img
               key={selectedImageIndex}
