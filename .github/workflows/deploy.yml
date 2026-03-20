@@ -2,7 +2,7 @@ name: Vercel Production Deployment
 on:
   push:
     branches:
-      - main  # Only deploys when you push to main
+      - main  # Only deploys when you push to mains
   pull_request:
     branches:
       - main
