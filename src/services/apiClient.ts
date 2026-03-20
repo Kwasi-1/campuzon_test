@@ -3,7 +3,7 @@ import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 // Base API configuration
 // Support both VITE_API_BASE_URL and VITE_API_URL env vars
 const envVars = import.meta.env as unknown as Record<string, string | undefined>;
-const API_BASE_URL = envVars.VITE_API_BASE_URL || envVars.VITE_API_URL || 'https://tobra-app-tmmhq.ondigitalocean.app/';
+const API_BASE_URL = envVars.VITE_API_BASE_URL || envVars.VITE_API_URL || 'https://test-api.campuzon.me/api/v1/';
 
 // API Response interfaces
 export interface ApiResponse<T = unknown> {
