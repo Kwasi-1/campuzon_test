@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Vercel CLI
-        run: npm install --global vercel@latest
+      - run: npm install --global vercel@50.16.0
 
       - name: Pull Vercel Environment Information
         # This downloads the remote project settings into a local .vercel folder
