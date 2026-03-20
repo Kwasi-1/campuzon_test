@@ -1,8 +1,9 @@
 name: Vercel Production Deployment
+
 on:
   push:
     branches:
-      - main  # Only deploys when you push to mains
+      - main
   pull_request:
     branches:
       - main
@@ -11,7 +12,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      # These must be set as ENV variables for the CLI to find your project
+      # These must be set as secrets in GitHub Repo Settings
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
@@ -19,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Vercel CLI
-      - run: npm install --global vercel@50.16.0
+        run: npm install --global vercel@50.16.0
 
       - name: Pull Vercel Environment Information
         # This downloads the remote project settings into a local .vercel folder
