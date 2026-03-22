@@ -741,4 +741,4 @@ interface ApiErrorResponse {
 type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 ```
 
-This comprehensive schema documentation ensures perfect consistency across frontend, backend, and mobile applications in the Tobra ecosystem! 🎯
+This comprehensive schema documentation ensures perfect consistency across frontend, backend, and mobile applications in the Campuzon ecosystem! 
