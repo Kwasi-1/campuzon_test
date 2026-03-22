@@ -544,7 +544,7 @@ export function SellerProductsPage() {
                           </div>
                           <div className="min-w-0 max-w-[300px]">
                             <Link
-                              to={`/products/${product.slug}`}
+                              to={`/product/${product.id}`}
                               className="line-clamp-1 text-sm md:text-base font-medium text-gray-900 transition-colors hover:text-emerald-600"
                             >
                               {product.name}
