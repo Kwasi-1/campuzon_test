@@ -52,26 +52,26 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
   const closeSidebar = () => setSidebarOpen(false);
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-gray-50 max-w-[100vw] overflow-x-hidden">
       {/* Mobile sidebar overlay */}
-      {isMobile && sidebarOpen && (
+      {sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={closeSidebar} />
-          <div className="relative flex-1 flex flex-col h-full w-full max-w-sm bg-white">
-            <div className="absolute top-4 right-4">
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-75 transition-opacity" onClick={closeSidebar} />
+          <div className="relative flex-1 flex flex-col h-full w-[280px] max-w-[80vw] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out">
+            <div className="absolute top-4 right-4 z-[60]">
               <Button
                 variant="ghost"
                 onClick={closeSidebar}
-                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 h-8 w-8 rounded-full p-0 flex items-center justify-center"
               >
-                <X className="h-10 w-10" />
+                <X className="h-5 w-5" />
               </Button>
             </div>
             {/* Mobile Sidebar Content */}
             <div className="flex-1 h-0 overflow-y-auto">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center shrink-0">
                     <Shield className="w-6 h-6 text-white" />
                   </div>
                   <div>
@@ -94,10 +94,10 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       }`}
                     >
-                      <Icon className="w-5 h-5" />
+                      <Icon className="w-5 h-5 shrink-0" />
                       <span className="font-medium">{item.name}</span>
                       {item.name === 'Notifications' && (
-                        <Badge variant="secondary" className="ml-auto">3</Badge>
+                        <Badge variant="secondary" className="ml-auto shrink-0">3</Badge>
                       )}
                     </Link>
                   );
@@ -109,11 +109,11 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
       )}
 
       {/* Desktop Sidebar */}
-      <div className={`${isMobile ? 'hidden' : 'fixed w-24 xl:w-72'} h-screen bg-gradient-to-b from-[#3B2F2F] via-[#231F1A] to-[#3B2F2F] shadow-2xl border-r border-[#4B3621] flex flex-col`}>
+      <div className="hidden lg:flex fixed left-0 top-0 w-24 xl:w-72 h-screen bg-gradient-to-b from-[#3B2F2F] via-[#231F1A] to-[#3B2F2F] shadow-2xl border-r border-[#4B3621] flex-col z-30">
         {/* Logo */}
-        <div className="p-6 border-b border-[#4B3621]">
+        <div className="p-6 border-b border-[#4B3621] shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#A9743B] to-[#7C4F20] rounded-xl flex items-center justify-center mx-auto xl:mx-0 shadow-lg">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#A9743B] to-[#7C4F20] rounded-xl flex items-center justify-center mx-auto xl:mx-0 shadow-lg shrink-0">
               <Shield className="w-7 h-7 text-white drop-shadow-sm" />
             </div>
             <div className='hidden xl:block'>
@@ -124,23 +124,23 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto w-full">
           {navigationItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link
                 key={item.name}
                 to={item.path}
-                className={`flex items-center space-x-3 text-sm px-4 py-3 rounded-xl transition-all duration-200 group ${
+                className={`flex items-center space-x-3 text-sm px-4 py-3 rounded-xl transition-all duration-200 group justify-center xl:justify-start ${
                   isActive(item.path)
                     ? 'bg-gradient-to-r from-[#A9743B] to-[#7C4F20] text-white shadow-lg transform scale-[1.04]'
                     : 'text-[#E6D3B3] hover:bg-[#4B3621]/70 hover:text-white hover:translate-x-1'
                 }`}
               >
-                <Icon className="w-5 h-5 mx-auto xl:mx-0 flex-shrink-0" />
+                <Icon className="w-5 h-5 mx-auto xl:mx-0 shrink-0" />
                 <span className="font-semibold hidden xl:block">{item.name}</span>
                 {item.name === 'Notifications' && (
-                  <Badge className="ml-auto hidden xl:block bg-red-500 hover:bg-red-600 text-white border-0">3</Badge>
+                  <Badge className="ml-auto hidden xl:block bg-red-500 hover:bg-red-600 text-white border-0 shrink-0">3</Badge>
                 )}
               </Link>
             );
@@ -148,28 +148,28 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
         </nav>
 
         {/* User Profile */}
-        <div className="p-4 border-t border-[#4B3621]">
+        <div className="p-4 border-t border-[#4B3621] shrink-0">
           {user && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="w-full justify-start p-3 h-auto hover:bg-[#4B3621]/70 rounded-xl transition-all duration-200">
-                  <Avatar className="h-10 w-10 mr-3 ring-2 ring-[#A9743B]/50">
+                <Button variant="ghost" className="w-full justify-center xl:justify-start p-3 h-auto hover:bg-[#4B3621]/70 rounded-xl transition-all duration-200">
+                  <Avatar className="h-10 w-10 xl:mr-3 ring-2 ring-[#A9743B]/50 shrink-0">
                     <AvatarImage alt={user.name} />
                     <AvatarFallback className="bg-gradient-to-br from-[#A9743B] to-[#7C4F20] text-white font-bold">
                       {user.name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="text-left hidden xl:block">
-                    <p className="text-sm font-semibold text-white">{user.name}</p>
-                    <p className="text-xs text-[#D2B48C]">{user.email}</p>
+                  <div className="text-left hidden xl:block min-w-0">
+                    <p className="text-sm font-semibold text-white truncate w-full">{user.name}</p>
+                    <p className="text-xs text-[#D2B48C] truncate w-full">{user.email}</p>
                   </div>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-white border border-[#A9743B] shadow-xl" align="end" forceMount>
+              <DropdownMenuContent className="w-56 mb-2 bg-white border border-[#A9743B] shadow-xl" align="end" side="top" forceMount>
                 <DropdownMenuLabel className="font-normal bg-gradient-to-r from-[#F5E6D3] to-[#E6D3B3]">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-semibold leading-none text-[#7C4F20]">{user.name}</p>
-                    <p className="text-xs leading-none text-[#A9743B]">
+                    <p className="text-sm font-semibold leading-none text-[#7C4F20] truncate">{user.name}</p>
+                    <p className="text-xs leading-none text-[#A9743B] truncate">
                       {user.email}
                     </p>
                     <p className="text-xs leading-none text-[#A9743B] font-bold">
@@ -178,7 +178,7 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-[#A9743B]" />
-                <DropdownMenuItem onClick={handleLogout} className="text-red-600 hover:bg-red-50 hover:text-red-700">
+                <DropdownMenuItem onClick={handleLogout} className="text-red-600 hover:bg-red-50 hover:text-red-700 cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>
@@ -189,49 +189,53 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
       </div>
 
       {/* Main Content */}
-      <div className={`flex-1 flex flex-col min-w-0 ${isMobile ? 'ml-0' : 'ml-24 xl:ml-72'}`}>
+      <div className="flex-1 flex flex-col min-w-0 lg:ml-24 xl:ml-72 w-full">
         {/* Top Header */}
-        <header className="bg-white block lg:hidden border-b border-gray-200 px-4 sm:px-6 py-4">
+        <header className="bg-white lg:hidden border-b border-gray-200 px-4 sm:px-6 py-4 sticky top-0 z-20 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              {isMobile && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setSidebarOpen(true)}
-                  className="lg:hidden"
-                >
-                  <Menu className="h-6 w-6" />
-                </Button>
-              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden -ml-2 h-9 w-9"
+              >
+                <Menu className="h-6 w-6" />
+              </Button>
               <Link to="/" className="flex items-center space-x-2 font-display">
                 <span className="text-xl sm:text-2xl font-bold text-gray-900 tracking-wide">tobra</span>
               </Link>
             </div>
             
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="w-5 h-5" />
-                <Badge className="absolute -top-1 -right-1 w-4 h-4 p-0 flex items-center justify-center text-xs">
-                  3
-                </Badge>
+              <Button variant="ghost" size="icon" className="relative h-9 w-9 -mr-2" asChild>
+                <Link to="/super-admin-portal/notifications">
+                  <Bell className="w-5 h-5" />
+                  <Badge className="absolute -top-1 -right-1 w-4 h-4 p-0 flex items-center justify-center text-xs">
+                    3
+                  </Badge>
+                </Link>
               </Button>
             </div>
           </div>
         </header>
 
-        <div className="absolute right-10 top-4 hidden lg:flex items-center space-x-4">
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="w-5 h-5" />
-            <Badge className="absolute -top-1 -right-1 w-4 h-4 p-0 flex items-center justify-center text-xs">
-              3
-            </Badge>
+        <div className="hidden lg:block absolute right-10 top-4 z-40">
+          <Button variant="ghost" size="icon" className="relative" asChild>
+            <Link to="/super-admin-portal/notifications">
+              <Bell className="w-5 h-5" />
+              <Badge className="absolute -top-1 -right-1 w-4 h-4 p-0 flex items-center justify-center text-xs">
+                3
+              </Badge>
+            </Link>
           </Button>
         </div>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
-          {children}
+        <main className="flex-1 p-4 sm:p-6 overflow-x-hidden min-h-[calc(100vh-70px)] lg:min-h-screen">
+          <div className="max-w-full w-full mx-auto">
+            {children}
+          </div>
         </main>
       </div>
     </div>

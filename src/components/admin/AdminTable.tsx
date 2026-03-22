@@ -73,17 +73,17 @@ const AdminTable: React.FC<AdminTableProps> = ({
       <CardContent className="space-y-4">
         {/* Search and Action Bar */}
         <div className="flex flex-col sm:flex-row justify-between gap-4">
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 w-full max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
               placeholder={searchPlaceholder}
               value={searchQuery}
               onChange={handleSearchChange}
-              className="pl-10 max-w-md"
+              className="pl-10 w-full"
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {(filters.length > 0 || showDateFilter) && (
               <Button
                 variant="outline"
@@ -103,14 +103,14 @@ const AdminTable: React.FC<AdminTableProps> = ({
             )}
 
             {secondaryActionButton && (
-              <Button variant="outline" onClick={secondaryActionButton.onClick}>
+               <Button variant="outline" onClick={secondaryActionButton.onClick} className="shrink-0">
                 {secondaryActionButton.icon}
                 {secondaryActionButton.label}
               </Button>
             )}
 
             {actionButton && (
-              <Button onClick={actionButton.onClick}>
+              <Button onClick={actionButton.onClick} className="shrink-0">
                 {actionButton.icon}
                 {actionButton.label}
               </Button>
@@ -120,11 +120,11 @@ const AdminTable: React.FC<AdminTableProps> = ({
 
         {/* Filters Row */}
         {showFilters && (filters.length > 0 || showDateFilter) && (
-          <div className="flex flex-wrap gap-4 p-4 bg-gray-50 rounded-lg">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 p-4 bg-gray-50 rounded-lg">
             {filters.map((filter) => (
-              <div key={filter.key} className="min-w-48">
+              <div key={filter.key} className="w-full sm:w-auto sm:min-w-48">
                 <Select value={filter.value} onValueChange={filter.onChange}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full bg-white">
                     <SelectValue placeholder={filter.label} />
                   </SelectTrigger>
                   <SelectContent>
@@ -138,7 +138,9 @@ const AdminTable: React.FC<AdminTableProps> = ({
               </div>
             ))}
             {showDateFilter && (actionButton || secondaryActionButton) && (
-              <DateFilter />
+              <div className="w-full sm:w-auto">
+                <DateFilter />
+              </div>
             )}
           </div>
         )}

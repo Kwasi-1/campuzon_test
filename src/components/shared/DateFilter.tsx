@@ -57,12 +57,12 @@ const DateFilter = () => {
 
   return (
     <div className="flex items-center gap-2">
-      <div className="flex bg-white dark:bg-[#e0e6e930] shadow border border-gray-200 dark:border-gray-700 rounded-xl p-[5px]">
+      <div className="flex bg-white dark:bg-[#e0e6e930] border border-gray-200 dark:border-gray-700 rounded-lg p-[5px]">
         {filters.map((filter) => (
           <button
             key={filter}
             onClick={() => handleFilterClick(filter)}
-            className={`px-3 py-[5px] rounded-lg text-[13px] cursor-pointer
+            className={`px-3 py-[5px] rounded-md text-xs md:text-[13px] cursor-pointer
               ${
                 selectedPeriod === filter
                   ? "bg-white dark:bg-accent border border-[#e5e7eb] dark:border-[#2f3031] text-black dark:text-white focus:border-[#e5e7eb]"
