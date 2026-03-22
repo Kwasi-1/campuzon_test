@@ -42,11 +42,13 @@ export interface AdminStoreItem {
   isVerified: boolean;
   owner: {
     id: string;
-    firstName: string;
-    lastName: string;
+    name?: string;
+    firstName?: string;
+    lastName?: string;
     email: string;
   } | null;
   institution?: string;
+  institutionName?: string;
   hall?: string;
   subscriptionPlan?: string;
   subscriptionStatus?: string;

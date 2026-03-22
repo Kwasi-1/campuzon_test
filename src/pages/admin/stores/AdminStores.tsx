@@ -93,7 +93,7 @@ const StoreDetailDialog: React.FC<{ store: AdminStoreItem | null; open: boolean;
     ["Subscription",  store.subscriptionPlan ?? "Free"],
     ["Institution",   store.institution ?? "—"],
     ["Hall",          store.hall ?? "—"],
-    ["Owner",         store.owner ? `${store.owner.firstName} ${store.owner.lastName}` : "—"],
+    ["Owner",         store.owner ? (store.owner.name || `${store.owner.firstName} ${store.owner.lastName}`.trim()) : "—"],
     ["Owner Email",   store.owner?.email ?? "—"],
     ["Joined",        new Date(store.dateCreated).toLocaleDateString()],
   ];
@@ -416,14 +416,14 @@ const AdminStores: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <div className="text-sm font-medium">
-                        {store.owner ? `${store.owner.firstName} ${store.owner.lastName}` : "—"}
+                        {store.owner ? (store.owner.name || `${store.owner.firstName || ""} ${store.owner.lastName || ""}`.trim()) : "—"}
                       </div>
                       <div className="text-xs text-gray-400">{store.owner?.email ?? "—"}</div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1 text-sm text-gray-600">
                         <MapPin className="w-3 h-3 text-gray-400" />
-                        {store.institution ?? "—"}
+                        {store.institution || store.institutionName || "—"}
                       </div>
                       {store.hall && <div className="text-xs text-gray-400 ml-4">{store.hall}</div>}
                     </TableCell>
@@ -433,7 +433,7 @@ const AdminStores: React.FC = () => {
                         {store.rating ? store.rating.toFixed(1) : "—"}
                       </div>
                       <div className="text-xs text-gray-400">
-                        ₵{store.totalRevenue.toLocaleString()} · {store.totalOrders} orders
+                        ₵{(store.totalRevenue || 0).toLocaleString()} · {store.totalOrders || 0} orders
                       </div>
                     </TableCell>
                     <TableCell><StatusBadge status={store.status} /></TableCell>
