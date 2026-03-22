@@ -28,11 +28,15 @@ import AdminProducts from "./pages/admin/products/AdminProducts";
 import AdminTransactions from "./pages/admin/transactions/AdminTransactions";
 import AdminSettings from "./pages/admin/settings/AdminSettings";
 import AdminNotifications from "./pages/admin/notifications/AdminNotifications";
+import AdminDisputes from "./pages/admin/disputes/AdminDisputes";
+import AdminInstitutions from "./pages/admin/institutions/AdminInstitutions";
+import AdminAnalytics from "./pages/admin/analytics/AdminAnalytics";
 
 // Super Admin Portal Components
 import SuperAdminPortalLayout from "./pages/super-admin/SuperAdminPortal";
 import UserActivity from "./pages/super-admin/user-activity/UserActivity";
 import AdminManagement from "./pages/super-admin/admin-management/AdminManagement";
+import AdminModerationQueue from "./pages/super-admin/moderation/AdminModerationQueue";
 import AdminDisbursements from "./pages/admin/transactions/AdminDisbursements";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import AdminLogin from "./pages/admin/AdminLogin";
@@ -185,6 +189,10 @@ const App = () => (
                           path="notifications"
                           element={<AdminNotifications />}
                         />
+                        <Route path="disputes" element={<AdminDisputes />} />
+                        <Route path="institutions" element={<AdminInstitutions />} />
+                        <Route path="analytics" element={<AdminAnalytics />} />
+                        <Route path="moderation" element={<AdminModerationQueue />} />
                       </Route>
 
                       {/* Admin Portal routes - wrapped with AdminAuthProvider */}
@@ -215,6 +223,11 @@ const App = () => (
                           path="notifications"
                           element={<AdminNotifications />}
                         />
+                        <Route path="disputes" element={<AdminDisputes />} />
+                        <Route path="institutions" element={<AdminInstitutions />} />
+                        <Route path="analytics" element={<AdminAnalytics />} />
+                        <Route path="moderation" element={<AdminModerationQueue />} />
+                        <Route path="admin-management" element={<AdminManagement />} />
                       </Route>
                       {/* Legacy admin auth routes - redirect to unified */}
                       <Route

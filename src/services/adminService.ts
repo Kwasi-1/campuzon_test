@@ -51,8 +51,14 @@ export class TwoFactorRequiredError extends Error {
 // Intercept: replace user token with admin token
 // for all /admin/ routes
 // ──────────────────────────────────────────────
+// Helper — matches both /admin/ (absolute) and admin/ (relative)
+function isAdminUrl(url?: string): boolean {
+  if (!url) return false;
+  return url.includes('/admin/') || url.startsWith('admin/') || url.includes('admin/');
+}
+
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  if (config.url?.includes('/admin/')) {
+  if (isAdminUrl(config.url)) {
     const adminToken = localStorage.getItem(ADMIN_TOKEN_KEY);
     if (adminToken) {
       config.headers.Authorization = `Bearer ${adminToken}`;
@@ -71,7 +77,7 @@ api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const originalReq = error.config as InternalAxiosRequestConfig & { _adminRetry?: boolean };
-    const isAdminRoute = originalReq?.url?.includes('/admin/');
+    const isAdminRoute = isAdminUrl(originalReq?.url);
 
     if (
       error.response?.status === 401 &&

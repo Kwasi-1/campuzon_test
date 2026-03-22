@@ -31,6 +31,11 @@ function isAuthRoute(url?: string): boolean {
   );
 }
 
+function isAdminUrl(url?: string): boolean {
+  if (!url) return false;
+  return url.includes('/admin/') || url.startsWith('admin/') || url.includes('admin/');
+}
+
 function handleUnauthorizedOnce() {
   if (sessionExpiryHandled) return;
   sessionExpiryHandled = true;
@@ -75,6 +80,11 @@ function handleUnauthorizedOnce() {
 // Request interceptor - Add auth token
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // Let adminService handle its own tokens
+    if (isAdminUrl(config.url)) {
+      return config;
+    }
+    
     const token = useAuthStore.getState().accessToken;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

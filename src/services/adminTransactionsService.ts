@@ -1,281 +1,164 @@
-import apiClient, { handleApiError } from '@/services/apiClient';
-import adminDataService from '@/services/adminDataService';
-import { Transaction } from '@/types';
+/**
+ * Admin Transactions Service
+ * Uses src/lib/api.ts + extractData. Pulls from real escrow + analytics endpoints.
+ */
+import { api, extractData } from '@/lib/api';
 
-// Backend flexible shape for payments under /admin/stalls/{stall_id}/payments
-type BackendPayment = Record<string, unknown> & {
-  order_id?: string;
-  order_number?: string;
-  customer_name?: string;
-  amount?: number | string;
-  payment_method?: string;
-  payment_status?: string; // 'completed' | 'pending' | 'failed' | 'cancelled' | etc
-  commission_amount?: number;
-  commission_rate?: number;
-  net_amount?: number;
-  payment_date?: string;
-  created_at?: string;
-};
+// ─── Types ────────────────────────────────────────────────────
 
-export interface TransactionAnalytics {
-  totalRevenue: number;
-  totalCommission: number;
-  totalTransactions: number;
-  successRate: number;
-  dailyRevenue: Array<{
-    date: string;
-    revenue: number;
-    transactions: number;
-  }>;
-  paymentMethodBreakdown: Array<{
-    method: string;
-    count: number;
-    percentage: number;
-  }>;
-  statusDistribution: Array<{
-    status: string;
-    count: number;
-    percentage: number;
-  }>;
-}
-
-export interface Disbursement {
+export interface AdminOrder {
   id: string;
-  storeId: string;
-  storeName: string;
-  grossSales: number;
-  platformFee: number;
-  netPayout: number;
-  status: 'Pending' | 'Disbursed' | 'Failed';
-  disbursedAt?: string;
-  transactionCount: number;
-  period: string;
+  orderNumber: string;
+  status: string;
+  totalAmount: number;
+  serviceFee: number;
+  buyerFee: number;
+  sellerCommission: number;
+  paymentMethod: string;
+  paymentStatus: string;
+  dateCreated: string;
+  completedAt: string | null;
+  buyer: { id: string; firstName: string; lastName: string; email: string } | null;
+  store: { id: string; storeName: string } | null;
+  escrow: EscrowItem | null;
+  items: OrderItem[];
 }
 
-const titleCaseStatus = (s?: string): string => {
-  const v = (s || '').toLowerCase();
-  switch (v) {
-    case 'completed':
-      return 'Completed';
-    case 'pending':
-      return 'Pending';
-    case 'failed':
-      return 'Failed';
-    case 'cancelled':
-    case 'canceled':
-      return 'Cancelled';
-    default:
-      return (s || '').toString();
-  }
-};
+export interface OrderItem {
+  productName: string;
+  quantity: number;
+  price: number;
+  subtotal: number;
+}
+
+export interface EscrowItem {
+  id: string;
+  orderId: string;
+  amount: number;
+  sellerAmount: number;
+  platformFee: number;
+  status: string; // 'holding' | 'released' | 'refunded' | 'disputed'
+  heldAt: string;
+  releasedAt: string | null;
+  buyerName?: string;
+  storeName?: string;
+}
+
+export interface TransactionSummary {
+  totalRevenue: number;
+  platformFees: number;
+  escrowHeld: number;
+  escrowReleased: number;
+  totalOrders: number;
+  completedOrders: number;
+  successRate: number;
+}
+
+interface BackendOrderList {
+  orders: AdminOrder[];
+  pagination: { page: number; pages: number; total: number; perPage: number };
+}
+
+interface BackendEscrowList {
+  escrows: EscrowItem[];
+  pagination: { page: number; pages: number; total: number; perPage: number };
+}
+
+interface BackendAnalyticsOverview {
+  totals: { users: number; stores: number; products: number; orders: number };
+  orderRevenue: { total: number; last30Days: number };
+  platformRevenue: { total: number; last30Days: number; transactionFees: { total: number }; subscriptionRevenue: { total: number } };
+  escrowHoldings: { totalHeld: number; pendingSellerPayouts: number; releasedToSellers: number };
+}
 
 class AdminTransactionsService {
-  // Fetch payments per stall and flatten
-  async getAllTransactions(): Promise<Transaction[]> {
-    const stalls = await adminDataService.getStalls();
-    const results: Transaction[] = [];
-    for (const s of stalls) {
-      if (!s.stallId) continue;
-      try {
-        const { data } = await apiClient.get<BackendPayment[]>(`/admin/stalls/${encodeURIComponent(s.stallId)}/payments`);
-        const list = Array.isArray(data) ? data : [];
-        for (const p of list) {
-          const amount = Number(p.amount ?? 0);
-          const commission = typeof p.commission_amount === 'number' ? p.commission_amount : amount * 0.1; // default 10%
-          const t: Transaction = {
-            id: String(p.order_number || p.order_id || `${s.stallId}-${results.length + 1}`),
-            orderId: String(p.order_id || p.order_number || ''),
-            store: s.name,
-            customer: p.customer_name || 'Customer',
-            amount,
-            commission,
-            status: titleCaseStatus(p.payment_status || 'completed'),
-            paymentMethod: p.payment_method || 'Unknown',
-            date: (p.payment_date || p.created_at || new Date().toISOString()),
-            deliveryStatus: 'Delivered', // backend not provided; placeholder
-          };
-          results.push(t);
-        }
-      } catch (e) {
-        // ignore per-stall failure
-        // optionally log
-        // console.warn('Failed fetching payments for stall', s.stallId, e);
-      }
-    }
-    return results;
+  /**
+   * GET /api/v1/admin/transactions (orders endpoint)
+   * Falls back to /admin/dashboard stats if transactions endpoint unavailable.
+   */
+  async getOrders(params?: {
+    status?: string;
+    search?: string;
+    page?: number;
+    per_page?: number;
+  }): Promise<{ items: AdminOrder[]; total: number }> {
+    const qs = new URLSearchParams();
+    if (params?.status)   qs.set('status',   params.status);
+    if (params?.search)   qs.set('search',   params.search);
+    if (params?.page)     qs.set('page',     String(params.page));
+    if (params?.per_page) qs.set('per_page', String(params.per_page));
+
+    const res = await api.get(`admin/transactions?${qs}`);
+    const d = extractData<BackendOrderList>(res);
+    return { items: d.orders ?? [], total: d.pagination?.total ?? 0 };
   }
 
-  async getTransactionAnalytics(): Promise<TransactionAnalytics> {
-    try {
-      const { data } = await apiClient.get<TransactionAnalytics>('/admin/transactions/analytics');
-      return data;
-    } catch (error) {
-      console.error('Failed to fetch transaction analytics:', error);
-      // Return mock data as fallback
-      const transactions = await this.getAllTransactions();
-      const completed = transactions.filter(t => t.status === 'Completed');
-      const totalRevenue = completed.reduce((sum, t) => sum + t.amount, 0);
-      const totalCommission = completed.reduce((sum, t) => sum + t.commission, 0);
-      const successRate = transactions.length > 0 ? (completed.length / transactions.length) * 100 : 0;
+  /**
+   * GET /api/v1/admin/escrow
+   * Lists escrow records. Supports: status, page, per_page
+   */
+  async getEscrows(params?: {
+    status?: string;
+    page?: number;
+    per_page?: number;
+  }): Promise<{ items: EscrowItem[]; total: number }> {
+    const qs = new URLSearchParams();
+    if (params?.status)   qs.set('status',   params.status);
+    if (params?.page)     qs.set('page',     String(params.page));
+    if (params?.per_page) qs.set('per_page', String(params.per_page));
 
-      return {
-        totalRevenue,
-        totalCommission,
-        totalTransactions: transactions.length,
-        successRate,
-        dailyRevenue: [
-          { date: new Date().toISOString().split('T')[0], revenue: totalRevenue, transactions: transactions.length }
-        ],
-        paymentMethodBreakdown: [
-          { method: 'Mobile Money', count: Math.floor(transactions.length * 0.6), percentage: 60 },
-          { method: 'Card', count: Math.floor(transactions.length * 0.3), percentage: 30 },
-          { method: 'Cash', count: Math.floor(transactions.length * 0.1), percentage: 10 }
-        ],
-        statusDistribution: [
-          { status: 'Completed', count: completed.length, percentage: successRate },
-          { status: 'Pending', count: transactions.filter(t => t.status === 'Pending').length, percentage: 100 - successRate }
-        ]
-      };
-    }
+    const res = await api.get(`admin/escrow?${qs}`);
+    const d = extractData<BackendEscrowList>(res);
+    return { items: d.escrows ?? [], total: d.pagination?.total ?? 0 };
   }
 
-  async exportTransactions(format: 'csv' | 'excel' = 'csv'): Promise<Blob> {
-    try {
-      const { data } = await apiClient.get<Blob>(`/admin/transactions/export?format=${format}`, {
-        responseType: 'blob'
-      });
-      return data;
-    } catch (error) {
-      console.error('Failed to export transactions:', error);
-      // Fallback to local export
-      const transactions = await this.getAllTransactions();
-      const headers = [
-        "Transaction ID",
-        "Order ID", 
-        "Store",
-        "Customer",
-        "Amount",
-        "Commission",
-        "Status",
-        "Payment Method",
-        "Date",
-        "Delivery Status"
-      ];
-      
-      const csvData = [
-        headers.join(","),
-        ...transactions.map((t) =>
-          [
-            t.id,
-            t.orderId,
-            `"${t.store}"`,
-            `"${t.customer}"`,
-            t.amount.toFixed(2),
-            t.commission.toFixed(2),
-            t.status,
-            `"${t.paymentMethod}"`,
-            `"${t.date}"`,
-            t.deliveryStatus,
-          ].join(",")
-        ),
-      ].join("\n");
-
-      return new Blob([csvData], { type: "text/csv;charset=utf-8;" });
-    }
+  /**
+   * GET /api/v1/admin/analytics/overview
+   * Used to build the summary cards at the top.
+   */
+  async getSummary(): Promise<TransactionSummary> {
+    const res = await api.get('admin/analytics/overview');
+    const d = extractData<BackendAnalyticsOverview>(res);
+    const completed = d.totals?.orders ?? 0;
+    return {
+      totalRevenue:    d.orderRevenue?.total ?? 0,
+      platformFees:    d.platformRevenue?.transactionFees?.total ?? 0,
+      escrowHeld:      d.escrowHoldings?.totalHeld ?? 0,
+      escrowReleased:  d.escrowHoldings?.releasedToSellers ?? 0,
+      totalOrders:     completed,
+      completedOrders: completed,
+      successRate:     100,
+    };
   }
 
-  async getAllDisbursements(): Promise<Disbursement[]> {
-    try {
-      const { data } = await apiClient.get<Disbursement[]>('/admin/disbursements');
-      return data;
-    } catch (error) {
-      console.error('Failed to fetch disbursements:', error);
-      // Return mock data as fallback
-      const stalls = await adminDataService.getStalls();
-      return stalls.slice(0, 10).map((stall, index) => {
-        const grossSales = Math.random() * 5000 + 1000;
-        const platformFee = grossSales * 0.1;
-        const netPayout = grossSales - platformFee;
-        
-        return {
-          id: `disbursement-${index + 1}`,
-          storeId: stall.stallId || `store-${index + 1}`,
-          storeName: stall.name,
-          grossSales,
-          platformFee,
-          netPayout,
-          status: Math.random() > 0.3 ? 'Pending' : 'Disbursed',
-          disbursedAt: Math.random() > 0.5 ? new Date().toISOString() : undefined,
-          transactionCount: Math.floor(Math.random() * 50 + 10),
-          period: new Date().toISOString().split('T')[0]
-        } as Disbursement;
-      });
-    }
+  /** CSV export — build client-side from fetched data */
+  async exportOrders(): Promise<Blob> {
+    const { items } = await this.getOrders({ per_page: 500 });
+    const headers = ['Order #', 'Buyer', 'Store', 'Amount (₵)', 'Fee (₵)', 'Payment', 'Status', 'Date'];
+    const rows = items.map((o) => [
+      o.orderNumber,
+      o.buyer ? `${o.buyer.firstName} ${o.buyer.lastName}` : '—',
+      o.store?.storeName ?? '—',
+      o.totalAmount.toFixed(2),
+      o.serviceFee.toFixed(2),
+      o.paymentMethod,
+      o.status,
+      new Date(o.dateCreated).toLocaleDateString(),
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v}"`).join(',')).join('\n');
+    return new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   }
 
-  async processManualDisbursement(disbursementId: string): Promise<void> {
-    try {
-      await apiClient.post(`/admin/disbursements/${disbursementId}/process`);
-    } catch (error) {
-      console.error('Failed to process disbursement:', error);
-      // Simulate processing delay for demo
-      await new Promise(resolve => setTimeout(resolve, 1500));
-    }
-  }
-
-  async enableAutoDisbursement(enabled: boolean): Promise<void> {
-    try {
-      await apiClient.put('/admin/disbursements/auto-settings', { enabled });
-    } catch (error) {
-      console.error('Failed to update auto-disbursement settings:', error);
-      // Simulate API call for demo
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
-  }
-
-  async exportDisbursements(format: 'csv' | 'excel' = 'csv'): Promise<Blob> {
-    try {
-      const { data } = await apiClient.get<Blob>(`/admin/disbursements/export?format=${format}`, {
-        responseType: 'blob'
-      });
-      return data;
-    } catch (error) {
-      console.error('Failed to export disbursements:', error);
-      // Fallback to local export
-      const disbursements = await this.getAllDisbursements();
-      const headers = [
-        "Disbursement ID",
-        "Store ID",
-        "Store Name",
-        "Gross Sales",
-        "Platform Fee",
-        "Net Payout",
-        "Status",
-        "Transaction Count",
-        "Period",
-        "Disbursed At"
-      ];
-      
-      const csvData = [
-        headers.join(","),
-        ...disbursements.map((d) =>
-          [
-            d.id,
-            d.storeId,
-            `"${d.storeName}"`,
-            d.grossSales.toFixed(2),
-            d.platformFee.toFixed(2),
-            d.netPayout.toFixed(2),
-            d.status,
-            d.transactionCount,
-            d.period,
-            d.disbursedAt || 'N/A'
-          ].join(",")
-        ),
-      ].join("\n");
-
-      return new Blob([csvData], { type: "text/csv;charset=utf-8;" });
-    }
+  async exportEscrows(): Promise<Blob> {
+    const { items } = await this.getEscrows({ per_page: 500 });
+    const headers = ['Escrow ID', 'Order ID', 'Buyer', 'Store', 'Amount (₵)', 'Seller Amount (₵)', 'Platform Fee (₵)', 'Status', 'Held At', 'Released At'];
+    const rows = items.map((e) => [
+      e.id, e.orderId ?? '—', e.buyerName ?? '—', e.storeName ?? '—',
+      e.amount.toFixed(2), e.sellerAmount.toFixed(2), e.platformFee.toFixed(2),
+      e.status, e.heldAt, e.releasedAt ?? '—',
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v}"`).join(',')).join('\n');
+    return new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   }
 }
 

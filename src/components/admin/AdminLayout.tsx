@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   BarChart3, Users, Store, Package, CreditCard,
   Settings, LogOut, Bell, Menu, X, ShieldCheck,
-  AlertTriangle, GraduationCap, ChevronRight,
+  AlertTriangle, GraduationCap, ChevronRight, LineChart,
+  ShieldAlert, Crown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -27,9 +28,16 @@ const navItems = [
   { name: 'Products',      path: '/admin-portal/products',      icon: Package },
   { name: 'Disputes',      path: '/admin-portal/disputes',      icon: AlertTriangle },
   { name: 'Transactions',  path: '/admin-portal/transactions',  icon: CreditCard },
+  { name: 'Analytics',     path: '/admin-portal/analytics',     icon: LineChart },
   { name: 'Institutions',  path: '/admin-portal/institutions',  icon: GraduationCap },
   { name: 'Notifications', path: '/admin-portal/notifications', icon: Bell },
   { name: 'Settings',      path: '/admin-portal/settings',      icon: Settings },
+];
+
+// Super-admin-only nav items
+const superAdminNavItems = [
+  { name: 'Admin Mgmt',   path: '/admin-portal/admin-management', icon: Crown },
+  { name: 'Moderation',  path: '/admin-portal/moderation',       icon: ShieldAlert },
 ];
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
@@ -67,8 +75,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-gray-100">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-md shadow-primary/20">
+        <div className="flex items-center justify-center md:justify-start gap-3">
+          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-md shadow-primary/20 shrink-0">
             <ShieldCheck className="w-5 h-5 text-white" />
           </div>
           <div className="hidden xl:block">
@@ -80,7 +88,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {navItems.map((item) => {
+          {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
           return (
@@ -89,7 +97,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               to={item.path}
               onClick={onNavClick}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group',
+                'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all group justify-center',
                 active
                   ? 'bg-primary/10 text-primary'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -106,6 +114,35 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             </Link>
           );
         })}
+
+        {/* Super-admin only */}
+        {isSuperAdmin && (
+          <>
+            <div className="my-2 mx-1 border-t border-gray-100" />
+            <p className="hidden xl:block px-3 text-[10px] font-semibold text-gray-300 uppercase tracking-wider mb-1">Super Admin</p>
+            {superAdminNavItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.path);
+              return (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  onClick={onNavClick}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group justify-center',
+                    active
+                      ? 'bg-violet-50 text-violet-700'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  )}
+                >
+                  <Icon className={cn('w-4 h-4 shrink-0', active ? 'text-violet-600' : 'text-gray-400 group-hover:text-gray-600')} />
+                  <span className="hidden xl:block flex-1">{item.name}</span>
+                  {active && <ChevronRight className="hidden xl:block ml-auto w-3.5 h-3.5 text-violet-500/60" />}
+                </Link>
+              );
+            })}
+          </>
+        )}
       </nav>
 
       {/* Admin profile */}
@@ -118,7 +155,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 className="w-full justify-start gap-3 p-2 h-auto hover:bg-gray-50"
               >
                 <Avatar className="h-8 w-8 shrink-0">
-                  <AvatarFallback className="bg-primary text-white text-xs font-bold">
+                  <AvatarFallback className="text-xs font-bold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>

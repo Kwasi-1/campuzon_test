@@ -1,352 +1,614 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Eye } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import SEO from "@/components/SEO";
-import AdminPageLayout from "@/components/admin/AdminPageLayout";
-import AdminTable from "@/components/admin/AdminTable";
-import TransactionModal from "@/components/admin/TransactionModal";
-import TableSkeleton from "@/components/ui/table-skeleton";
-import EmptyDateState from "@/components/shared/EmptyDateState";
+import {
+  Download, Eye, Search, RefreshCw, TrendingUp, Lock,
+  ShoppingBag, DollarSign, CheckCircle2, Clock, AlertCircle,
+  ArrowUpRight,
+} from "lucide-react";
 import { useDateFilter } from "@/contexts/DateFilterContext";
-import AdminDisbursements from "./AdminDisbursements";
+import DateFilter from "@/components/shared/DateFilter";
 import { isWithinInterval, parseISO } from "date-fns";
-import adminTransactionsService from "@/services/adminTransactionsService";
-import { Transaction } from "@/types-new";
+import adminTransactionsService, {
+  AdminOrder, EscrowItem, TransactionSummary,
+} from "@/services/adminTransactionsService";
 
-export interface AdminTransaction extends Transaction {
-  orderId: string;
-  store: string;
-  customer: string;
-  commission: number;
-  paymentMethod: string;
-  date: string;
-  deliveryStatus: string;
-}
+// ─── Helpers ──────────────────────────────────────────────────
 
-const AdminTransactions = () => {
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [periodFilter, setPeriodFilter] = useState("all");
-  const [storeFilter, setStoreFilter] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTransaction, setSelectedTransaction] =
-    useState<AdminTransaction | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+const currency = (n: number) =>
+  `₵${Number(n).toLocaleString("en-GH", { minimumFractionDigits: 2 })}`;
+
+const ORDER_STATUS: Record<string, string> = {
+  pending:    "bg-yellow-100 text-yellow-700",
+  confirmed:  "bg-blue-100   text-blue-700",
+  processing: "bg-blue-100   text-blue-700",
+  shipped:    "bg-purple-100 text-purple-700",
+  delivered:  "bg-emerald-100 text-emerald-700",
+  completed:  "bg-emerald-100 text-emerald-700",
+  cancelled:  "bg-gray-100   text-gray-600",
+  disputed:   "bg-red-100    text-red-700",
+  refunded:   "bg-orange-100 text-orange-700",
+};
+
+const ESCROW_STATUS: Record<string, string> = {
+  holding:   "bg-orange-100 text-orange-700",
+  released:  "bg-emerald-100 text-emerald-700",
+  refunded:  "bg-blue-100   text-blue-700",
+  disputed:  "bg-red-100    text-red-700",
+};
+
+const StatusBadge = ({ status, map }: { status: string; map: Record<string, string> }) => {
+  const cls = map[status.toLowerCase()] ?? "bg-gray-100 text-gray-600";
+  return (
+    <Badge className={`${cls} font-medium text-xs capitalize`}>{status}</Badge>
+  );
+};
+
+// ─── Order Detail Dialog ───────────────────────────────────────
+
+const OrderDetailDialog: React.FC<{ order: AdminOrder | null; open: boolean; onClose: () => void }> = ({
+  order, open, onClose,
+}) => {
+  if (!order) return null;
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Order #{order.orderNumber}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 text-sm">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+            {[
+              ["Status",         order.status],
+              ["Payment Status", order.paymentStatus],
+              ["Payment Method", order.paymentMethod],
+              ["Total Amount",   currency(order.totalAmount)],
+              ["Service Fee",    currency(order.serviceFee)],
+              ["Buyer Fee",      currency(order.buyerFee)],
+              ["Seller Comm.",   currency(order.sellerCommission)],
+              ["Store",          order.store?.storeName ?? "—"],
+              ["Buyer",          order.buyer ? `${order.buyer.firstName} ${order.buyer.lastName}` : "—"],
+              ["Buyer Email",    order.buyer?.email ?? "—"],
+              ["Created",        new Date(order.dateCreated).toLocaleString()],
+              ["Completed",      order.completedAt ? new Date(order.completedAt).toLocaleString() : "—"],
+            ].map(([k, v]) => (
+              <React.Fragment key={k}>
+                <div className="text-gray-400 font-medium">{k}</div>
+                <div className="text-gray-800 truncate">{v}</div>
+              </React.Fragment>
+            ))}
+          </div>
+          {order.items?.length > 0 && (
+            <div className="border-t pt-3">
+              <p className="font-medium text-gray-700 mb-2">Items</p>
+              <div className="space-y-1">
+                {order.items.map((item, i) => (
+                  <div key={i} className="flex items-center justify-between text-xs text-gray-600">
+                    <span className="truncate max-w-[60%]">{item.productName}</span>
+                    <span className="text-gray-400">×{item.quantity}</span>
+                    <span className="font-medium">{currency(item.subtotal)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {order.escrow && (
+            <div className="border-t pt-3">
+              <p className="font-medium text-gray-700 mb-2">Escrow</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                {[
+                  ["Amount",       currency(order.escrow.amount)],
+                  ["Seller Gets",  currency(order.escrow.sellerAmount)],
+                  ["Platform Fee", currency(order.escrow.platformFee)],
+                  ["Status",       order.escrow.status],
+                  ["Held",         new Date(order.escrow.heldAt).toLocaleDateString()],
+                  ["Released",     order.escrow.releasedAt ? new Date(order.escrow.releasedAt).toLocaleDateString() : "—"],
+                ].map(([k, v]) => (
+                  <React.Fragment key={k}>
+                    <div className="text-gray-400">{k}</div>
+                    <div className="text-gray-800">{v}</div>
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// ─── Skeleton ──────────────────────────────────────────────────
+
+const SkeletonRows = ({ cols = 8, rows = 8 }: { cols?: number; rows?: number }) => (
+  <>
+    {Array.from({ length: rows }).map((_, i) => (
+      <TableRow key={i}>
+        {Array.from({ length: cols }).map((__, j) => (
+          <TableCell key={j}><Skeleton className="h-5 w-full" /></TableCell>
+        ))}
+      </TableRow>
+    ))}
+  </>
+);
+
+// ─── Summary Card ─────────────────────────────────────────────
+
+const SummaryCard = ({
+  icon: Icon, title, value, sub, iconBg, iconColor, loading,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string; value: string; sub?: string;
+  iconBg: string; iconColor: string; loading: boolean;
+}) => (
+  <Card className="hover:shadow-md transition-shadow">
+    <CardContent className="p-5">
+      <div className="flex items-start justify-between">
+        <div className="space-y-1 min-w-0">
+          <p className="text-sm text-gray-500 font-medium">{title}</p>
+          {loading ? <Skeleton className="h-7 w-28" /> : (
+            <p className="text-2xl font-bold text-gray-900 tabular-nums truncate">{value}</p>
+          )}
+          {sub && !loading && (
+            <p className="text-xs text-gray-400 flex items-center gap-1">
+              <ArrowUpRight className="w-3 h-3 text-emerald-500" />{sub}
+            </p>
+          )}
+        </div>
+        <div className={`${iconBg} p-2.5 rounded-xl shrink-0`}>
+          <Icon className={`w-5 h-5 ${iconColor}`} />
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+// ─── Main Page ─────────────────────────────────────────────────
+
+const AdminTransactions: React.FC = () => {
   const { toast } = useToast();
-  const {
-    selectedPeriod,
-    dateRange,
-    isFiltered,
-    isLoading: dateLoading,
-  } = useDateFilter();
+  const { dateRange, isFiltered } = useDateFilter();
 
-  const [allTransactions, setAllTransactions] = useState<AdminTransaction[]>([]);
+  const [tab, setTab] = useState<"orders" | "escrow">("orders");
 
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      setLoading(true);
-      try {
-        const list = await adminTransactionsService.getAllTransactions();
-        setAllTransactions(list as any);
-      } catch (e) {
-        setAllTransactions([]);
-        toast({
-          title: "Failed to load transactions",
-          description: (e as Error).message,
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Orders state
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [ordersTotal, setOrdersTotal] = useState(0);
+  const [ordersPage, setOrdersPage] = useState(1);
+  const [ordersStatus, setOrdersStatus] = useState("all");
+  const [ordersSearch, setOrdersSearch] = useState("");
+  const [ordersLoading, setOrdersLoading] = useState(true);
 
-    void fetchTransactions();
+  // Escrow state
+  const [escrows, setEscrows] = useState<EscrowItem[]>([]);
+  const [escrowTotal, setEscrowTotal] = useState(0);
+  const [escrowPage, setEscrowPage] = useState(1);
+  const [escrowStatus, setEscrowStatus] = useState("all");
+  const [escrowLoading, setEscrowLoading] = useState(true);
+
+  // Summary state
+  const [summary, setSummary] = useState<TransactionSummary | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(true);
+
+  // Detail dialog
+  const [viewOrder, setViewOrder] = useState<AdminOrder | null>(null);
+
+  const PER_PAGE = 20;
+
+  // ── Load summary ──────────────────────────
+  const loadSummary = useCallback(async () => {
+    setSummaryLoading(true);
+    try {
+      const s = await adminTransactionsService.getSummary();
+      setSummary(s);
+    } catch (err) {
+      toast({ title: "Failed to load summary", description: (err as Error).message, variant: "destructive" });
+    } finally {
+      setSummaryLoading(false);
+    }
   }, [toast]);
 
-  // Filter transactions based on search, filters, and date range
-  const filteredTransactions = allTransactions.filter((transaction) => {
-    const matchesSearch =
-      searchQuery === "" ||
-      transaction.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      transaction.store.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      transaction.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      transaction.orderId.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === "all" ||
-      transaction.status.toLowerCase() === statusFilter.toLowerCase();
-
-    const matchesStore =
-      storeFilter === "all" ||
-      transaction.store.toLowerCase().includes(storeFilter.toLowerCase());
-
-    // Apply date filter
-    let matchesDate = true;
-    if (isFiltered && dateRange.from && dateRange.to) {
-      const transactionDate = parseISO(transaction.date);
-      matchesDate = isWithinInterval(transactionDate, {
-        start: dateRange.from,
-        end: dateRange.to,
-      });
-    }
-
-    return matchesSearch && matchesStatus && matchesStore && matchesDate;
-  });
-
-  // Calculate dashboard stats based on filtered data
-  const completedTransactions = filteredTransactions.filter(
-    (t) => t.status === "success"
-  );
-  const totalRevenue = completedTransactions.reduce(
-    (sum, t) => sum + t.amount,
-    0
-  );
-  const totalCommission = completedTransactions.reduce(
-    (sum, t) => sum + t.commission,
-    0
-  );
-  const successRate =
-    allTransactions.length > 0
-      ? (completedTransactions.length / allTransactions.length) * 100
-      : 0;
-
-  const dashboardStats = [
-    {
-      label: "Total Revenue",
-      value: `₵${totalRevenue.toFixed(2)}`,
-      subtext: "+15.3% from last month",
-    },
-    {
-      label: "Commission Earned",
-      value: `₵${totalCommission.toFixed(2)}`,
-      subtext: "10% platform fee",
-    },
-    {
-      label: "Total Transactions",
-      value: filteredTransactions.length.toString(),
-      subtext: `${allTransactions.length} total`,
-    },
-    {
-      label: "Success Rate",
-      value: `${successRate.toFixed(1)}%`,
-      subtext: "Payment success rate",
-    },
-  ];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "success":
-        return "bg-green-100 text-green-800";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "failed":
-        return "bg-red-100 text-red-800";
-      case "reversed":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getDeliveryStatusColor = (status: string) => {
-    switch (status) {
-      case "Delivered":
-        return "bg-green-100 text-green-800";
-      case "In Transit":
-        return "bg-blue-100 text-blue-800";
-      case "Cancelled":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const handleViewTransaction = (transaction: AdminTransaction) => {
-    setSelectedTransaction(transaction);
-    setModalOpen(true);
-  };
-
-  const exportTransactions = async () => {
+  // ── Load orders ───────────────────────────
+  const loadOrders = useCallback(async () => {
+    setOrdersLoading(true);
     try {
-      const blob = await adminTransactionsService.exportTransactions("csv");
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `transactions-export-${
-        new Date().toISOString().split("T")[0]
-      }.csv`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      const { items, total } = await adminTransactionsService.getOrders({
+        status: ordersStatus !== "all" ? ordersStatus : undefined,
+        search: ordersSearch || undefined,
+        page: ordersPage,
+        per_page: PER_PAGE,
+      });
+      setOrders(items);
+      setOrdersTotal(total);
+    } catch (err) {
+      toast({ title: "Failed to load orders", description: (err as Error).message, variant: "destructive" });
+    } finally {
+      setOrdersLoading(false);
+    }
+  }, [ordersStatus, ordersSearch, ordersPage, toast]);
 
-      toast({
-        title: "Export Complete",
-        description: "Transaction data has been exported successfully.",
+  // ── Load escrow ───────────────────────────
+  const loadEscrow = useCallback(async () => {
+    setEscrowLoading(true);
+    try {
+      const { items, total } = await adminTransactionsService.getEscrows({
+        status: escrowStatus !== "all" ? escrowStatus : undefined,
+        page: escrowPage,
+        per_page: PER_PAGE,
       });
-    } catch (error) {
-      toast({
-        title: "Export Failed",
-        description: (error as Error).message,
-        variant: "destructive",
-      });
+      setEscrows(items);
+      setEscrowTotal(total);
+    } catch (err) {
+      toast({ title: "Failed to load escrow", description: (err as Error).message, variant: "destructive" });
+    } finally {
+      setEscrowLoading(false);
+    }
+  }, [escrowStatus, escrowPage, toast]);
+
+  useEffect(() => { void loadSummary(); }, [loadSummary]);
+  useEffect(() => { void loadOrders(); }, [loadOrders]);
+  useEffect(() => { void loadEscrow(); }, [loadEscrow]);
+
+  // ── Date filtering (client-side) ──────────
+  const filterByDate = <T extends { dateCreated?: string; heldAt?: string }>(items: T[], dateKey: keyof T): T[] => {
+    if (!isFiltered || !dateRange.from || !dateRange.to) return items;
+    return items.filter((item) => {
+      const raw = item[dateKey] as string | undefined;
+      if (!raw) return false;
+      try {
+        return isWithinInterval(parseISO(raw), { start: dateRange.from!, end: dateRange.to! });
+      } catch { return false; }
+    });
+  };
+
+  const filteredOrders  = filterByDate(orders,  "dateCreated");
+  const filteredEscrows = filterByDate(escrows, "heldAt");
+
+  const orderPages  = Math.ceil(ordersTotal  / PER_PAGE);
+  const escrowPages = Math.ceil(escrowTotal / PER_PAGE);
+
+  const handleExportOrders = async () => {
+    try {
+      const blob = await adminTransactionsService.exportOrders();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url;
+      a.download = `orders-${Date.now()}.csv`; a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: "Export complete" });
+    } catch (err) {
+      toast({ title: "Export failed", description: (err as Error).message, variant: "destructive" });
     }
   };
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
+  const handleExportEscrow = async () => {
+    try {
+      const blob = await adminTransactionsService.exportEscrows();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url;
+      a.download = `escrow-${Date.now()}.csv`; a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: "Export complete" });
+    } catch (err) {
+      toast({ title: "Export failed", description: (err as Error).message, variant: "destructive" });
+    }
   };
-
-  const filters = [
-    {
-      key: "status",
-      label: "Status",
-      options: [
-        { value: "all", label: "All Status" },
-        { value: "success", label: "Success" },
-        { value: "pending", label: "Pending" },
-        { value: "failed", label: "Failed" },
-      ],
-      value: statusFilter,
-      onChange: setStatusFilter,
-    },
-    {
-      key: "period",
-      label: "Period",
-      options: [
-        { value: "all", label: "All Time" },
-        { value: "today", label: "Today" },
-        { value: "week", label: "This Week" },
-        { value: "month", label: "This Month" },
-      ],
-      value: periodFilter,
-      onChange: setPeriodFilter,
-    },
-    {
-      key: "store",
-      label: "Store",
-      options: [
-        { value: "all", label: "All Stores" },
-        { value: "supermart", label: "SuperMart Accra" },
-        { value: "freshfoods", label: "Fresh Foods Ltd" },
-        { value: "quickshop", label: "QuickShop Express" },
-      ],
-      value: storeFilter,
-      onChange: setStoreFilter,
-    },
-  ];
 
   return (
     <>
       <SEO
-        title="Transaction Management"
-        description="Monitor and manage all platform transactions, payments, and delivery tracking."
-        keywords="transaction management, payment tracking, delivery analytics, financial reports"
+        title="Transactions — Campuzon Admin"
+        description="Monitor platform orders, escrow, and financial flows."
+        keywords="admin transactions, escrow, orders, campus marketplace"
       />
 
-      <AdminPageLayout title="Treansactions" dashboardStats={dashboardStats}>
-        <AdminTable
-          title="Transaction History"
-          description="Monitor all platform transactions and payments"
-          searchPlaceholder="Search transactions by ID, store, customer, or order..."
-          onSearch={handleSearch}
-          filters={filters}
-          showDateFilter={true}
-          actionButton={{
-            label: "Export Data",
-            onClick: exportTransactions,
-            icon: <Download className="w-4 h-4 mr-2" />,
-          }}
-        >
-          {loading || dateLoading ? (
-            <TableSkeleton rows={8} columns={11} />
-          ) : filteredTransactions.length === 0 ? (
-            <EmptyDateState message="No transactions found for the selected date range" />
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Transaction ID</TableHead>
-                  <TableHead>Order</TableHead>
-                  <TableHead>Store</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Commission</TableHead>
-                  <TableHead>Payment</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Delivery</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTransactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell className="font-medium font-mono">
-                      {transaction.id}
-                    </TableCell>
-                    <TableCell className="font-mono">
-                      {transaction.orderId}
-                    </TableCell>
-                    <TableCell>{transaction.store}</TableCell>
-                    <TableCell>{transaction.customer}</TableCell>
-                    <TableCell className="font-medium">
-                      ₵{transaction.amount.toFixed(2)}
-                    </TableCell>
-                    <TableCell>₵{transaction.commission.toFixed(2)}</TableCell>
-                    <TableCell className="text-sm">
-                      {transaction.paymentMethod}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(transaction.status)}>
-                        {transaction.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={getDeliveryStatusColor(
-                          transaction.deliveryStatus
-                        )}
-                      >
-                        {transaction.deliveryStatus}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {new Date(transaction.date).toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleViewTransaction(transaction)}
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary" /> Transactions
+            </h1>
+            <p className="text-sm text-gray-500 mt-0.5">Orders, payments &amp; escrow management</p>
+          </div>
+          <DateFilter />
+        </div>
+
+        {/* Summary cards */}
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          <SummaryCard
+            icon={ShoppingBag} title="Gross Revenue"
+            value={summary ? currency(summary.totalRevenue) : "₵0.00"}
+            sub="Total completed order value"
+            iconBg="bg-indigo-50" iconColor="text-indigo-600"
+            loading={summaryLoading}
+          />
+          <SummaryCard
+            icon={DollarSign} title="Platform Fees"
+            value={summary ? currency(summary.platformFees) : "₵0.00"}
+            sub="Transaction + subscription fees"
+            iconBg="bg-emerald-50" iconColor="text-emerald-600"
+            loading={summaryLoading}
+          />
+          <SummaryCard
+            icon={Lock} title="Escrow Held"
+            value={summary ? currency(summary.escrowHeld) : "₵0.00"}
+            sub="Pending buyer protection release"
+            iconBg="bg-orange-50" iconColor="text-orange-600"
+            loading={summaryLoading}
+          />
+          <SummaryCard
+            icon={CheckCircle2} title="Released to Sellers"
+            value={summary ? currency(summary.escrowReleased) : "₵0.00"}
+            sub="Total seller payouts"
+            iconBg="bg-teal-50" iconColor="text-teal-600"
+            loading={summaryLoading}
+          />
+        </div>
+
+        {/* Tabs */}
+        <Tabs value={tab} onValueChange={(v) => setTab(v as "orders" | "escrow")}>
+          <TabsList className="bg-gray-100">
+            <TabsTrigger value="orders">
+              Orders
+              {ordersTotal > 0 && (
+                <span className="ml-1.5 bg-primary/10 text-primary text-xs rounded-full px-1.5 py-0.5">
+                  {ordersTotal}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="escrow">
+              Escrow
+              {escrowTotal > 0 && (
+                <span className="ml-1.5 bg-orange-100 text-orange-600 text-xs rounded-full px-1.5 py-0.5">
+                  {escrowTotal}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          {/* ── Orders Tab ── */}
+          <TabsContent value="orders" className="mt-4 space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  className="pl-9"
+                  placeholder="Search orders by ID, buyer, or store…"
+                  value={ordersSearch}
+                  onChange={(e) => { setOrdersSearch(e.target.value); setOrdersPage(1); }}
+                />
+              </div>
+              <Select value={ordersStatus} onValueChange={(v) => { setOrdersStatus(v); setOrdersPage(1); }}>
+                <SelectTrigger className="w-44">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                  <SelectItem value="delivered">Delivered</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="disputed">Disputed</SelectItem>
+                  <SelectItem value="refunded">Refunded</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={() => void loadOrders()}>
+                <RefreshCw className="w-4 h-4 mr-1.5" /> Refresh
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => void handleExportOrders()}>
+                <Download className="w-4 h-4 mr-1.5" /> Export
+              </Button>
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50/80">
+                    <TableHead>Order #</TableHead>
+                    <TableHead>Buyer</TableHead>
+                    <TableHead>Store</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Fee</TableHead>
+                    <TableHead>Payment</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">View</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </AdminTable>
-      </AdminPageLayout>
+                </TableHeader>
+                <TableBody>
+                  {ordersLoading ? (
+                    <SkeletonRows cols={9} rows={8} />
+                  ) : filteredOrders.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center py-16 text-gray-400">
+                        <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                        No orders found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredOrders.map((order) => (
+                      <TableRow key={order.id} className="hover:bg-gray-50/50">
+                        <TableCell className="font-mono text-xs font-medium">
+                          #{order.orderNumber}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {order.buyer
+                            ? `${order.buyer.firstName} ${order.buyer.lastName}`
+                            : "—"}
+                        </TableCell>
+                        <TableCell className="text-sm">{order.store?.storeName ?? "—"}</TableCell>
+                        <TableCell className="font-semibold text-sm">
+                          {currency(order.totalAmount)}
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-500">
+                          {currency(order.serviceFee)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-xs capitalize font-normal">
+                            {order.paymentMethod}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge status={order.status} map={ORDER_STATUS} />
+                        </TableCell>
+                        <TableCell className="text-xs text-gray-500">
+                          {new Date(order.dateCreated).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost" size="icon" className="h-8 w-8"
+                            onClick={() => setViewOrder(order)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
 
-      <TransactionModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        transaction={selectedTransaction}
-      />
+              {orderPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50/50">
+                  <p className="text-xs text-gray-500">
+                    Page {ordersPage} of {orderPages} · {ordersTotal} orders
+                  </p>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setOrdersPage((p) => Math.max(1, p - 1))} disabled={ordersPage === 1}>
+                      Previous
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setOrdersPage((p) => Math.min(orderPages, p + 1))} disabled={ordersPage >= orderPages}>
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* ── Escrow Tab ── */}
+          <TabsContent value="escrow" className="mt-4 space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Select value={escrowStatus} onValueChange={(v) => { setEscrowStatus(v); setEscrowPage(1); }}>
+                <SelectTrigger className="w-44">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="holding">Holding</SelectItem>
+                  <SelectItem value="released">Released</SelectItem>
+                  <SelectItem value="refunded">Refunded</SelectItem>
+                  <SelectItem value="disputed">Disputed</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={() => void loadEscrow()}>
+                <RefreshCw className="w-4 h-4 mr-1.5" /> Refresh
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => void handleExportEscrow()}>
+                <Download className="w-4 h-4 mr-1.5" /> Export
+              </Button>
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50/80">
+                    <TableHead>Escrow ID</TableHead>
+                    <TableHead>Order</TableHead>
+                    <TableHead>Buyer</TableHead>
+                    <TableHead>Store</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Seller Gets</TableHead>
+                    <TableHead>Platform Fee</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Held</TableHead>
+                    <TableHead>Released</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {escrowLoading ? (
+                    <SkeletonRows cols={10} rows={6} />
+                  ) : filteredEscrows.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={10} className="text-center py-16 text-gray-400">
+                        <Lock className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                        No escrow records found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredEscrows.map((e) => (
+                      <TableRow key={e.id} className="hover:bg-gray-50/50">
+                        <TableCell className="font-mono text-xs">{e.id.slice(0, 8)}…</TableCell>
+                        <TableCell className="font-mono text-xs">{e.orderId?.slice(0, 8)}…</TableCell>
+                        <TableCell className="text-sm">{e.buyerName ?? "—"}</TableCell>
+                        <TableCell className="text-sm">{e.storeName ?? "—"}</TableCell>
+                        <TableCell className="font-semibold text-sm">{currency(e.amount)}</TableCell>
+                        <TableCell className="text-sm text-emerald-600">{currency(e.sellerAmount)}</TableCell>
+                        <TableCell className="text-sm text-gray-500">{currency(e.platformFee)}</TableCell>
+                        <TableCell>
+                          <StatusBadge status={e.status} map={ESCROW_STATUS} />
+                        </TableCell>
+                        <TableCell className="text-xs text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {new Date(e.heldAt).toLocaleDateString()}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-xs text-gray-500">
+                          {e.releasedAt ? (
+                            <span className="flex items-center gap-1 text-emerald-600">
+                              <CheckCircle2 className="w-3 h-3" />
+                              {new Date(e.releasedAt).toLocaleDateString()}
+                            </span>
+                          ) : "—"}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+
+              {escrowPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50/50">
+                  <p className="text-xs text-gray-500">
+                    Page {escrowPage} of {escrowPages} · {escrowTotal} records
+                  </p>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setEscrowPage((p) => Math.max(1, p - 1))} disabled={escrowPage === 1}>
+                      Previous
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setEscrowPage((p) => Math.min(escrowPages, p + 1))} disabled={escrowPage >= escrowPages}>
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Order Detail Dialog */}
+      <OrderDetailDialog order={viewOrder} open={!!viewOrder} onClose={() => setViewOrder(null)} />
     </>
   );
 };
