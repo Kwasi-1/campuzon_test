@@ -62,31 +62,32 @@ export function Header() {
 
   // Campus marketplace categories for dropdown
   const categories = [
-    { label: "Electronics", value: "electronics" },
-    { label: "Books & Stationery", value: "books" },
-    { label: "Fashion & Clothing", value: "fashion" },
-    { label: "Furniture", value: "furniture" },
-    { label: "Sports & Fitness", value: "sports" },
-    { label: "Beauty & Personal Care", value: "beauty" },
+    { label: "Dorm Essentials", value: "dorm-essentials" },
+    { label: "Textbooks & Stationery", value: "textbooks" },
+    { label: "Electronics & Gadgets", value: "electronics" },
+    { label: "Fashion & Personal Care", value: "fashion" },
+    { label: "Services & Campus Gigs", value: "services" },
+    { label: "Tickets & Event Passes", value: "tickets" },
     { label: "Food & Groceries", value: "food" },
-    { label: "Services", value: "services" },
-    { label: "Accessories", value: "accessories" },
+    { label: "Sports & Hobbies", value: "sports" },
+    { label: "Lost & Found", value: "lost-found" },
   ];
 
-  // Filter tabs
+  // Filter tabs for desktop sub-header
   const filterTabs = [
-    { label: "Men", value: "men" },
-    { label: "Women", value: "women" },
-    { label: "Children", value: "children" },
-    { label: "Brand", value: "brand" },
+    { label: "New Items", value: "new" },
+    { label: "Used/Pre-owned", value: "used" },
+    { label: "Campus Services", value: "services" },
+    { label: "Donations/Free", value: "free" },
   ];
 
-  // Main categories for mobile menu
+  // Main categories for mobile menu & quick navigation
   const mainCategories = [
-    { label: "New Arrivals", href: "/products?filter=new" },
-    { label: "Sale", href: "/products?filter=sale" },
-    { label: "Deals", href: "/products?filter=deals" },
-    { label: "Sell", href: "/sell" },
+    { label: "Trending on Campus", href: "/products?filter=trending" },
+    { label: "Daily Deals", href: "/products?filter=deals" },
+    { label: "Campus Gigs", href: "/products?category=services" },
+    { label: "Lost & Found", href: "/products?category=lost-found" },
+    { label: "Sell Your Stuff", href: "/sell" },
   ];
 
   return (
@@ -124,11 +125,11 @@ export function Header() {
                 />
               </div>
             ) : (
-              <Link to="/" className="hidden lg:block absolute left-1/2 -translate-x-1/2">
+              <Link to="/" className="absolute left-1/2 -translate-x-1/2">
                 <img
                   src={logo}
                   alt="Campuzon"
-                  className="h-10 md:h-12 object-contain"
+                  className="h-8 md:h-12 object-contain"
                 />
               </Link>
             )}
@@ -286,7 +287,7 @@ export function Header() {
                 onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
                 className="flex items-center gap-2 h-10 px-4 bg-muted rounded-full text-sm font-medium hover:bg-muted/80 transition-colors"
               >
-                Clothing
+                Browse Campus
                 <ChevronDown className="h-4 w-4" />
               </button>
 
@@ -315,16 +316,16 @@ export function Header() {
             {/* Quick Links */}
             <div className="hidden sm:flex items-center gap-2 shrink-0">
               <Link
-                to="/products?filter=new"
+                to="/products?filter=trending"
                 className="h-10 px-4 inline-flex items-center justify-center rounded-full border border-border text-sm font-medium hover:bg-muted transition-colors"
               >
-                New Arrivals
+                Trending
               </Link>
               <Link
-                to="/products?filter=sale"
+                to="/products?category=services"
                 className="h-10 px-4 inline-flex items-center justify-center rounded-full border border-border text-sm font-medium hover:bg-muted transition-colors"
               >
-                Sale
+                Gigs & Services
               </Link>
             </div>
 
