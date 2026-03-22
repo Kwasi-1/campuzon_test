@@ -36,7 +36,6 @@ import SuperAdminPortalLayout from "./pages/super-admin/SuperAdminPortal";
 import UserActivity from "./pages/super-admin/user-activity/UserActivity";
 import AdminManagement from "./pages/super-admin/admin-management/AdminManagement";
 import AdminModerationQueue from "./pages/super-admin/moderation/AdminModerationQueue";
-import AdminDisbursements from "./pages/admin/transactions/AdminDisbursements";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import AdminLogin from "./pages/admin/AdminLogin";
 import SuperAdminLogin from "./pages/super-admin/SuperAdminLogin";
@@ -210,10 +209,6 @@ const App = () => (
                         <Route
                           path="transactions"
                           element={<AdminTransactions />}
-                        />
-                        <Route
-                          path="disbursements"
-                          element={<AdminDisbursements />}
                         />
                         <Route path="settings" element={<AdminSettings />} />
                         <Route
