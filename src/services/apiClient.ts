@@ -62,10 +62,8 @@ class ApiClient {
             delete (config.headers as Record<string, unknown>).Authorization;
           }
         } else if (config.url?.includes('/admin/')) {
-          // Admin portal uses cookie session; don't attach Authorization header
-          if (config.headers && 'Authorization' in config.headers) {
-            delete (config.headers as Record<string, unknown>).Authorization;
-          }
+          // Admin portal uses its own JWT — managed by adminService.ts on the lib/api client
+          // This apiClient is not used for admin routes; leave Authorization as-is
         } else {
           // Regular client requests use regular auth token
           const token = localStorage.getItem('authToken');
