@@ -75,7 +75,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-gray-100">
-        <div className="flex items-center justify-center md:justify-start gap-3">
+        <div className="flex items-center justify-center xl:justify-start gap-3">
           <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-md shadow-primary/20 shrink-0">
             <ShieldCheck className="w-5 h-5 text-white" />
           </div>
