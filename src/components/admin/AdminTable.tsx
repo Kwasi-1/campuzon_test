@@ -1,17 +1,22 @@
-
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Search, Filter, ChevronDown } from 'lucide-react';
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, Filter, ChevronDown } from "lucide-react";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import DateFilter from '@/components/shared/DateFilter';
+} from "@/components/ui/select";
+import DateFilter from "@/components/shared/DateFilter";
 
 interface AdminTableProps {
   title: string;
@@ -48,9 +53,9 @@ const AdminTable: React.FC<AdminTableProps> = ({
   showDateFilter = false,
   actionButton,
   secondaryActionButton,
-  children
+  children,
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,17 +72,17 @@ const AdminTable: React.FC<AdminTableProps> = ({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Search and Action Bar */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
+        <div className="flex flex-col sm:flex-row justify-between gap-4">
+          <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
               placeholder={searchPlaceholder}
               value={searchQuery}
               onChange={handleSearchChange}
-              className="pl-10"
+              className="pl-10 max-w-md"
             />
           </div>
-          
+
           <div className="flex gap-2">
             {(filters.length > 0 || showDateFilter) && (
               <Button
@@ -87,21 +92,23 @@ const AdminTable: React.FC<AdminTableProps> = ({
               >
                 <Filter className="w-4 h-4 mr-2" />
                 Filters
-                <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  className={`w-4 h-4 ml-2 transition-transform ${showFilters ? "rotate-180" : ""}`}
+                />
               </Button>
             )}
-            
+
             {showDateFilter && !actionButton && !secondaryActionButton && (
               <DateFilter />
             )}
-            
+
             {secondaryActionButton && (
               <Button variant="outline" onClick={secondaryActionButton.onClick}>
                 {secondaryActionButton.icon}
                 {secondaryActionButton.label}
               </Button>
             )}
-            
+
             {actionButton && (
               <Button onClick={actionButton.onClick}>
                 {actionButton.icon}
@@ -137,9 +144,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
         )}
 
         {/* Table Content */}
-        <div className="overflow-x-auto">
-          {children}
-        </div>
+        <div className="overflow-x-auto">{children}</div>
       </CardContent>
     </Card>
   );
