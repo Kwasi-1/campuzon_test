@@ -88,7 +88,7 @@ const StoreLayout: React.FC<StoreLayoutProps> = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen flex font-dashboard">
+    <div className="min-h-screen flex">
       {/* Mobile sidebar overlay */}
       {isMobile && sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">

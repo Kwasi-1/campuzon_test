@@ -25,7 +25,6 @@ const navItems = [
   { name: 'Dashboard',     path: '/admin-portal',               icon: BarChart3 },
   { name: 'Users',         path: '/admin-portal/users',         icon: Users },
   { name: 'Stores',        path: '/admin-portal/stores',        icon: Store },
-  { name: 'Products',      path: '/admin-portal/products',      icon: Package },
   { name: 'Disputes',      path: '/admin-portal/disputes',      icon: AlertTriangle },
   { name: 'Transactions',  path: '/admin-portal/transactions',  icon: CreditCard },
   { name: 'Analytics',     path: '/admin-portal/analytics',     icon: LineChart },

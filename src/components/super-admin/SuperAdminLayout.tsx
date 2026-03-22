@@ -52,7 +52,7 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
   const closeSidebar = () => setSidebarOpen(false);
 
   return (
-    <div className="min-h-screen flex font-dashboard">
+    <div className="min-h-screen flex">
       {/* Mobile sidebar overlay */}
       {isMobile && sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">

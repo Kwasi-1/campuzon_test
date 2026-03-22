@@ -99,12 +99,14 @@ All colors MUST be HSL.
 @layer base {
   * {
     @apply border-border;
+    font-family: 'Outfit', sans-serif;
   }
 
   body {
     @apply bg-white text-foreground;
     font-family: 'Outfit', sans-serif;
     letter-spacing: -0.01rem;
+    pointer-events: auto !important; /* Fix NextUI / Radix UI modal lock conflict */
   }
   h1, h2, h3, h4, h5, h6 {
     @apply lg:tracking-wide font-semibold;
@@ -164,9 +166,6 @@ All colors MUST be HSL.
   
   .section-padding {
     @apply px-[15px] sm:px-6 lg:px-8 2xl:px-0;
-  }
-  .font-dashboard {
-    font-family: 'Public Sans', sans-serif;
   }
 
   /* Mobile safe area utilities */

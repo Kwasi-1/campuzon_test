@@ -24,7 +24,6 @@ import AdminPortalLayout from "./pages/admin/AdminPortal";
 import AdminDashboard from "./pages/admin/dashboard/AdminDashboard";
 import AdminUsers from "./pages/admin/users/AdminUsers";
 import AdminStores from "./pages/admin/stores/AdminStores";
-import AdminProducts from "./pages/admin/products/AdminProducts";
 import AdminTransactions from "./pages/admin/transactions/AdminTransactions";
 import AdminSettings from "./pages/admin/settings/AdminSettings";
 import AdminNotifications from "./pages/admin/notifications/AdminNotifications";
@@ -171,7 +170,6 @@ const App = () => (
                         <Route index element={<AdminDashboard />} />
                         <Route path="users" element={<AdminUsers />} />
                         <Route path="stores" element={<AdminStores />} />
-                        <Route path="products" element={<AdminProducts />} />
                         <Route
                           path="transactions"
                           element={<AdminTransactions />}
@@ -209,7 +207,6 @@ const App = () => (
                         <Route index element={<AdminDashboard />} />
                         <Route path="users" element={<AdminUsers />} />
                         <Route path="stores" element={<AdminStores />} />
-                        <Route path="products" element={<AdminProducts />} />
                         <Route
                           path="transactions"
                           element={<AdminTransactions />}
