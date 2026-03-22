@@ -88,7 +88,7 @@ const StoreDetailDialog: React.FC<{ store: AdminStoreItem | null; open: boolean;
     ["Rating",        store.rating ? `${store.rating.toFixed(1)} / 5` : "No ratings"],
     ["Products",      String(store.productCount)],
     ["Total Orders",  String(store.totalOrders)],
-    ["Revenue",       `₵${store.totalRevenue.toLocaleString()}`],
+    ["Revenue",       `₵${(store.totalRevenue || 0).toLocaleString()}`],
     ["Verified",      store.isVerified ? "Yes" : "No"],
     ["Subscription",  store.subscriptionPlan ?? "Free"],
     ["Institution",   store.institution ?? "—"],
@@ -120,7 +120,7 @@ const StoreDetailDialog: React.FC<{ store: AdminStoreItem | null; open: boolean;
             <div className="mt-1"><StatusBadge status={store.status} /></div>
           </div>
         </div>
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm py-2 max-h-64 overflow-y-auto">
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm py-2 max-h-64 overflow-y-auto scrollbar-hide">
           {rows.map(([k, v]) => (
             <React.Fragment key={k}>
               <dt className="text-gray-400 font-medium">{k}</dt>
