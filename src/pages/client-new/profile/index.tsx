@@ -35,6 +35,7 @@ import { api, extractData } from "@/lib/api";
 import { mockInstitutions } from "@/lib/mockData";
 import { formatPrice, formatDate, getOrderStatusColor } from "@/lib/utils";
 import type { User } from "@/types-new";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 // Mock data for stats and activity
 const mockRecentActivity = [
@@ -95,7 +96,7 @@ export function ProfilePage() {
         response?: { data?: { error?: { message?: string } } };
       };
       setError(
-        apiError.response?.data?.error?.message || "Failed to upload avatar"
+        apiError.response?.data?.error?.message || "Failed to upload avatar",
       );
     } finally {
       setIsAvatarLoading(false);
@@ -178,9 +179,9 @@ export function ProfilePage() {
 
       {/* Profile Header & Picture update */}
       <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
-        <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6 border-b border-gray-100 bg-gray-50/50 hidden">
+        <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6 border-b border-gray-100 bg-gray-50/50">
           <div className="relative shrink-0">
-            {user.profileImage ? (
+            {/* {user.profileImage ? (
               <img
                 src={user.profileImage}
                 alt={user.displayName || user.firstName}
@@ -193,7 +194,13 @@ export function ProfilePage() {
                   {user.lastName.charAt(0)}
                 </span>
               </div>
-            )}
+            )} */}
+            <Avatar className="h-24 w-24 mr-3">
+              <AvatarImage src={user.profileImage} alt={user.displayName || user.firstName} />
+              <AvatarFallback className="text-3xl">
+                { user.firstName.charAt(0) + user.lastName.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
             {isAvatarLoading && (
               <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
                 <Loader2 className="h-6 w-6 text-white animate-spin" />
@@ -269,7 +276,7 @@ export function ProfilePage() {
               <Button
                 variant="outline"
                 onClick={() => setIsEditing(true)}
-                className="rounded-full shadow-sm"
+                className="rounded-full"
               >
                 <Edit2 className="h-4 w-4 mr-2" />
                 Edit Profile
@@ -384,7 +391,10 @@ export function ProfilePage() {
                       Institution
                     </p>
                     <p className="text-sm font-medium text-gray-900">
-                      {user.institutionName || user.institution?.name || institution?.name || "Not specified"}
+                      {user.institutionName ||
+                        user.institution?.name ||
+                        institution?.name ||
+                        "Not specified"}
                     </p>
                   </div>
                 </div>
@@ -393,7 +403,6 @@ export function ProfilePage() {
           )}
         </div>
       </div>
-
       {/* Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statsCards.map((stat) => (
@@ -480,7 +489,7 @@ export function ProfilePage() {
                       </p>
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getOrderStatusColor(
-                          order.status
+                          order.status,
                         )}`}
                       >
                         {order.status}
