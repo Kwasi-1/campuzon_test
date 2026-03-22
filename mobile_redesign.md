@@ -243,3 +243,5 @@ If mobile is unfinished and desktop is already stable, do not keep redesigning e
 2. Validate breakpoints.
 3. Continue section by section.
 4. Only then move to deeper visual redesign.
+
+updated notification page clickable 
