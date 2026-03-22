@@ -14,7 +14,7 @@ export function ProductCardSkeleton() {
   return (
     <div className="flex flex-col">
       {/* Image placeholder */}
-      <div className="aspect-square rounded-[6px] md:rounded-md bg-[#f8f9fa] animate-pulse mb-3" />
+      <div className="aspect-square rounded-[7px] md:rounded-md bg-[#f8f9fa] animate-pulse mb-3" />
 
       {/* Content */}
       <div className="flex flex-col px-1 gap-1 mt-1">

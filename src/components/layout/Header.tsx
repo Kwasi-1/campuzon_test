@@ -14,6 +14,7 @@ import { useWishlist } from "@/hooks";
 import logo from "@/assets/images/CAMPUZONV2LT.png";
 import { MobileMenu } from "./MobileMenu";
 import MobileSearchOverlay from "../MobileSearchOverlay";
+import { SearchHeader } from "./SearchHeader";
 import { Icon } from "@iconify/react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { useEffect } from "react";
@@ -36,7 +37,7 @@ export function Header() {
     if (query) {
       setSearchQuery(query);
     } else if (isProductsPage) {
-      // Clear if on products page but no query? 
+      // Clear if on products page but no query?
       // Actually maybe better to leave it if the user just cleared it.
     }
   }, [searchParams, isProductsPage]);
@@ -92,7 +93,7 @@ export function Header() {
     <header className="sticky top-0 z-40 w-full bg-background">
       {/* Top Navigation Bar */}
       <div className="md:border-b border-border">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-2">
           <div className="flex h-18 items-center justify-between py-3">
             {/* Left: Hamburger Menu */}
             {!isProductsPage && (
@@ -102,50 +103,40 @@ export function Header() {
                 aria-label="Toggle menu"
               >
                 {/* <Menu className="h-6 w-6 text-foreground" /> */}
-                <Icon icon="ri:menu-2-fill" className="h-7 w-7 text-foreground" />
+                <Icon
+                  icon="ri:menu-2-fill"
+                  className="h-7 w-7 text-foreground"
+                />
               </button>
             )}
 
             {/* Center: Logo / Mobile Search Bar for Products Page */}
             {isProductsPage ? (
-              <div className="md:hidden flex flex-1 items-center gap-2 px-0 -ml-1">
-                <button
-                  onClick={() => navigate("/")}
-                  className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted"
-                  aria-label="Back"
-                >
-                  <Icon icon="ri:arrow-left-s-line" className="h-6 w-6" />
-                </button>
-                <form onSubmit={handleSearch} className="flex-1 -mr-2">
-                  <div className="relative">
-                    <input
-                      type="search"
-                      placeholder="Search..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full h-10 pl-4 pr-10 rounded-full  bg-muted text-sm focus:outline-none transition-all"
-                    />
-                    <button
-                      type="submit"
-                      className="absolute right-3 top-1/2 -translate-y-1/2"
-                      aria-label="Search"
-                    >
-                      <Search className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                  </div>
-                </form>
+              <div className="md:hidden flex-1 -mx4 -my-3">
+                <SearchHeader
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  onSearch={() =>
+                    handleSearch({ preventDefault: () => {} } as any)
+                  }
+                  onBack={() => navigate("/")}
+                  placeholder="App only offer"
+                />
               </div>
             ) : (
-              <Link
-                to="/"
-                className="absolute left-1/2 -translate-x-1/2"
-              >
-                <img src={logo} alt="Campuzon" className="h-10 md:h-12 object-contain" />
+              <Link to="/" className="hidden lg:block absolute left-1/2 -translate-x-1/2">
+                <img
+                  src={logo}
+                  alt="Campuzon"
+                  className="h-10 md:h-12 object-contain"
+                />
               </Link>
             )}
 
             {/* Right: Navigation Links & Actions */}
-            <div className={`${isProductsPage ? 'hidden md:flex' : 'flex'} items-center gap-1 sm:gap-2`}>
+            <div
+              className={`${isProductsPage ? "hidden md:flex" : "flex"} items-center gap-1 sm:gap-2`}
+            >
               {/* Desktop Links */}
               <nav className="hidden md:flex items-center gap-4 mr-2">
                 <Link
@@ -167,30 +158,108 @@ export function Header() {
                 </Link>
 
                 {/* Notifications */}
-              <Link
-                to="/notifications"
-                className="relative h-10 w-10 inline-flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
-                aria-label="Notifications"
-              >
-                <Bell className="h-5 w-5" />
-              </Link>
+                <Link
+                  to="/notifications"
+                  className="relative h-10 w-10 inline-flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
+                  aria-label="Notifications"
+                >
+                  <Bell className="h-5 w-5" />
+                </Link>
 
-              {/* Cart */}
-              <Link
-                to="/cart"
-                className="relative h-10 w-10 inline-flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
-                aria-label="Cart"
-              >
-                <ShoppingCart className="h-5 w-5" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 min-w-5 px-1 flex items-center justify-center rounded-full bg-primary text-white text-xs font-bold">
-                    {cartCount > 99 ? "99+" : cartCount}
-                  </span>
+                {/* Cart */}
+                <Link
+                  to="/cart"
+                  className="relative h-10 w-10 inline-flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
+                  aria-label="Cart"
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-5 min-w-5 px-1 flex items-center justify-center rounded-full bg-primary text-white text-xs font-bold">
+                      {cartCount > 99 ? "99+" : cartCount}
+                    </span>
+                  )}
+                </Link>
+                {/* User Menu */}
+                {isAuthenticated && user ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center justify-center h-10 w-10 rounded-lg hover:bg-muted transition-colors"
+                    >
+                      {user.profileImage ? (
+                        <img
+                          src={user.profileImage}
+                          alt={user.displayName || user.firstName}
+                          className="h-7 w-7 rounded-full object-cover"
+                        />
+                      ) : (
+                        <User className="h-5 w-5" />
+                      )}
+                    </button>
+
+                    {showUserMenu && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => setShowUserMenu(false)}
+                        />
+                        <div className="absolute right-0 top-12 z-50 w-48 rounded-lg border border-border bg-background shadow-lg py-1">
+                          <div className="px-3 py-2 border-b border-border">
+                            <p className="font-medium text-sm">
+                              {user.displayName}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {user.email}
+                            </p>
+                          </div>
+                          <Link
+                            to="/profile"
+                            onClick={() => setShowUserMenu(false)}
+                            className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors"
+                          >
+                            <User className="h-4 w-4" />
+                            Profile
+                          </Link>
+                          <Link
+                            to="/orders"
+                            onClick={() => setShowUserMenu(false)}
+                            className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors"
+                          >
+                            <ShoppingCart className="h-4 w-4" />
+                            My Orders
+                          </Link>
+                          <Link
+                            to="/settings/security"
+                            onClick={() => setShowUserMenu(false)}
+                            className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors"
+                          >
+                            <Settings className="h-4 w-4" />
+                            Settings
+                          </Link>
+                          <button
+                            onClick={() => {
+                              logout();
+                              setShowUserMenu(false);
+                            }}
+                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-destructive hover:bg-muted transition-colors"
+                          >
+                            <LogOut className="h-4 w-4" />
+                            Logout
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    to="/login"
+                    className="h-10 w-10 inline-flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
+                    aria-label="Account"
+                  >
+                    <User className="h-5 w-5" />
+                  </Link>
                 )}
-              </Link>
               </nav>
-
-              
 
               {/* Mobile Search Toggle */}
               {!isProductsPage && (
@@ -201,87 +270,6 @@ export function Header() {
                 >
                   <Search className="h-5 w-5" />
                 </button>
-              )}
-
-              {/* User Menu */}
-              {isAuthenticated && user ? (
-                <div className="relative">
-                  <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center justify-center h-10 w-10 rounded-lg hover:bg-muted transition-colors"
-                  >
-                    {user.profileImage ? (
-                      <img
-                        src={user.profileImage}
-                        alt={user.displayName || user.firstName}
-                        className="h-7 w-7 rounded-full object-cover"
-                      />
-                    ) : (
-                      <User className="h-5 w-5" />
-                    )}
-                  </button>
-
-                  {showUserMenu && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-40"
-                        onClick={() => setShowUserMenu(false)}
-                      />
-                      <div className="absolute right-0 top-12 z-50 w-48 rounded-lg border border-border bg-background shadow-lg py-1">
-                        <div className="px-3 py-2 border-b border-border">
-                          <p className="font-medium text-sm">
-                            {user.displayName}
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {user.email}
-                          </p>
-                        </div>
-                        <Link
-                          to="/profile"
-                          onClick={() => setShowUserMenu(false)}
-                          className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors"
-                        >
-                          <User className="h-4 w-4" />
-                          Profile
-                        </Link>
-                        <Link
-                          to="/orders"
-                          onClick={() => setShowUserMenu(false)}
-                          className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors"
-                        >
-                          <ShoppingCart className="h-4 w-4" />
-                          My Orders
-                        </Link>
-                        <Link
-                          to="/settings/security"
-                          onClick={() => setShowUserMenu(false)}
-                          className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors"
-                        >
-                          <Settings className="h-4 w-4" />
-                          Settings
-                        </Link>
-                        <button
-                          onClick={() => {
-                            logout();
-                            setShowUserMenu(false);
-                          }}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-destructive hover:bg-muted transition-colors"
-                        >
-                          <LogOut className="h-4 w-4" />
-                          Logout
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ) : (
-                <Link
-                  to="/login"
-                  className="h-10 w-10 inline-flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
-                  aria-label="Account"
-                >
-                  <User className="h-5 w-5" />
-                </Link>
               )}
             </div>
           </div>

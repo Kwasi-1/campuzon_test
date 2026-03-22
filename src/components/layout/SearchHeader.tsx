@@ -35,7 +35,7 @@ export const SearchHeader = ({
   };
 
   return (
-    <div className="flex h-14 items-center gap-3 px-3 border-b border-gray-100 bg-white">
+    <div className="flex h16 items-center gap-3 px-3 py-4 border-b border-gray-100 bg-white">
       {/* Back Button */}
       <Button
         variant="ghost"

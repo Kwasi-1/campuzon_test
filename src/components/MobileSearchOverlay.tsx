@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Search, X, Clock } from 'lucide-react';
+import { Search, X, Clock, Trash2, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { SearchHeader } from './layout/SearchHeader';
 
 interface MobileSearchOverlayProps {
   isOpen: boolean;
@@ -62,49 +63,78 @@ const MobileSearchOverlay = ({ isOpen, onClose }: MobileSearchOverlayProps) => {
   if (!isOpen && !isClosing) return null;
 
   return (
-    <div className={`fixed inset-0 z-50 bg-white transition-transform duration-300 ${
-      isClosing ? 'animate-slide-out-up' : 'animate-slide-in-down'
-    }`}>
-      <div className="p-4">
-        <form onSubmit={handleSearch} className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Search products, stores..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2  rounded-full bg-[#f4f7fb] outline-none ring-0"
-            autoFocus
-          />
-        </form>
+    <div
+      className={`fixed inset-0 z-[100] bg-white transition-transform duration-300 ${
+        isClosing ? "animate-slide-out-up" : "animate-slide-in-down"
+      }`}
+    >
+      <SearchHeader
+        value={searchQuery}
+        onChange={setSearchQuery}
+        onSearch={() => handleSearch({ preventDefault: () => {} } as any)}
+        onBack={handleClose}
+        placeholder="Search products, stores..."
+        autoFocus
+      />
 
+      <div className="p-5 flex flex-col gap-8">
+        {/* Recent Searches */}
         {searchHistory.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-gray-700">Recent Searches</h3>
-              <Button variant="ghost" size="sm" onClick={clearHistory} className="text-xs text-gray-500">
-                Clear All
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[17px] font-bold text-gray-900 tracking-tight">
+                Recent Searches
+              </h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={clearHistory}
+                className="h-8 w-8 text-gray-500 hover:text-red-500 hover:bg-gray-100 rounded-full"
+              >
+                <Trash2 className="h-[18px] w-[18px]" />
               </Button>
             </div>
-            <div className="space-y-1">
+            
+            <div className="flex flex-wrap gap-2.5">
               {searchHistory.map((query, index) => (
                 <button
                   key={index}
                   onClick={() => handleHistoryClick(query)}
-                  className="w-full flex items-center space-x-3 p-3 hover:bg-gray-50 text-sm rounded-lg text-left"
+                  className="px-4 py-2 bg-[#f4f7fb] text-[13.5px] font-medium text-gray-600 rounded-full hover:bg-gray-200 transition-colors leading-none"
                 >
-                  <Clock className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-700">{query}</span>
+                  {query}
                 </button>
               ))}
             </div>
           </div>
         )}
-      </div>
-      <div >
-        <Button variant="ghost" size="sm" onClick={handleClose} className="absolute bottom-28 right-0 left-0 w-10 h-10 border mx-auto rounded-full bg-primary/5 text-primary">
-          <X className="w-6 h-6" />
-        </Button>
+
+        {/* Recommendations */}
+        <div className="space-y-4">
+          <h3 className="text-[17px] font-bold text-gray-900 tracking-tight">
+            Recommendations
+          </h3>
+          <div className="space-y-1 -mx-5 px-5">
+            {[
+              { label: "Daily Deals", href: "/products?filter=deals" },
+              { label: "APP ONLY OFFER", href: "/products?filter=offers" },
+            ].map((item, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  navigate(item.href);
+                  handleClose();
+                }}
+                className="w-full flex items-center justify-between py-4 group hover:bg-gray-50 transition-colors"
+              >
+                <span className="text-[15px] font-semibold text-gray-800 group-hover:text-primary">
+                  {item.label}
+                </span>
+                <ChevronRight className="h-4.5 w-4.5 text-gray-300 group-hover:text-primary transition-colors" />
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
