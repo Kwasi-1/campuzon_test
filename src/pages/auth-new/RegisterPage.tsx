@@ -22,6 +22,7 @@ import {
 } from "@/components/shared/text-field";
 import { useAuthStore } from "@/stores";
 import { mockInstitutions } from "@/lib/mockData";
+import { extractError } from "@/lib/api";
 
 const registerSchema = z
   .object({
@@ -94,8 +95,7 @@ export function RegisterPage() {
       });
       navigate("/");
     } catch (err: unknown) {
-      const error = err as { message?: string };
-      setError(error.message || "Registration failed. Please try again.");
+      setError(extractError(err));
     }
   };
 

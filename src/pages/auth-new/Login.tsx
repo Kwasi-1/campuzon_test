@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { AuthPage } from "@/components/auth-page";
 import { CustomInputTextField } from "@/components/shared/text-field";
 import { useAuthStore } from "@/stores";
+import { extractError } from "@/lib/api";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -54,8 +55,7 @@ const Login = () => {
       // No 2FA, proceed to destination
       navigate(redirect);
     } catch (err: unknown) {
-      const error = err as { message?: string };
-      setError(error.message || "Invalid email or password");
+      setError(extractError(err));
     }
   };
 

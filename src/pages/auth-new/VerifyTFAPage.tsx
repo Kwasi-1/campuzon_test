@@ -12,7 +12,7 @@ import { Card,
   CardDescription,
   CardContent } from "@/components/ui/card";
 import { useAuthStore } from "@/stores";
-import api from "@/lib/api";
+import api, { extractError } from "@/lib/api";
 import type { TwoFactorMethod } from "@/types-new";
 
 interface VerifyTFAPageState {
@@ -103,8 +103,7 @@ export function VerifyTFAPage() {
       await verify2FA(state.tempToken, verificationCode);
       navigate(state.redirect || "/", { replace: true });
     } catch (err: unknown) {
-      const error = err as { message?: string };
-      setError(error.message || "Invalid verification code");
+      setError(extractError(err));
       setCode(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
     } finally {
@@ -124,8 +123,7 @@ export function VerifyTFAPage() {
       });
       setResendCooldown(60);
     } catch (err: unknown) {
-      const error = err as { message?: string };
-      setError(error.message || "Failed to resend code");
+      setError(extractError(err));
     } finally {
       setIsResending(false);
     }
