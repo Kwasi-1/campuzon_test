@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell, Check, Trash2, ExternalLink, Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Notification, NotificationSettings } from '@/types-new';
@@ -41,6 +42,7 @@ const NotificationComponent = ({
   settingsTabCategories = ['order', 'product', 'payment', 'system']
 }: NotificationComponentProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -89,8 +91,39 @@ const NotificationComponent = ({
     </Card>
   );
 
+  const handleNotificationClick = (notification: Notification, e: React.MouseEvent) => {
+    // Prevent triggering if clicked on inner buttons
+    if ((e.target as HTMLElement).closest('.action-btn')) return;
+
+    if (!notification.isRead) {
+      onMarkAsRead(notification.id);
+    }
+
+    if (notification.actionUrl) {
+      navigate(notification.actionUrl);
+      return;
+    }
+
+    // Default routes based on type
+    switch (notification.type) {
+      case 'order':
+      case 'payment':
+        navigate('/admin-portal/transactions');
+        break;
+      case 'dispute':
+        navigate('/admin-portal/disputes');
+        break;
+      case 'chat':
+        navigate('/admin-portal/messages');
+        break;
+    }
+  };
+
   const NotificationCard = ({ notification }: { notification: Notification }) => (
-    <Card className={`${!notification.isRead ? 'border-2 border-primary/5 bg-accent/40' : ''} shadow-none`}>
+    <Card 
+      onClick={(e) => handleNotificationClick(notification, e)}
+      className={`cursor-pointer transition-colors hover:bg-gray-50/50 ${!notification.isRead ? 'border-2 border-primary/5 bg-accent/40 hover:bg-accent/60' : ''} shadow-none`}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between space-x-4">
           <div className="flex-1 space-y-2">
@@ -128,6 +161,7 @@ const NotificationComponent = ({
               <Button
                 variant="ghost"
                 size="icon"
+                className="action-btn"
                 onClick={() => onMarkAsRead(notification.id)}
                 title="Mark as read"
               >
@@ -137,6 +171,7 @@ const NotificationComponent = ({
             <Button
               variant="ghost"
               size="icon"
+              className="action-btn"
               onClick={() => onDeleteNotification(notification.id)}
               title="Delete notification"
             >

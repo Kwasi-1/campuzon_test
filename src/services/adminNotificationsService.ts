@@ -49,22 +49,13 @@ const map = (n: BackendNotification): Notification => ({
 
 class AdminNotificationsService {
   private readonly SETTINGS_KEY = 'adminNotificationSettings';
+  private readonly DATABAE_KEY = 'adminNotificationMockDB';
 
-  async list(adminId?: string): Promise<Notification[]> {
-    try {
-      // Prefer super admin scoped notifications if adminId provided; else fallback to customer notifications
-      if (adminId) {
-        const { data } = await apiClient.get<BackendNotification[]>(`/admin/super/admins/${encodeURIComponent(adminId)}/notifications`);
-        return (Array.isArray(data) ? data : []).map(map);
-      }
-      // Fallback: use customer notifications endpoint for current session user
-      const { data } = await apiClient.get<{ success: boolean; notifications: BackendNotification[] }>(`/user/account/notifications`);
-      const list = data?.notifications || [];
-      return (Array.isArray(list) ? list : []).map(map);
-    } catch (error) {
-      console.error('Failed to fetch notifications:', error);
-      // Return mock data as fallback
-      return [
+  private getDB() {
+    const raw = localStorage.getItem(this.DATABAE_KEY);
+    if (raw) return JSON.parse(raw);
+    return {
+      notifications: [
         {
           id: '1',
           title: 'New Order Alert',
@@ -87,53 +78,19 @@ class AdminNotificationsService {
           referenceType: null,
           referenceID: null,
         }
-      ];
-    }
-  }
-
-  async markAsRead(notificationId: string): Promise<void> {
-    try {
-      // Prefer customer endpoint shape since admin-specific mark-as-read is not listed
-      await apiClient.post(`/user/account/notifications/${encodeURIComponent(notificationId)}/read`);
-    } catch (error) {
-      throw new Error(handleApiError(error));
-    }
-  }
-
-  async markAllAsRead(): Promise<void> {
-    try {
-      await apiClient.post('/admin/notifications/mark-all-read');
-    } catch (error) {
-      console.error('Failed to mark all notifications as read:', error);
-      // Simulate API call for demo
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
-  }
-
-  async createBroadcast(broadcast: Omit<BroadcastNotification, 'id' | 'status'>): Promise<BroadcastNotification> {
-    try {
-      const { data } = await apiClient.post<BroadcastNotification>('/admin/notifications/broadcast', broadcast);
-      return data;
-    } catch (error) {
-      console.error('Failed to create broadcast:', error);
-      // Return mock response as fallback
-      return {
-        id: `broadcast-${Date.now()}`,
-        ...broadcast,
-        status: 'sent',
-        sentAt: new Date().toISOString()
-      };
-    }
-  }
-
-  async getTemplates(): Promise<NotificationTemplate[]> {
-    try {
-      const { data } = await apiClient.get<NotificationTemplate[]>('/admin/notifications/templates');
-      return data;
-    } catch (error) {
-      console.error('Failed to fetch templates:', error);
-      // Return mock templates as fallback
-      return [
+      ],
+      broadcasts: [
+        {
+          id: 'broadcast-1',
+          title: 'Platform Maintenance Notice',
+          message: 'We will be performing scheduled maintenance tonight.',
+          type: 'warning',
+          recipients: 'all',
+          status: 'sent',
+          sentAt: new Date(Date.now() - 86400000).toISOString()
+        }
+      ],
+      templates: [
         {
           id: 'order-confirmation',
           name: 'Order Confirmation',
@@ -154,7 +111,89 @@ class AdminNotificationsService {
           isActive: true,
           variables: ['userName']
         }
-      ];
+      ],
+      stats: {
+        totalSent: 1250,
+        totalDelivered: 1188,
+        deliveryRate: 95.04,
+        engagementRate: 68.5
+      }
+    };
+  }
+
+  private saveDB(data: any) {
+    localStorage.setItem(this.DATABAE_KEY, JSON.stringify(data));
+  }
+
+  async list(adminId?: string): Promise<Notification[]> {
+    try {
+      if (adminId) {
+        const { data } = await apiClient.get<BackendNotification[]>(`/admin/super/admins/${encodeURIComponent(adminId)}/notifications`);
+        return (Array.isArray(data) ? data : []).map(map);
+      }
+      const { data } = await apiClient.get<{ success: boolean; notifications: BackendNotification[] }>(`/user/account/notifications`);
+      const list = data?.notifications || [];
+      return (Array.isArray(list) ? list : []).map(map);
+    } catch (error) {
+      console.warn('Failed to fetch notifications API, using local DB:', error);
+      return this.getDB().notifications;
+    }
+  }
+
+  async markAsRead(notificationId: string): Promise<void> {
+    try {
+      await apiClient.post(`/user/account/notifications/${encodeURIComponent(notificationId)}/read`);
+    } catch (error) {
+       console.warn('Failed to call markAsRead API, updating local DB...');
+       const db = this.getDB();
+       db.notifications = db.notifications.map((n: Notification) => 
+         n.id === notificationId ? { ...n, isRead: true } : n
+       );
+       this.saveDB(db);
+    }
+  }
+
+  async markAllAsRead(): Promise<void> {
+    try {
+      await apiClient.post('/admin/notifications/mark-all-read');
+    } catch (error) {
+      console.warn('Failed to call markAllAsRead API, updating local DB...');
+      const db = this.getDB();
+      db.notifications = db.notifications.map((n: Notification) => ({ ...n, isRead: true }));
+      this.saveDB(db);
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
+
+  async createBroadcast(broadcast: Omit<BroadcastNotification, 'id' | 'status'>): Promise<BroadcastNotification> {
+    try {
+      const { data } = await apiClient.post<BroadcastNotification>('/admin/notifications/broadcast', broadcast);
+      return data;
+    } catch (error) {
+      console.warn('Failed to create broadcast API, updating local DB...');
+      const db = this.getDB();
+      const newBroadcast = {
+        id: `broadcast-${Date.now()}`,
+        ...broadcast,
+        status: 'sent' as const,
+        sentAt: new Date().toISOString()
+      };
+      db.broadcasts = [newBroadcast, ...db.broadcasts];
+      // update stats as well to simulate real engagement
+      db.stats.totalSent += 1;
+      db.stats.totalDelivered += 1;
+      this.saveDB(db);
+      return newBroadcast;
+    }
+  }
+
+  async getTemplates(): Promise<NotificationTemplate[]> {
+    try {
+      const { data } = await apiClient.get<NotificationTemplate[]>('/admin/notifications/templates');
+      return data;
+    } catch (error) {
+      console.warn('Failed to fetch templates API, using local DB...');
+      return this.getDB().templates;
     }
   }
 
@@ -163,12 +202,12 @@ class AdminNotificationsService {
       const { data } = await apiClient.post<NotificationTemplate>('/admin/notifications/templates', template);
       return data;
     } catch (error) {
-      console.error('Failed to create template:', error);
-      // Return mock response as fallback
-      return {
-        id: `template-${Date.now()}`,
-        ...template
-      };
+      console.warn('Failed to create template API, updating local DB...');
+      const db = this.getDB();
+      const newTemplate = { id: `template-${Date.now()}`, ...template };
+      db.templates.push(newTemplate);
+      this.saveDB(db);
+      return newTemplate;
     }
   }
 
@@ -177,8 +216,19 @@ class AdminNotificationsService {
       const { data } = await apiClient.put<NotificationTemplate>(`/admin/notifications/templates/${id}`, template);
       return data;
     } catch (error) {
-      console.error('Failed to update template:', error);
-      throw error;
+      console.warn('Failed to update template API, updating local DB...');
+      const db = this.getDB();
+      let updated = null;
+      db.templates = db.templates.map((t: NotificationTemplate) => {
+        if (t.id === id) {
+          updated = { ...t, ...template };
+          return updated;
+        }
+        return t;
+      });
+      if (!updated) throw new Error("Template not found");
+      this.saveDB(db);
+      return updated;
     }
   }
 
@@ -186,8 +236,10 @@ class AdminNotificationsService {
     try {
       await apiClient.delete(`/admin/notifications/templates/${id}`);
     } catch (error) {
-      console.error('Failed to delete template:', error);
-      // Simulate API call for demo
+      console.warn('Failed to delete template API, updating local DB...');
+      const db = this.getDB();
+      db.templates = db.templates.filter((t: NotificationTemplate) => t.id !== id);
+      this.saveDB(db);
       await new Promise(resolve => setTimeout(resolve, 500));
     }
   }
@@ -197,19 +249,8 @@ class AdminNotificationsService {
       const { data } = await apiClient.get<BroadcastNotification[]>('/admin/notifications/broadcasts');
       return data;
     } catch (error) {
-      console.error('Failed to fetch broadcast history:', error);
-      // Return mock data as fallback
-      return [
-        {
-          id: 'broadcast-1',
-          title: 'Platform Maintenance Notice',
-          message: 'We will be performing scheduled maintenance tonight.',
-          type: 'warning',
-          recipients: 'all',
-          status: 'sent',
-          sentAt: new Date(Date.now() - 86400000).toISOString()
-        }
-      ];
+      console.warn('Failed to fetch broadcast API, using local DB...');
+      return this.getDB().broadcasts;
     }
   }
 
@@ -228,14 +269,8 @@ class AdminNotificationsService {
       }>('/admin/notifications/stats');
       return data;
     } catch (error) {
-      console.error('Failed to fetch notification stats:', error);
-      // Return mock stats as fallback
-      return {
-        totalSent: 1250,
-        totalDelivered: 1188,
-        deliveryRate: 95.04,
-        engagementRate: 68.5
-      };
+      console.warn('Failed to fetch stats API, using local DB...');
+      return this.getDB().stats;
     }
   }
 
@@ -253,9 +288,8 @@ class AdminNotificationsService {
       await apiClient.put('/admin/notifications/settings', settings);
       this.saveSettings(settings);
     } catch (error) {
-      console.error('Failed to update notification settings on server:', error);
-      // Save locally as fallback
-      this.saveSettings(settings);
+      console.warn('Failed to update notification settings on server API, updating local DB:', error);
+      this.saveSettings(settings); // Fallback
     }
   }
 }

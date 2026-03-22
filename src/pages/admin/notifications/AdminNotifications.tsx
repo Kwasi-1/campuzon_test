@@ -17,9 +17,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -29,6 +36,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Send, FileText, BarChart3 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const AdminNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -51,6 +59,26 @@ const AdminNotifications = () => {
     type: "info" as const,
     recipients: "all" as const,
   });
+
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] =
+    useState<NotificationTemplate | null>(null);
+  const [templateForm, setTemplateForm] = useState<{
+    name: string;
+    subject: string;
+    body: string;
+    type: "email" | "push" | "sms";
+    category: string;
+    isActive: boolean;
+  }>({
+    name: "",
+    subject: "",
+    body: "",
+    type: "email",
+    category: "orders",
+    isActive: true,
+  });
+
   const { toast } = useToast();
 
   const { admin } = useAdminAuth();
@@ -102,7 +130,7 @@ const AdminNotifications = () => {
     try {
       await adminNotificationsService.markAsRead(id);
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
       );
       toast({
         title: "Notification marked as read",
@@ -121,7 +149,7 @@ const AdminNotifications = () => {
     try {
       await adminNotificationsService.markAllAsRead();
       setNotifications((prev) =>
-        prev.map((notif) => ({ ...notif, isRead: true }))
+        prev.map((notif) => ({ ...notif, isRead: true })),
       );
       toast({
         title: "All notifications marked as read",
@@ -180,9 +208,8 @@ const AdminNotifications = () => {
         return;
       }
 
-      const broadcast = await adminNotificationsService.createBroadcast(
-        broadcastForm
-      );
+      const broadcast =
+        await adminNotificationsService.createBroadcast(broadcastForm);
       setBroadcastHistory((prev) => [broadcast, ...prev]);
       setBroadcastForm({
         title: "",
@@ -204,6 +231,90 @@ const AdminNotifications = () => {
     }
   };
 
+  const handleOpenTemplateModal = (template?: NotificationTemplate) => {
+    if (template) {
+      setEditingTemplate(template);
+      setTemplateForm({
+        name: template.name,
+        subject: template.subject,
+        body: template.body,
+        type: template.type,
+        category: template.category,
+        isActive: template.isActive,
+      });
+    } else {
+      setEditingTemplate(null);
+      setTemplateForm({
+        name: "",
+        subject: "",
+        body: "",
+        type: "email",
+        category: "orders",
+        isActive: true,
+      });
+    }
+    setIsTemplateModalOpen(true);
+  };
+
+  const handleSaveTemplate = async () => {
+    try {
+      if (!templateForm.name || !templateForm.subject || !templateForm.body) {
+        toast({
+          title: "Incomplete",
+          description: "Please fill out all required fields.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (editingTemplate) {
+        const updated = await adminNotificationsService.updateTemplate(
+          editingTemplate.id,
+          { ...templateForm, variables: [] },
+        );
+        setTemplates((prev) =>
+          prev.map((t) => (t.id === updated.id ? updated : t)),
+        );
+        toast({
+          title: "Template Updated",
+          description: "Template saved successfully.",
+        });
+      } else {
+        const created = await adminNotificationsService.createTemplate({
+          ...templateForm,
+          variables: [],
+        });
+        setTemplates((prev) => [...prev, created]);
+        toast({
+          title: "Template Created",
+          description: "New template added successfully.",
+        });
+      }
+      setIsTemplateModalOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error saving template",
+        description: (error as Error).message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteTemplate = async (id: string) => {
+    try {
+      if (confirm("Are you sure you want to delete this template?")) {
+        await adminNotificationsService.deleteTemplate(id);
+        setTemplates((prev) => prev.filter((t) => t.id !== id));
+        toast({ title: "Template Deleted", description: "Template removed." });
+      }
+    } catch (error) {
+      toast({
+        title: "Error deleting template",
+        description: (error as Error).message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <AdminPageLayout title="Notification Management">
       <SEO
@@ -213,12 +324,10 @@ const AdminNotifications = () => {
       />
 
       <Tabs defaultValue="notifications" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="broadcast">Broadcast</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="notifications">
@@ -232,7 +341,7 @@ const AdminNotifications = () => {
             onDeleteNotification={deleteNotification}
             onUpdateSetting={updateSetting}
             onSaveSettings={saveSettings}
-            showSettings={false}
+            showSettings={true}
             settingsTabCategories={["user", "system", "payment"]}
           />
         </TabsContent>
@@ -384,14 +493,19 @@ const AdminNotifications = () => {
 
         <TabsContent value="templates" className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                Notification Templates
-              </CardTitle>
-              <CardDescription>
-                Manage reusable notification templates
-              </CardDescription>
+            <CardHeader className="flex flex-row items-start justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5" />
+                  Notification Templates
+                </CardTitle>
+                <CardDescription>
+                  Manage reusable notification templates
+                </CardDescription>
+              </div>
+              <Button onClick={() => handleOpenTemplateModal()} size="sm">
+                <Plus className="w-4 h-4 mr-2" /> New Template
+              </Button>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -416,10 +530,18 @@ const AdminNotifications = () => {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenTemplateModal(template)}
+                      >
                         Edit
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteTemplate(template.id)}
+                      >
                         Delete
                       </Button>
                     </div>
@@ -430,89 +552,109 @@ const AdminNotifications = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Total Sent
-                </CardTitle>
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {notificationStats?.totalSent || 0}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Notifications sent this month
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Delivered</CardTitle>
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {notificationStats?.totalDelivered || 0}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Successfully delivered
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Delivery Rate
-                </CardTitle>
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {notificationStats?.deliveryRate?.toFixed(1) || 0}%
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Average delivery success
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Engagement
-                </CardTitle>
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {notificationStats?.engagementRate?.toFixed(1) || 0}%
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  User engagement rate
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
 
-        <TabsContent value="settings">
-          <NotificationComponent
-            notifications={[]}
-            settings={settings}
-            isLoading={false}
-            isSettingsLoading={isSettingsLoading}
-            onMarkAsRead={() => {}}
-            onMarkAllAsRead={() => {}}
-            onDeleteNotification={() => {}}
-            onUpdateSetting={updateSetting}
-            onSaveSettings={saveSettings}
-            showSettings={true}
-            settingsTabCategories={["user", "system", "payment"]}
-          />
-        </TabsContent>
       </Tabs>
+
+      {/* Template Modal */}
+      <Dialog open={isTemplateModalOpen} onOpenChange={setIsTemplateModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {editingTemplate ? "Edit Template" : "New Template"}
+            </DialogTitle>
+            <DialogDescription>
+              Configure the email, SMS, or Push template block here.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium">Name</label>
+              <Input
+                value={templateForm.name}
+                onChange={(e) =>
+                  setTemplateForm((prev) => ({ ...prev, name: e.target.value }))
+                }
+                placeholder="e.g. Password Reset"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Type</label>
+                <Select
+                  value={templateForm.type}
+                  onValueChange={(v) =>
+                    setTemplateForm((prev) => ({ ...prev, type: v as any }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="sms">SMS</SelectItem>
+                    <SelectItem value="push">Push</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Category</label>
+                <Select
+                  value={templateForm.category}
+                  onValueChange={(v) =>
+                    setTemplateForm((prev) => ({ ...prev, category: v }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="orders">Orders</SelectItem>
+                    <SelectItem value="user">User / Auth</SelectItem>
+                    <SelectItem value="system">System</SelectItem>
+                    <SelectItem value="promotions">Promotions</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Subject / Title</label>
+              <Input
+                value={templateForm.subject}
+                onChange={(e) =>
+                  setTemplateForm((prev) => ({
+                    ...prev,
+                    subject: e.target.value,
+                  }))
+                }
+                placeholder="Subject of the notification"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Message Body</label>
+              <Textarea
+                rows={4}
+                value={templateForm.body}
+                onChange={(e) =>
+                  setTemplateForm((prev) => ({ ...prev, body: e.target.value }))
+                }
+                placeholder="Hello {{customerName}}..."
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Use {"{{variableName}}"} to define dynamic data mappings.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsTemplateModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSaveTemplate}>Save Template</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminPageLayout>
   );
 };
