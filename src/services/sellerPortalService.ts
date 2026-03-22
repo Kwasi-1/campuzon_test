@@ -238,12 +238,12 @@ export const sellerPortalService: SellerPortalService = {
 
   async updateOrderStatus(id: string, status: OrderStatus) {
     if (status === 'processing') {
-      const response = await api.post(`/store/orders/${id}/process`);
+      const response = await api.post(`/store/orders/${id}/process`, {});
       return extractData(response);
     }
 
     if (status === 'shipped' || status === 'delivered' || status === 'completed') {
-      const response = await api.post(`/store/orders/${id}/ship`);
+      const response = await api.post(`/store/orders/${id}/ship`, {});
       return extractData(response);
     }
 
