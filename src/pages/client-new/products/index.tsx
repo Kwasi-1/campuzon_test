@@ -87,7 +87,7 @@ export default function Products() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 md:px-6  py-4">
+      <div className="container mx-auto px-3 md:px-6  py-4">
         {/* Top Header Row: Breadcrumbs + Sort */}
         <div className="hidden md:flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-4 border-b border-gray-200">
           {/* Breadcrumb matching Oraimo style */}
@@ -123,7 +123,7 @@ export default function Products() {
         {/* Main Layout: Sidebar + Content */}
         <div className="flex gap-8">
           {/* Left Sidebar - Filters */}
-          <div className="hidden lg:block w-60 shrink-0">
+          <div className="hidden lg:block w-60 shrink-0 sticky top-24 self-start max-h-[calc(100vh-[100px])] overflow-y-auto scrollbar-hide pb-10">
              <h3 className="text-[14px] font-bold text-gray-900 mb-6 pb-3 border-b border-gray-200 uppercase tracking-wide">
                 Shopping Options {data?.total ? `(${data.total} Results)` : ""}
              </h3>
@@ -138,7 +138,7 @@ export default function Products() {
           {/* Main Content Area */}
           <div className="flex-1 min-w-0">
             {/* Mobile Header (Hidden on Desktop) */}
-            <div className="md:hidden flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
+            <div className="md:hidden sticky top-[60px] z-30 bg-white/[99%] backdrop-blur-sm -mx-4 px-4 pt-3 flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
               <h1 className="text-sm text-gray-900 font-semibold">
                 {data?.total?.toLocaleString() || "0"} results
               </h1>

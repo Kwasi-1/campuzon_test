@@ -13,14 +13,33 @@ import { useCartStore, useAuthStore } from "@/stores";
 import { useWishlist } from "@/hooks";
 import logo from "@/assets/images/CAMPUZONV2LT.png";
 import { MobileMenu } from "./MobileMenu";
+import MobileSearchOverlay from "../MobileSearchOverlay";
 import { Icon } from "@iconify/react";
+import { useLocation, useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
 
 export function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  const isProductsPage = location.pathname === "/products";
+
+  // Sync search query with URL
+  useEffect(() => {
+    const query = searchParams.get("search");
+    if (query) {
+      setSearchQuery(query);
+    } else if (isProductsPage) {
+      // Clear if on products page but no query? 
+      // Actually maybe better to leave it if the user just cleared it.
+    }
+  }, [searchParams, isProductsPage]);
 
   const handleSearch = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -76,25 +95,57 @@ export function Header() {
         <div className="container mx-auto px-4">
           <div className="flex h-18 items-center justify-between py-3">
             {/* Left: Hamburger Menu */}
-            <button
-              onClick={() => setShowMobileMenu(true)}
-              className="flex items-center justify-center h-10 w-10 rounded hover:bg-muted transition-colors"
-              aria-label="Toggle menu"
-            >
-              {/* <Menu className="h-6 w-6 text-foreground" /> */}
-              <Icon icon="ri:menu-2-fill" className="h-7 w-7 text-foreground" />
-            </button>
+            {!isProductsPage && (
+              <button
+                onClick={() => setShowMobileMenu(true)}
+                className="flex items-center justify-center h-10 w-10 rounded hover:bg-muted transition-colors"
+                aria-label="Toggle menu"
+              >
+                {/* <Menu className="h-6 w-6 text-foreground" /> */}
+                <Icon icon="ri:menu-2-fill" className="h-7 w-7 text-foreground" />
+              </button>
+            )}
 
-            {/* Center: Logo */}
-            <Link
-              to="/"
-              className="hidden lg:block absolute left-1/2 -translate-x-1/2"
-            >
-              <img src={logo} alt="Campuzon" className="h-12 object-contain" />
-            </Link>
+            {/* Center: Logo / Mobile Search Bar for Products Page */}
+            {isProductsPage ? (
+              <div className="md:hidden flex flex-1 items-center gap-2 px-0 -ml-1">
+                <button
+                  onClick={() => navigate("/")}
+                  className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted"
+                  aria-label="Back"
+                >
+                  <Icon icon="ri:arrow-left-s-line" className="h-6 w-6" />
+                </button>
+                <form onSubmit={handleSearch} className="flex-1 -mr-2">
+                  <div className="relative">
+                    <input
+                      type="search"
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full h-10 pl-4 pr-10 rounded-full  bg-muted text-sm focus:outline-none transition-all"
+                    />
+                    <button
+                      type="submit"
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                      aria-label="Search"
+                    >
+                      <Search className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <Link
+                to="/"
+                className="absolute left-1/2 -translate-x-1/2"
+              >
+                <img src={logo} alt="Campuzon" className="h-10 md:h-12 object-contain" />
+              </Link>
+            )}
 
             {/* Right: Navigation Links & Actions */}
-            <div className="flex items-center gap-1 sm:gap-2">
+            <div className={`${isProductsPage ? 'hidden md:flex' : 'flex'} items-center gap-1 sm:gap-2`}>
               {/* Desktop Links */}
               <nav className="hidden md:flex items-center gap-4 mr-2">
                 <Link
@@ -114,9 +165,8 @@ export function Header() {
                     </span>
                   )}
                 </Link>
-              </nav>
 
-              {/* Notifications */}
+                {/* Notifications */}
               <Link
                 to="/notifications"
                 className="relative h-10 w-10 inline-flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
@@ -138,6 +188,20 @@ export function Header() {
                   </span>
                 )}
               </Link>
+              </nav>
+
+              
+
+              {/* Mobile Search Toggle */}
+              {!isProductsPage && (
+                <button
+                  onClick={() => setShowMobileSearch(true)}
+                  className="md:hidden h-10 w-10 inline-flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
+                  aria-label="Search"
+                >
+                  <Search className="h-5 w-5" />
+                </button>
+              )}
 
               {/* User Menu */}
               {isAuthenticated && user ? (
@@ -319,6 +383,10 @@ export function Header() {
         categories={categories}
         mainCategories={mainCategories}
         onClose={() => setShowMobileMenu(false)}
+      />
+      <MobileSearchOverlay
+        isOpen={showMobileSearch}
+        onClose={() => setShowMobileSearch(false)}
       />
     </header>
   );

@@ -116,7 +116,7 @@ export function ProductCard({
       >
         <article className="flex flex-col h-full bg-transparent group">
           {/* Image Container */}
-          <div className="relative aspect-square overflow-hidden bg-[#f8f9fa] rounded-[6px] sm:rounded-sm md:rounded-md mb-3 transition-all duration-300 ">
+          <div className="relative aspect-square overflow-hidden bg-[#f8f9fa] rounded-[7px] sm:rounded-sm md:rounded-md mb-3 transition-all duration-300 ">
             <img
               src={
                 product.images?.[0] ||
@@ -149,9 +149,9 @@ export function ProductCard({
             </button>
 
             {isOutOfStock && (
-              <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center">
-                <span className="bg-gray-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-full tracking-wider uppercase">
-                  Sold Out
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <span className="text-white text-[15px] font-bold tracking-tight">
+                  Out of stock
                 </span>
               </div>
             )}
@@ -276,9 +276,9 @@ function ListCard({
             </button>
 
             {isOutOfStock && (
-              <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center">
-                <span className="bg-gray-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-full tracking-wider uppercase">
-                  Sold Out
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <span className="text-white text-[15px] font-bold tracking-tight">
+                  Out of stock
                 </span>
               </div>
             )}

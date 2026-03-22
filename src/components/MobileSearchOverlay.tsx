@@ -62,16 +62,9 @@ const MobileSearchOverlay = ({ isOpen, onClose }: MobileSearchOverlayProps) => {
   if (!isOpen && !isClosing) return null;
 
   return (
-    <div className={`fixed inset-0 z-50 bg-white transition-transform duration-300 mt-16 ${
+    <div className={`fixed inset-0 z-50 bg-white transition-transform duration-300 ${
       isClosing ? 'animate-slide-out-up' : 'animate-slide-in-down'
     }`}>
-      {/* <div className="flex items-center justify-between p-4 border-b">
-        <h2 className="text-lg font-semibold">Search</h2>
-        <Button variant="ghost" size="sm" onClick={handleClose}>
-          <X className="w-5 h-5" />
-        </Button>
-      </div> */}
-
       <div className="p-4">
         <form onSubmit={handleSearch} className="relative mb-6">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -80,7 +73,7 @@ const MobileSearchOverlay = ({ isOpen, onClose }: MobileSearchOverlayProps) => {
             placeholder="Search products, stores..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-1.5 border border-gray-300 rounded-full bg-[#f4f7fb] outline-none ring-0 focus:ring-2 focus:ring-primary/50 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2  rounded-full bg-[#f4f7fb] outline-none ring-0"
             autoFocus
           />
         </form>
