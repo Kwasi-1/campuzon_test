@@ -28,6 +28,7 @@ import {
   AlertCircle, MapPin, Package,
 } from "lucide-react";
 import adminDataService, { AdminStoreItem } from "@/services/adminDataService";
+import { useCurrency } from "@/hooks";
 
 // ─── Helpers ──────────────────────────────────────────────────
 
@@ -79,6 +80,7 @@ const ConfirmDialog: React.FC<{
 const StoreDetailDialog: React.FC<{ store: AdminStoreItem | null; open: boolean; onClose: () => void }> = ({
   store, open, onClose,
 }) => {
+  const { formatGHS } = useCurrency();
   if (!store) return null;
   const rows: [string, string][] = [
     ["Store Name",    store.storeName],
@@ -88,10 +90,10 @@ const StoreDetailDialog: React.FC<{ store: AdminStoreItem | null; open: boolean;
     ["Rating",        store.rating ? `${store.rating.toFixed(1)} / 5` : "No ratings"],
     ["Products",      String(store.productCount)],
     ["Total Orders",  String(store.totalOrders)],
-    ["Revenue",       `₵${(store.totalRevenue || 0).toLocaleString()}`],
+    ["Revenue",       formatGHS(store.totalRevenue || 0)],
     ["Verified",      store.isVerified ? "Yes" : "No"],
     ["Subscription",  store.subscriptionPlan ?? "Free"],
-    ["Institution",   store.institution ?? "—"],
+    ["Institution",   store.institutionName ?? "—"],
     ["Hall",          store.hall ?? "—"],
     ["Owner",         store.owner ? (store.owner.name || `${store.owner.firstName} ${store.owner.lastName}`.trim()) : "—"],
     ["Owner Email",   store.owner?.email ?? "—"],
@@ -154,7 +156,8 @@ const SkeletonRows = ({ count = 6 }: { count?: number }) => (
 
 const AdminStores: React.FC = () => {
   const { toast } = useToast();
-
+  const { formatGHS } = useCurrency();
+  // const { dateRange, isFiltered } = useDateFilter(); // Assuming useDateFilter is a custom hook you intend to add
   const [stores, setStores] = useState<AdminStoreItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -276,7 +279,7 @@ const AdminStores: React.FC = () => {
   };
 
   const handleExport = () => {
-    const headers = ["ID", "Store Name", "Owner", "Email", "Status", "Products", "Orders", "Revenue (₵)", "Verified", "Joined"];
+    const headers = ["ID", "Store Name", "Owner", "Email", "Status", "Products", "Orders", "Revenue (GHS)", "Verified", "Joined"];
     const rows = stores.map((s) => [
       s.id, s.storeName,
       s.owner ? `${s.owner.firstName} ${s.owner.lastName}` : "—",
@@ -433,7 +436,7 @@ const AdminStores: React.FC = () => {
                         {store.rating ? store.rating.toFixed(1) : "—"}
                       </div>
                       <div className="text-xs text-gray-400">
-                        ₵{(store.totalRevenue || 0).toLocaleString()} · {store.totalOrders || 0} orders
+                        {formatGHS(store.totalRevenue || 0)} · {store.totalOrders || 0} orders
                       </div>
                     </TableCell>
                     <TableCell><StatusBadge status={store.status} /></TableCell>

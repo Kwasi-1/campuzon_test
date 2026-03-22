@@ -28,10 +28,11 @@ import adminTransactionsService, {
   AdminOrder, EscrowItem, TransactionSummary,
 } from "@/services/adminTransactionsService";
 
-// ─── Helpers ──────────────────────────────────────────────────
+import { useCurrency } from "@/hooks";
 
-const currency = (n: number) =>
-  `₵${Number(n).toLocaleString("en-GH", { minimumFractionDigits: 2 })}`;
+// ──────────────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────────────
 
 const ORDER_STATUS: Record<string, string> = {
   pending:    "bg-yellow-100 text-yellow-700",
@@ -64,6 +65,7 @@ const StatusBadge = ({ status, map }: { status: string; map: Record<string, stri
 const OrderDetailDialog: React.FC<{ order: AdminOrder | null; open: boolean; onClose: () => void }> = ({
   order, open, onClose,
 }) => {
+  const { formatGHS } = useCurrency();
   if (!order) return null;
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -77,10 +79,10 @@ const OrderDetailDialog: React.FC<{ order: AdminOrder | null; open: boolean; onC
               ["Status",         order.status],
               ["Payment Status", order.paymentStatus],
               ["Payment Method", order.paymentMethod],
-              ["Total Amount",   currency(order.totalAmount)],
-              ["Service Fee",    currency(order.serviceFee)],
-              ["Buyer Fee",      currency(order.buyerFee)],
-              ["Seller Comm.",   currency(order.sellerCommission)],
+              ["Total Amount",   formatGHS(order.totalAmount)],
+              ["Service Fee",    formatGHS(order.serviceFee)],
+              ["Buyer Fee",      formatGHS(order.buyerFee)],
+              ["Seller Comm.",   formatGHS(order.sellerCommission)],
               ["Store",          order.store?.storeName ?? "—"],
               ["Buyer",          order.buyer ? `${order.buyer.firstName} ${order.buyer.lastName}` : "—"],
               ["Buyer Email",    order.buyer?.email ?? "—"],
@@ -101,7 +103,7 @@ const OrderDetailDialog: React.FC<{ order: AdminOrder | null; open: boolean; onC
                   <div key={i} className="flex items-center justify-between text-xs text-gray-600">
                     <span className="truncate max-w-[60%]">{item.productName}</span>
                     <span className="text-gray-400">×{item.quantity}</span>
-                    <span className="font-medium">{currency(item.subtotal)}</span>
+                    <span className="font-medium">{formatGHS(item.subtotal)}</span>
                   </div>
                 ))}
               </div>
@@ -112,9 +114,9 @@ const OrderDetailDialog: React.FC<{ order: AdminOrder | null; open: boolean; onC
               <p className="font-medium text-gray-700 mb-2">Escrow</p>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                 {[
-                  ["Amount",       currency(order.escrow.amount)],
-                  ["Seller Gets",  currency(order.escrow.sellerAmount)],
-                  ["Platform Fee", currency(order.escrow.platformFee)],
+                  ["Amount",       formatGHS(order.escrow.amount)],
+                  ["Seller Gets",  formatGHS(order.escrow.sellerAmount)],
+                  ["Platform Fee", formatGHS(order.escrow.platformFee)],
                   ["Status",       order.escrow.status],
                   ["Held",         new Date(order.escrow.heldAt).toLocaleDateString()],
                   ["Released",     order.escrow.releasedAt ? new Date(order.escrow.releasedAt).toLocaleDateString() : "—"],
@@ -186,6 +188,7 @@ const SummaryCard = ({
 const AdminTransactions: React.FC = () => {
   const { toast } = useToast();
   const { dateRange, isFiltered } = useDateFilter();
+  const { formatGHS } = useCurrency();
 
   const [tab, setTab] = useState<"orders" | "escrow">("orders");
 
@@ -335,28 +338,28 @@ const AdminTransactions: React.FC = () => {
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
           <SummaryCard
             icon={ShoppingBag} title="Gross Revenue"
-            value={summary ? currency(summary.totalRevenue) : "₵0.00"}
+            value={summary ? formatGHS(summary.totalRevenue) : "₵0.00"}
             sub="Total completed order value"
             iconBg="bg-indigo-50" iconColor="text-indigo-600"
             loading={summaryLoading}
           />
           <SummaryCard
             icon={DollarSign} title="Platform Fees"
-            value={summary ? currency(summary.platformFees) : "₵0.00"}
+            value={summary ? formatGHS(summary.platformFees) : "₵0.00"}
             sub="Transaction + subscription fees"
             iconBg="bg-emerald-50" iconColor="text-emerald-600"
             loading={summaryLoading}
           />
           <SummaryCard
             icon={Lock} title="Escrow Held"
-            value={summary ? currency(summary.escrowHeld) : "₵0.00"}
+            value={summary ? formatGHS(summary.escrowHeld) : "₵0.00"}
             sub="Pending buyer protection release"
             iconBg="bg-orange-50" iconColor="text-orange-600"
             loading={summaryLoading}
           />
           <SummaryCard
             icon={CheckCircle2} title="Released to Sellers"
-            value={summary ? currency(summary.escrowReleased) : "₵0.00"}
+            value={summary ? formatGHS(summary.escrowReleased) : "₵0.00"}
             sub="Total seller payouts"
             iconBg="bg-teal-50" iconColor="text-teal-600"
             loading={summaryLoading}
@@ -457,10 +460,10 @@ const AdminTransactions: React.FC = () => {
                         </TableCell>
                         <TableCell className="text-sm">{order.store?.storeName ?? "—"}</TableCell>
                         <TableCell className="font-semibold text-sm">
-                          {currency(order.totalAmount)}
+                          {formatGHS(order.totalAmount)}
                         </TableCell>
                         <TableCell className="text-sm text-gray-500">
-                          {currency(order.serviceFee)}
+                          {formatGHS(order.serviceFee)}
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="text-xs capitalize font-normal">
@@ -561,9 +564,9 @@ const AdminTransactions: React.FC = () => {
                         <TableCell className="font-mono text-xs">{e.orderId?.slice(0, 8)}…</TableCell>
                         <TableCell className="text-sm">{e.buyerName ?? "—"}</TableCell>
                         <TableCell className="text-sm">{e.storeName ?? "—"}</TableCell>
-                        <TableCell className="font-semibold text-sm">{currency(e.amount)}</TableCell>
-                        <TableCell className="text-sm text-emerald-600">{currency(e.sellerAmount)}</TableCell>
-                        <TableCell className="text-sm text-gray-500">{currency(e.platformFee)}</TableCell>
+                        <TableCell className="font-semibold text-sm">{formatGHS(e.amount)}</TableCell>
+                        <TableCell className="text-sm text-emerald-600">{formatGHS(e.sellerAmount)}</TableCell>
+                        <TableCell className="text-sm text-gray-500">{formatGHS(e.platformFee)}</TableCell>
                         <TableCell>
                           <StatusBadge status={e.status} map={ESCROW_STATUS} />
                         </TableCell>

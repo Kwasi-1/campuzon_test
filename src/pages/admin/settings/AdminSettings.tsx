@@ -24,6 +24,7 @@ import {
   CheckCircle2, Percent, Calendar,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/hooks";
 import SEO from "@/components/SEO";
 import { api, extractData } from "@/lib/api";
 
@@ -76,8 +77,6 @@ interface SystemSetting {
 
 // ─── Helpers ──────────────────────────────────────────────────
 
-const currency = (n: number) => `₵${Number(n).toFixed(2)}`;
-
 const FEE_TYPE_LABEL: Record<string, string> = {
   buyer_fee: "Buyer Fee", seller_commission: "Seller Commission", subscription: "Subscription",
 };
@@ -90,6 +89,7 @@ const POSITION_LABEL: Record<string, string> = {
 
 const PlatformFeesTab: React.FC = () => {
   const { toast } = useToast();
+  const { formatGHS } = useCurrency();
   const [fees, setFees] = useState<PlatformFee[]>([]);
   const [loading, setLoading] = useState(true);
   const [editFee, setEditFee] = useState<PlatformFee | null>(null);
@@ -164,10 +164,10 @@ const PlatformFeesTab: React.FC = () => {
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-2xl font-bold text-gray-900">
-                    {fee.percentage > 0 ? `${fee.percentage}%` : fee.minAmount ? currency(fee.minAmount) : "—"}
+                    {fee.percentage > 0 ? `${fee.percentage}%` : fee.minAmount ? formatGHS(fee.minAmount) : "—"}
                   </p>
                   {fee.minAmount && fee.percentage > 0 && (
-                    <p className="text-xs text-gray-400">Min: {currency(fee.minAmount)}</p>
+                    <p className="text-xs text-gray-400">Min: {formatGHS(fee.minAmount)}</p>
                   )}
                 </div>
               </div>
@@ -471,6 +471,7 @@ const defaultPromoForm = (): Partial<PromoCode> => ({
 
 const PromoCodesTab: React.FC = () => {
   const { toast } = useToast();
+  const { formatGHS } = useCurrency();
   const [promos, setPromos] = useState<PromoCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
@@ -555,10 +556,10 @@ const PromoCodesTab: React.FC = () => {
                     <div className="flex items-center gap-2 flex-wrap mb-0.5">
                       <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">
                         <Percent className="w-2.5 h-2.5 mr-0.5" />
-                        {p.discountType === "percentage" ? `${p.discountValue}% off` : `₵${p.discountValue} off`}
+                        {p.discountType === "percentage" ? `${p.discountValue}% off` : `${formatGHS(p.discountValue)} off`}
                       </Badge>
                       {p.minOrderAmount && (
-                        <span className="text-xs text-gray-400">Min: {currency(p.minOrderAmount)}</span>
+                        <span className="text-xs text-gray-400">Min: {formatGHS(p.minOrderAmount)}</span>
                       )}
                       {expired && <Badge className="bg-red-100 text-red-500 border-0 text-xs">Expired</Badge>}
                       {!p.isActive && <Badge className="bg-gray-100 text-gray-400 border-0 text-xs">Inactive</Badge>}

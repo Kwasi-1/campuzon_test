@@ -31,6 +31,7 @@ import adminDisputesService, {
   Dispute, DisputeStatus, ResolutionType, ChatMessage, DisputeStats,
 } from "@/services/adminDisputesService";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import { useCurrency } from "@/hooks";
 
 // ─── Helpers ──────────────────────────────────────────────────
 
@@ -42,9 +43,6 @@ const DISPUTE_STATUS: Record<string, { label: string; cls: string }> = {
   cancelled:        { label: "Cancelled",       cls: "bg-gray-100   text-gray-500   border-gray-200"   },
   closed:           { label: "Closed",          cls: "bg-gray-100   text-gray-400   border-gray-200"   },
 };
-
-const currency = (n: number) =>
-  `₵${Number(n).toLocaleString("en-GH", { minimumFractionDigits: 2 })}`;
 
 const isResolved = (s: DisputeStatus) =>
   ["resolved_buyer", "resolved_seller", "cancelled", "closed"].includes(s);
@@ -162,6 +160,7 @@ interface DetailDialogProps {
 const DetailDialog: React.FC<DetailDialogProps> = ({ dispute, open, onClose, onResolved }) => {
   const { admin } = useAdminAuth();
   const { toast } = useToast();
+  const { formatGHS } = useCurrency();
 
   const [tab, setTab] = useState("overview");
   const [resolution, setResolution] = useState<ResolutionType>("buyer_favor");
@@ -224,7 +223,7 @@ const DetailDialog: React.FC<DetailDialogProps> = ({ dispute, open, onClose, onR
           </DialogTitle>
           <DialogDescription>
             Reason: <span className="font-medium text-gray-700">{dispute.reason}</span> ·{" "}
-            <AgePill days={dispute.age} /> old · Escrow: <strong>{currency(escrowAmt)}</strong>
+            <AgePill days={dispute.age} /> old · Escrow: <strong>{formatGHS(escrowAmt)}</strong>
           </DialogDescription>
         </DialogHeader>
 
@@ -276,12 +275,12 @@ const DetailDialog: React.FC<DetailDialogProps> = ({ dispute, open, onClose, onR
                     <div key={i} className="flex items-center justify-between px-3 py-2 text-sm">
                       <span className="truncate flex-1">{item.productName}</span>
                       <span className="text-gray-400 mx-3">×{item.quantity}</span>
-                      <span className="font-medium">{currency(item.total)}</span>
+                      <span className="font-medium">{formatGHS(item.total)}</span>
                     </div>
                   ))}
                   <div className="flex items-center justify-between px-3 py-2 bg-gray-50 text-sm font-semibold">
                     <span>Total</span>
-                    <span>{currency(dispute.order.totalAmount)}</span>
+                    <span>{formatGHS(dispute.order.totalAmount)}</span>
                   </div>
                 </div>
               </div>
@@ -294,7 +293,7 @@ const DetailDialog: React.FC<DetailDialogProps> = ({ dispute, open, onClose, onR
                 <div className="grid grid-cols-3 gap-2 text-sm">
                   <div>
                     <p className="text-gray-500 text-xs">Amount</p>
-                    <p className="font-bold text-gray-900">{currency(dispute.escrow.amount)}</p>
+                    <p className="font-bold text-gray-900">{formatGHS(dispute.escrow.amount)}</p>
                   </div>
                   <div>
                     <p className="text-gray-500 text-xs">Status</p>
@@ -386,11 +385,11 @@ const DetailDialog: React.FC<DetailDialogProps> = ({ dispute, open, onClose, onR
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div className="bg-white rounded-lg p-2 text-center">
                         <p className="text-gray-400 text-xs">Buyer refund</p>
-                        <p className="font-bold text-blue-600">{currency(escrowAmt * (refundPct / 100))}</p>
+                        <p className="font-bold text-blue-600">{formatGHS(escrowAmt * (refundPct / 100))}</p>
                       </div>
                       <div className="bg-white rounded-lg p-2 text-center">
                         <p className="text-gray-400 text-xs">Seller gets</p>
-                        <p className="font-bold text-emerald-600">{currency(escrowAmt * ((100 - refundPct) / 100))}</p>
+                        <p className="font-bold text-emerald-600">{formatGHS(escrowAmt * ((100 - refundPct) / 100))}</p>
                       </div>
                     </div>
                   </div>
@@ -486,6 +485,7 @@ const StatCard = ({
 
 const AdminDisputes: React.FC = () => {
   const { toast } = useToast();
+  const { formatGHS } = useCurrency();
 
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [total, setTotal] = useState(0);
@@ -678,7 +678,7 @@ const AdminDisputes: React.FC = () => {
                     <TableCell className="text-sm max-w-[140px] truncate">{d.reason}</TableCell>
                     <TableCell className="text-sm">{d.buyer.name}</TableCell>
                     <TableCell className="text-sm">{d.seller.name}</TableCell>
-                    <TableCell className="font-semibold text-sm">{currency(d.amount)}</TableCell>
+                    <TableCell className="font-semibold text-sm">{formatGHS(d.amount)}</TableCell>
                     <TableCell><StatusBadge status={d.status} /></TableCell>
                     <TableCell><AgePill days={d.age} /></TableCell>
                     <TableCell className="text-right">

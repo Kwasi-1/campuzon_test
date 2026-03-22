@@ -21,11 +21,11 @@ import adminDashboardService, {
 } from "@/services/adminDashboardService";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 
+import { useCurrency } from "@/hooks";
+
 // ──────────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────────
-const currency = (n: number) =>
-  `₵${Number(n).toLocaleString("en-GH", { minimumFractionDigits: 2 })}`;
 
 const num = (n: number) =>
   n >= 1_000_000
@@ -95,9 +95,11 @@ const StatSkeleton = () => (
 // ──────────────────────────────────────────────
 // Custom tooltip for the line chart
 // ──────────────────────────────────────────────
-const RevenueTooltip = ({ active, payload, label }: {
-  active?: boolean; payload?: { name: string; value: number; color: string }[]; label?: string;
+const RevenueTooltip: React.FC<{ active?: boolean; payload?: any[]; label?: string }> = ({
+  active, payload, label,
 }) => {
+  const { formatGHS } = useCurrency();
+
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-3 text-sm">
@@ -108,7 +110,7 @@ const RevenueTooltip = ({ active, payload, label }: {
           <span className="w-2 h-2 rounded-full" style={{ background: p.color }} />
           <span className="capitalize">{p.name}:</span>
           <span className="font-medium ml-auto pl-3">
-            {p.name === "orders" ? p.value : currency(p.value)}
+            {p.name === "orders" ? p.value : formatGHS(p.value)}
           </span>
         </div>
       ))}
@@ -122,6 +124,7 @@ const RevenueTooltip = ({ active, payload, label }: {
 const AdminDashboard = () => {
   const { admin } = useAdminAuth();
   const { selectedPeriod } = useDateFilter();
+  const { formatGHS, formatShort } = useCurrency();
 
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState<DashboardOverview | null>(null);
@@ -236,23 +239,23 @@ const AdminDashboard = () => {
               />
               <StatCard
                 title="GMV (All time)"
-                value={currency(overview.totalRevenue)}
-                subtitle={`${currency(overview.monthRevenue)} this month`}
+                value={overview ? formatGHS(overview.totalRevenue) : "₵0.00"}
+                subtitle={`${overview ? formatGHS(overview.monthRevenue) : "₵0.00"} this month`}
                 icon={ShoppingBag}
                 iconBg="bg-yellow-50"
                 iconColor="text-yellow-600"
               />
               <StatCard
                 title="Platform Revenue"
-                value={currency(platformRevenue?.total ?? 0)}
-                subtitle={`${currency(platformRevenue?.last30Days ?? 0)} last 30d`}
+                value={platformRevenue ? formatGHS(platformRevenue.totalFees) : "₵0.00"}
+                subtitle={`${platformRevenue ? formatGHS(platformRevenue.last30Days) : "₵0.00"} last 30d`}
                 icon={TrendingUp}
                 iconBg="bg-indigo-50"
                 iconColor="text-indigo-600"
               />
               <StatCard
                 title="Escrow Held"
-                value={currency(escrow?.totalHeld ?? 0)}
+                value={escrow ? formatGHS(escrow.totalHeld) : "₵0.00"}
                 subtitle="Buyer-protection funds"
                 icon={Lock}
                 iconBg="bg-orange-50"
@@ -295,7 +298,7 @@ const AdminDashboard = () => {
                   <LineChart data={revenueTrend} margin={{ left: -10, right: 10 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} />
+                    <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#9ca3af" }} tickFormatter={(val) => formatShort(val)} />
                     <Tooltip content={<RevenueTooltip />} />
                     <Line
                       type="monotone"
@@ -398,7 +401,7 @@ const AdminDashboard = () => {
                   ].map(({ label, value, color, bg }) => (
                     <div key={label} className={`${bg} rounded-lg px-4 py-3 flex justify-between items-center`}>
                       <span className="text-xs font-medium text-gray-600">{label}</span>
-                      <span className={`text-sm font-bold ${color}`}>{currency(value)}</span>
+                      <span className={`text-sm font-bold ${color}`}>{formatGHS(value)}</span>
                     </div>
                   ))}
                 </div>
@@ -444,7 +447,7 @@ const AdminDashboard = () => {
                           )}
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="font-bold text-sm text-gray-900">{store.revenue}</p>
+                          <div className="font-semibold">{formatGHS(store.revenue)}</div>
                           <p className="text-xs text-gray-400">{store.orders} orders</p>
                         </div>
                       </div>

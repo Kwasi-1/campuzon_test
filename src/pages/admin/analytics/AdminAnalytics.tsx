@@ -22,10 +22,9 @@ import adminAnalyticsService, {
   StoreAnalyticsData, EscrowHoldingsData,
 } from "@/services/adminAnalyticsService";
 
-// ─── Helpers ──────────────────────────────────────────────────
+import { useCurrency } from "@/hooks";
 
-const currency = (n: number) =>
-  `₵${Number(n).toLocaleString("en-GH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+// ─── Helpers ──────────────────────────────────────────────────
 
 const pct = (n: number) => `${Number(n).toFixed(1)}%`;
 
@@ -113,6 +112,7 @@ const SectionHeader: React.FC<{
 const ChartTooltip = ({ active, payload, label }: {
   active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string;
 }) => {
+  const { formatGHS: currency } = useCurrency();
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-white border border-gray-100 rounded-xl shadow-lg p-3 text-xs">
@@ -165,6 +165,7 @@ const TopList: React.FC<{
 
 const AdminAnalytics: React.FC = () => {
   const { toast } = useToast();
+  const { formatGHS: currency, formatShort } = useCurrency();
   const [period, setPeriod] = useState<Period>("30d");
   const [tab, setTab] = useState("revenue");
 
@@ -363,7 +364,7 @@ const AdminAnalytics: React.FC = () => {
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                       <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                      <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₵${v.toLocaleString()}`} />
+                      <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatShort(v)} />
                       <Tooltip content={<ChartTooltip />} />
                       <Legend wrapperStyle={{ fontSize: 12 }} />
                       <Area type="monotone" dataKey="revenue" name="Gross Revenue" stroke="#6366f1" fill="url(#revGrad)" strokeWidth={2} dot={false} />
@@ -399,7 +400,7 @@ const AdminAnalytics: React.FC = () => {
                         <BarChart data={platformRev.chart.slice(-14)}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                           <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                          <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `₵${v}`} />
+                          <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => formatShort(v)} />
                           <Tooltip content={<ChartTooltip />} />
                           <Bar dataKey="transactionFees" name="Transaction Fees" fill="#8b5cf6" radius={[3,3,0,0]} />
                           <Bar dataKey="subscriptions" name="Subscriptions" fill="#22c55e" radius={[3,3,0,0]} />
@@ -666,7 +667,7 @@ const AdminAnalytics: React.FC = () => {
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                       <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                      <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₵${v.toLocaleString()}`} />
+                      <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatShort(v)} />
                       <Tooltip content={<ChartTooltip />} />
                       <Area type="monotone" dataKey="releasedToSellers" name="Released Amount" stroke="#22c55e" fill="url(#escGrad)" strokeWidth={2} dot={false} />
                     </AreaChart>
