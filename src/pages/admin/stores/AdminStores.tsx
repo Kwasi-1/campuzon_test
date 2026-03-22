@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import AdminPageLayout from "@/components/admin/AdminPageLayout";
+import AdminTable from "@/components/admin/AdminTable";
 import SEO from "@/components/SEO";
 import {
   MoreHorizontal, CheckCircle, XCircle, ShieldBan, ShieldCheck,
@@ -300,6 +302,13 @@ const AdminStores: React.FC = () => {
   const verifiedCount = stores.filter((s) => s.isVerified).length;
   const totalPages   = Math.ceil(total / PER_PAGE);
 
+  const dashboardStats = [
+    { label: "Total",    value: total },
+    { label: "Active",   value: activeCount },
+    { label: "Pending",  value: pendingCount, highlight: pendingCount > 0 },
+    { label: "Verified", value: verifiedCount },
+  ];
+
   return (
     <>
       <SEO
@@ -308,74 +317,43 @@ const AdminStores: React.FC = () => {
         keywords="admin stores, store approval, campus marketplace"
       />
 
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <Store className="w-5 h-5 text-primary" /> Store Management
-            </h1>
-            <p className="text-sm text-gray-500 mt-0.5">{total.toLocaleString()} total stores</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => void fetchStores()}>
-              <RefreshCw className="w-4 h-4 mr-1.5" /> Refresh
+      <AdminPageLayout 
+        title="Store Management" 
+        dashboardStats={dashboardStats}
+        isLoading={loading}
+        headerActions={
+          <>
+            <Button variant="outline" size="sm" onClick={() => void fetchStores()} disabled={loading}>
+              <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? "animate-spin" : ""}`} /> 
+              {loading ? "Refreshing..." : "Refresh"}
             </Button>
             <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="w-4 h-4 mr-1.5" /> Export CSV
             </Button>
-          </div>
-        </div>
-
-        {/* Summary cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: "Total",    value: total,        color: "text-primary",     bg: "bg-primary/5"   },
-            { label: "Active",   value: activeCount,  color: "text-emerald-600", bg: "bg-emerald-50"  },
-            { label: "Pending",  value: pendingCount, color: "text-yellow-600",  bg: "bg-yellow-50",
-              highlight: pendingCount > 0 },
-            { label: "Verified", value: verifiedCount, color: "text-blue-600",   bg: "bg-blue-50"     },
-          ].map(({ label, value, color, bg, highlight }) => (
-            <div
-              key={label}
-              className={`${bg} rounded-xl p-4 text-center relative ${highlight ? "ring-2 ring-yellow-300/60" : ""}`}
-            >
-              <p className={`text-2xl font-bold ${color}`}>{loading ? "—" : value}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{label}</p>
-              {highlight && (
-                <span className="absolute top-2 right-2 w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              className="pl-9"
-              placeholder="Search by store name, owner, or email…"
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
-            <SelectTrigger className="w-44">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="pending">Pending Approval</SelectItem>
-              <SelectItem value="suspended">Suspended</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Table */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          </>
+        }
+      >
+        <AdminTable
+          title="Stores List"
+          description={`${total.toLocaleString()} total stores`}
+          searchPlaceholder="Search by store name, owner, or email…"
+          onSearch={(v) => { setSearch(v); setPage(1); }}
+          filters={[
+            {
+              key: "status",
+              label: "Status",
+              value: statusFilter,
+              onChange: (v) => { setStatusFilter(v); setPage(1); },
+              options: [
+                { value: "all", label: "All Status" },
+                { value: "active", label: "Active" },
+                { value: "pending", label: "Pending Approval" },
+                { value: "suspended", label: "Suspended" },
+                { value: "rejected", label: "Rejected" },
+              ]
+            }
+          ]}
+        >
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50/80">
@@ -543,8 +521,8 @@ const AdminStores: React.FC = () => {
               </div>
             </div>
           )}
-        </div>
-      </div>
+        </AdminTable>
+      </AdminPageLayout>
 
       {/* ── Dialogs ── */}
       <StoreDetailDialog store={viewStore} open={!!viewStore} onClose={() => setViewStore(null)} />

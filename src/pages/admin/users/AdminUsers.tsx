@@ -21,6 +21,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import AdminPageLayout from "@/components/admin/AdminPageLayout";
+import AdminTable from "@/components/admin/AdminTable";
 import SEO from "@/components/SEO";
 import {
   Eye, MoreHorizontal, ShieldBan, ShieldCheck, BadgeCheck,
@@ -393,6 +395,13 @@ const AdminUsers: React.FC = () => {
 
   const totalPages = Math.ceil(total / PER_PAGE);
 
+  const dashboardStats = [
+    { label: "Total", value: total },
+    { label: "Active", value: activeCount },
+    { label: "Suspended", value: suspendedCount },
+    { label: "Verified", value: verifiedCount },
+  ];
+
   return (
     <>
       <SEO
@@ -401,77 +410,54 @@ const AdminUsers: React.FC = () => {
         keywords="admin users, user management, campus"
       />
 
-      <div className="space-y-6">
-        {/* ── Header ── */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" /> User Management
-            </h1>
-            <p className="text-sm text-gray-500 mt-0.5">{total.toLocaleString()} total users</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => void fetchUsers()}>
-              <RefreshCw className="w-4 h-4 mr-1.5" /> Refresh
+      <AdminPageLayout 
+        title="User Management" 
+        dashboardStats={dashboardStats}
+        isLoading={loading}
+        headerActions={
+          <>
+            <Button variant="outline" size="sm" onClick={() => void fetchUsers()} disabled={loading}>
+              <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? "animate-spin" : ""}`} /> 
+              {loading ? "Refreshing..." : "Refresh"}
             </Button>
             <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="w-4 h-4 mr-1.5" /> Export CSV
             </Button>
-          </div>
-        </div>
-
-        {/* ── Summary cards ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: "Total",     value: total,         color: "text-primary",    bg: "bg-primary/5"    },
-            { label: "Active",    value: activeCount,   color: "text-emerald-600", bg: "bg-emerald-50"  },
-            { label: "Suspended", value: suspendedCount, color: "text-red-600",   bg: "bg-red-50"       },
-            { label: "Verified",  value: verifiedCount, color: "text-blue-600",   bg: "bg-blue-50"      },
-          ].map(({ label, value, color, bg }) => (
-            <div key={label} className={`${bg} rounded-xl p-4 text-center`}>
-              <p className={`text-2xl font-bold ${color}`}>{loading ? "—" : value}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* ── Filters ── */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              className="pl-9"
-              placeholder="Search by name, email, or phone…"
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-              <SelectItem value="suspended">Suspended</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={roleFilter} onValueChange={(v) => { setRoleFilter(v); setPage(1); }}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value="buyer">Buyer</SelectItem>
-              <SelectItem value="seller">Seller</SelectItem>
-              <SelectItem value="buyer_seller">Buyer &amp; Seller</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* ── Table ── */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          </>
+        }
+      >
+        <AdminTable
+          title="Users List"
+          description={`${total.toLocaleString()} total users`}
+          searchPlaceholder="Search by name, email, or phone…"
+          onSearch={(v) => { setSearch(v); setPage(1); }}
+          filters={[
+            {
+              key: "status",
+              label: "Status",
+              value: statusFilter,
+              onChange: (v) => { setStatusFilter(v); setPage(1); },
+              options: [
+                { value: "all", label: "All Status" },
+                { value: "active", label: "Active" },
+                { value: "inactive", label: "Inactive" },
+                { value: "suspended", label: "Suspended" },
+              ]
+            },
+            {
+              key: "role",
+              label: "Role",
+              value: roleFilter,
+              onChange: (v) => { setRoleFilter(v); setPage(1); },
+              options: [
+                { value: "all", label: "All Roles" },
+                { value: "buyer", label: "Buyer" },
+                { value: "seller", label: "Seller" },
+                { value: "buyer_seller", label: "Buyer & Seller" },
+              ]
+            }
+          ]}
+        >
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50/80">
@@ -532,7 +518,6 @@ const AdminUsers: React.FC = () => {
                     <TableCell>{statusBadge(user)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        {/* Verify quick-action */}
                         {!user.isVerified && (
                           <Button
                             variant="ghost"
@@ -613,8 +598,8 @@ const AdminUsers: React.FC = () => {
               </div>
             </div>
           )}
-        </div>
-      </div>
+        </AdminTable>
+      </AdminPageLayout>
 
       {/* Dialogs */}
       <UserDetailDialog user={viewUser} open={!!viewUser} onClose={() => setViewUser(null)} />

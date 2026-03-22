@@ -21,6 +21,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import AdminPageLayout from "@/components/admin/AdminPageLayout";
+import AdminTable from "@/components/admin/AdminTable";
 import SEO from "@/components/SEO";
 import {
   AlertTriangle, Eye, MessageSquare, CheckCircle2, XCircle,
@@ -556,6 +558,13 @@ const AdminDisputes: React.FC = () => {
   const openCount = stats?.byStatus?.["open"] ?? 0;
   const underReviewCount = stats?.byStatus?.["under_review"] ?? 0;
 
+  const dashboardStats = [
+    { label: "Open",             value: statsLoading ? "—" : openCount,                                    highlight: openCount > 0 },
+    { label: "Under Review",     value: statsLoading ? "—" : underReviewCount },
+    { label: "Avg Resolution",   value: statsLoading || !stats ? "—" : `${stats.averageResolutionDays}d` },
+    { label: "Total Disputes",   value: statsLoading ? "—" : total },
+  ];
+
   return (
     <>
       <SEO
@@ -564,171 +573,154 @@ const AdminDisputes: React.FC = () => {
         keywords="admin disputes, escrow resolution, campus marketplace"
       />
 
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <Scale className="w-5 h-5 text-primary" /> Dispute Resolution
-            </h1>
-            <p className="text-sm text-gray-500 mt-0.5">
-              {total} total · escrow held until resolved
-            </p>
-          </div>
+      <AdminPageLayout 
+        title="Dispute Resolution" 
+        dashboardStats={dashboardStats}
+        isLoading={loading || statsLoading}
+        headerActions={
           <Button variant="outline" size="sm" onClick={() => { void loadDisputes(); void loadStats(); }}>
-            <RefreshCw className="w-4 h-4 mr-1.5" /> Refresh
+            <RefreshCw className={`w-4 h-4 mr-1.5 ${loading || statsLoading ? 'animate-spin' : ''}`} /> 
+            {loading || statsLoading ? "Refreshing..." : "Refresh"}
           </Button>
-        </div>
-
-        {/* Stat cards */}
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          <StatCard icon={ShieldAlert}     title="Open"              value={statsLoading ? "—" : openCount}                                    iconBg="bg-red-50"     iconColor="text-red-600"     loading={statsLoading} />
-          <StatCard icon={AlertTriangle}   title="Under Review"      value={statsLoading ? "—" : underReviewCount}                             iconBg="bg-orange-50"  iconColor="text-orange-600"  loading={statsLoading} />
-          <StatCard icon={CheckCircle2}    title="Avg Resolution"    value={statsLoading || !stats ? "—" : `${stats.averageResolutionDays}d`}  iconBg="bg-emerald-50" iconColor="text-emerald-600" loading={statsLoading} />
-          <StatCard icon={Scale}           title="Total Disputes"    value={statsLoading ? "—" : total}                                        iconBg="bg-blue-50"    iconColor="text-blue-600"    loading={statsLoading} />
-        </div>
-
-        {/* Alert for open disputes */}
-        {!statsLoading && openCount > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
-            <ShieldAlert className="w-5 h-5 text-red-600 shrink-0" />
-            <div className="flex-1">
-              <p className="font-semibold text-red-700 text-sm">
-                {openCount} open dispute{openCount !== 1 ? "s" : ""} need attention
-              </p>
-              <p className="text-red-500 text-xs mt-0.5">
-                Escrow is locked until these are resolved. Oldest first.
-              </p>
+        }
+      >
+        <div className="space-y-6">
+          {/* Alert for open disputes */}
+          {!statsLoading && openCount > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
+              <ShieldAlert className="w-5 h-5 text-red-600 shrink-0" />
+              <div className="flex-1">
+                <p className="font-semibold text-red-700 text-sm">
+                  {openCount} open dispute{openCount !== 1 ? "s" : ""} need attention
+                </p>
+                <p className="text-red-500 text-xs mt-0.5">
+                  Escrow is locked until these are resolved. Oldest first.
+                </p>
+              </div>
+              <Button
+                size="sm" variant="outline"
+                className="border-red-300 text-red-600 hover:bg-red-100 shrink-0"
+                onClick={() => { setStatusFilter("open"); setPage(1); }}
+              >
+                View Open <ChevronRight className="w-3 h-3 ml-1" />
+              </Button>
             </div>
-            <Button
-              size="sm" variant="outline"
-              className="border-red-300 text-red-600 hover:bg-red-100 shrink-0"
-              onClick={() => { setStatusFilter("open"); setPage(1); }}
-            >
-              View Open <ChevronRight className="w-3 h-3 ml-1" />
-            </Button>
-          </div>
-        )}
+          )}
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              className="pl-9"
-              placeholder="Search by order #, buyer, seller, or reason…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="All Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="open">Open</SelectItem>
-              <SelectItem value="under_review">Under Review</SelectItem>
-              <SelectItem value="resolved_buyer">Resolved – Buyer</SelectItem>
-              <SelectItem value="resolved_seller">Resolved – Seller</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-              <SelectItem value="closed">Closed</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Table */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-50/80">
-                <TableHead>Order</TableHead>
-                <TableHead>Reason</TableHead>
-                <TableHead>Buyer</TableHead>
-                <TableHead>Seller</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Age</TableHead>
-                <TableHead className="text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <SkeletonRows />
-              ) : filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-16 text-gray-400">
-                    <Scale className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                    No disputes found
-                  </TableCell>
+          <AdminTable
+            title="Disputes List"
+            description={`${total} records`}
+            searchPlaceholder="Search by order #, buyer, seller, or reason…"
+            onSearch={setSearch}
+            filters={[
+              {
+                key: "status",
+                label: "Status",
+                value: statusFilter,
+                onChange: (v) => { setStatusFilter(v); setPage(1); },
+                options: [
+                  { value: "all", label: "All Status" },
+                  { value: "open", label: "Open" },
+                  { value: "under_review", label: "Under Review" },
+                  { value: "resolved_buyer", label: "Resolved – Buyer" },
+                  { value: "resolved_seller", label: "Resolved – Seller" },
+                  { value: "cancelled", label: "Cancelled" },
+                  { value: "closed", label: "Closed" },
+                ]
+              }
+            ]}
+          >
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50/80">
+                  <TableHead>Order</TableHead>
+                  <TableHead>Reason</TableHead>
+                  <TableHead>Buyer</TableHead>
+                  <TableHead>Seller</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Age</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
                 </TableRow>
-              ) : (
-                filtered.map((d) => (
-                  <TableRow
-                    key={d.id}
-                    className={`hover:bg-gray-50/50 cursor-pointer ${
-                      d.status === "open" ? "border-l-4 border-l-red-400" :
-                      d.status === "under_review" ? "border-l-4 border-l-orange-400" : ""
-                    }`}
-                    onClick={() => setSelected(d)}
-                  >
-                    <TableCell className="font-mono text-xs font-medium">
-                      #{d.orderNumber ?? d.id.slice(0, 8)}
-                    </TableCell>
-                    <TableCell className="text-sm max-w-[140px] truncate">{d.reason}</TableCell>
-                    <TableCell className="text-sm">{d.buyer.name}</TableCell>
-                    <TableCell className="text-sm">{d.seller.name}</TableCell>
-                    <TableCell className="font-semibold text-sm">{formatGHS(d.amount)}</TableCell>
-                    <TableCell><StatusBadge status={d.status} /></TableCell>
-                    <TableCell><AgePill days={d.age} /></TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost" size="sm"
-                        onClick={(e) => { e.stopPropagation(); setSelected(d); }}
-                        className="h-8"
-                      >
-                        {isResolved(d.status) ? (
-                          <><Eye className="w-4 h-4 mr-1" /> View</>
-                        ) : (
-                          <><Scale className="w-4 h-4 mr-1" /> Resolve</>
-                        )}
-                      </Button>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <SkeletonRows />
+                ) : filtered.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-16 text-gray-400">
+                      <Scale className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                      No disputes found
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  filtered.map((d) => (
+                    <TableRow
+                      key={d.id}
+                      className={`hover:bg-gray-50/50 cursor-pointer ${
+                        d.status === "open" ? "border-l-4 border-l-red-400" :
+                        d.status === "under_review" ? "border-l-4 border-l-orange-400" : ""
+                      }`}
+                      onClick={() => setSelected(d)}
+                    >
+                      <TableCell className="font-mono text-xs font-medium">
+                        #{d.orderNumber ?? d.id.slice(0, 8)}
+                      </TableCell>
+                      <TableCell className="text-sm max-w-[140px] truncate">{d.reason}</TableCell>
+                      <TableCell className="text-sm">{d.buyer.name}</TableCell>
+                      <TableCell className="text-sm">{d.seller.name}</TableCell>
+                      <TableCell className="font-semibold text-sm">{formatGHS(d.amount)}</TableCell>
+                      <TableCell><StatusBadge status={d.status} /></TableCell>
+                      <TableCell><AgePill days={d.age} /></TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost" size="sm"
+                          onClick={(e) => { e.stopPropagation(); setSelected(d); }}
+                          className="h-8"
+                        >
+                          {isResolved(d.status) ? (
+                            <><Eye className="w-4 h-4 mr-1" /> View</>
+                          ) : (
+                            <><Scale className="w-4 h-4 mr-1" /> Resolve</>
+                          )}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50/50">
-              <p className="text-xs text-gray-500">Page {page} of {totalPages} · {total} disputes</p>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>Previous</Button>
-                <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>Next</Button>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50/50">
+                <p className="text-xs text-gray-500">Page {page} of {totalPages} · {total} disputes</p>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>Previous</Button>
+                  <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>Next</Button>
+                </div>
+              </div>
+            )}
+          </AdminTable>
+
+          {/* Top dispute stores */}
+          {stats && stats.topStoresByDisputes.length > 0 && (
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+              <h2 className="font-semibold text-gray-800 mb-3 flex items-center gap-2 text-sm">
+                <ArrowUpRight className="w-4 h-4 text-red-500" /> Top Stores by Disputes
+              </h2>
+              <div className="space-y-2">
+                {stats.topStoresByDisputes.slice(0, 5).map((s, i) => (
+                  <div key={s.storeId} className="flex items-center gap-3 text-sm">
+                    <span className="w-5 text-gray-400 font-semibold text-center">{i + 1}</span>
+                    <span className="flex-1 text-gray-800">{s.storeName}</span>
+                    <Badge className="bg-red-100 text-red-600 border-red-200">{s.disputeCount} dispute{s.disputeCount !== 1 ? "s" : ""}</Badge>
+                  </div>
+                ))}
               </div>
             </div>
           )}
         </div>
-
-        {/* Top dispute stores */}
-        {stats && stats.topStoresByDisputes.length > 0 && (
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-            <h2 className="font-semibold text-gray-800 mb-3 flex items-center gap-2 text-sm">
-              <ArrowUpRight className="w-4 h-4 text-red-500" /> Top Stores by Disputes
-            </h2>
-            <div className="space-y-2">
-              {stats.topStoresByDisputes.slice(0, 5).map((s, i) => (
-                <div key={s.storeId} className="flex items-center gap-3 text-sm">
-                  <span className="w-5 text-gray-400 font-semibold text-center">{i + 1}</span>
-                  <span className="flex-1 text-gray-800">{s.storeName}</span>
-                  <Badge className="bg-red-100 text-red-600 border-red-200">{s.disputeCount} dispute{s.disputeCount !== 1 ? "s" : ""}</Badge>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      </AdminPageLayout>
 
       <DetailDialog
         dispute={selected}
