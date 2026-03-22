@@ -29,6 +29,13 @@ import { Skeleton } from "@/components/shared/Skeleton";
 import { Alert } from "@/components/ui/alert";
 import Input from "@/components/shared/InputField";
 import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { useAuthStore } from "@/stores";
 import { useMyOrders } from "@/hooks";
 import { api, extractData } from "@/lib/api";
@@ -178,23 +185,9 @@ export function ProfilePage() {
       )}
 
       {/* Profile Header & Picture update */}
-      <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
+      <Card className="rounded-3xl overflow-hidden">
         <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6 border-b border-gray-100 bg-gray-50/50">
           <div className="relative shrink-0">
-            {/* {user.profileImage ? (
-              <img
-                src={user.profileImage}
-                alt={user.displayName || user.firstName}
-                className="h-24 w-24 rounded-full object-cover border-4 border-white shadow-sm"
-              />
-            ) : (
-              <div className="h-24 w-24 rounded-full bg-primary flex items-center justify-center border-4 border-white shadow-sm">
-                <span className="text-3xl font-bold text-white">
-                  {user.firstName.charAt(0)}
-                  {user.lastName.charAt(0)}
-                </span>
-              </div>
-            )} */}
             <Avatar className="h-24 w-24 mr-3">
               <AvatarImage src={user.profileImage} alt={user.displayName || user.firstName} />
               <AvatarFallback className="text-3xl">
@@ -262,15 +255,15 @@ export function ProfilePage() {
         </div>
 
         {/* Profile Details Edit */}
-        <div className="p-6 sm:p-8">
+        <CardContent className="p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">
+              <CardTitle className="text-lg font-semibold text-gray-900">
                 Personal Information
-              </h3>
-              <p className="text-sm text-gray-500 mt-1">
+              </CardTitle>
+              <CardDescription className="text-sm text-gray-500 mt-1">
                 Manage your personal details and contact info
-              </p>
+              </CardDescription>
             </div>
             {!isEditing ? (
               <Button
@@ -401,14 +394,14 @@ export function ProfilePage() {
               </div>
             </div>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
       {/* Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statsCards.map((stat) => (
-          <div
+          <Card
             key={stat.label}
-            className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow"
+            className="rounded-2xl border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow"
           >
             <div className="flex items-center gap-4">
               <div
@@ -425,20 +418,18 @@ export function ProfilePage() {
                 </p>
               </div>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
       {/* Recent Activity Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Recent Orders */}
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-          <div className="flex items-center justify-between p-6 border-b border-gray-100">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                Recent Orders
-              </h3>
-            </div>
+        <Card className="rounded-2xl border-gray-100 overflow-hidden shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between p-6 border-b border-gray-100 space-y-0">
+            <CardTitle className="text-lg font-semibold text-gray-900">
+              Recent Orders
+            </CardTitle>
             <Link to="/orders">
               <Button
                 variant="ghost"
@@ -449,8 +440,8 @@ export function ProfilePage() {
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </Link>
-          </div>
-          <div>
+          </CardHeader>
+          <CardContent className="p-0">
             {ordersLoading ? (
               <div className="p-6 space-y-4">
                 <Skeleton className="h-14 w-full rounded-lg" />
@@ -499,17 +490,17 @@ export function ProfilePage() {
                 ))}
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900">
+        <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden">
+          <CardHeader className="p-6 border-b border-gray-100">
+            <CardTitle className="text-lg font-semibold text-gray-900">
               Recent Activity
-            </h3>
-          </div>
-          <div className="p-6">
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
             <div className="space-y-6">
               {mockRecentActivity.map((activity, index) => (
                 <div key={index} className="flex gap-4">
@@ -531,8 +522,8 @@ export function ProfilePage() {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
