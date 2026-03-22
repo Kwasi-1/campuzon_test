@@ -247,7 +247,7 @@ const AdminDashboard = () => {
               />
               <StatCard
                 title="Platform Revenue"
-                value={platformRevenue ? formatGHS(platformRevenue.totalFees) : "₵0.00"}
+                value={platformRevenue ? formatGHS(platformRevenue.total) : "₵0.00"}
                 subtitle={`${platformRevenue ? formatGHS(platformRevenue.last30Days) : "₵0.00"} last 30d`}
                 icon={TrendingUp}
                 iconBg="bg-indigo-50"
@@ -447,7 +447,7 @@ const AdminDashboard = () => {
                           )}
                         </div>
                         <div className="text-right shrink-0">
-                          <div className="font-semibold">{formatGHS(store.revenue)}</div>
+                          <div className="font-semibold">{formatGHS(Number(store.revenue))}</div>
                           <p className="text-xs text-gray-400">{store.orders} orders</p>
                         </div>
                       </div>

@@ -87,7 +87,7 @@ interface BackendAnalyticsOverview {
     total: number;
     last30Days: number;
     transactionFees: { total: number; last30Days: number };
-    subscriptionRevenue: { total: number; last30Days: number };
+    subscriptions: { total: number; last30Days: number };
   };
 }
 
@@ -125,28 +125,27 @@ class AdminDashboardService {
    */
   async getDashboard(): Promise<DashboardOverview> {
     const res = await api.get('admin/dashboard');
-    const d = extractData<{ stats: BackendDashboardStats }>(res);
-    const s = d.stats;
+    const s = extractData<BackendDashboardStats>(res);
     return {
-      totalUsers:     s.users.total,
-      newUsersMonth:  s.users.newThisMonth,
-      newUsersWeek:   s.users.newThisWeek,
-      activeUsers:    s.users.activeThisWeek,
-      totalStores:    s.stores.total,
-      newStoresMonth: s.stores.newThisMonth,
-      activeStores:   s.stores.active,
-      pendingStores:  s.stores.pending,
-      totalOrders:    s.orders.total,
-      ordersMonth:    s.orders.thisMonth,
-      ordersWeek:     s.orders.thisWeek,
-      ordersToday:    s.orders.today,
-      totalRevenue:   s.revenue.total,
-      monthRevenue:   s.revenue.thisMonth,
-      weeklyRevenue:  s.revenue.thisWeek,
-      totalFees:      s.revenue.totalFees,
-      openDisputes:   s.disputes.open,
-      pendingEscrow:  s.escrow.pending,
-      totalProducts:  s.products.total,
+      totalUsers:     s.users?.total ?? 0,
+      newUsersMonth:  s.users?.newThisMonth ?? 0,
+      newUsersWeek:   s.users?.newThisWeek ?? 0,
+      activeUsers:    s.users?.activeThisWeek ?? 0,
+      totalStores:    s.stores?.total ?? 0,
+      newStoresMonth: s.stores?.newThisMonth ?? 0,
+      activeStores:   s.stores?.active ?? 0,
+      pendingStores:  s.stores?.pending ?? 0,
+      totalOrders:    s.orders?.total ?? 0,
+      ordersMonth:    s.orders?.thisMonth ?? 0,
+      ordersWeek:     s.orders?.thisWeek ?? 0,
+      ordersToday:    s.orders?.today ?? 0,
+      totalRevenue:   s.revenue?.total ?? 0,
+      monthRevenue:   s.revenue?.thisMonth ?? 0,
+      weeklyRevenue:  s.revenue?.thisWeek ?? 0,
+      totalFees:      s.revenue?.totalFees ?? 0,
+      openDisputes:   s.disputes?.open ?? 0,
+      pendingEscrow:  s.escrow?.pending ?? 0,
+      totalProducts:  s.products?.total ?? 0,
     };
   }
 
@@ -169,8 +168,8 @@ class AdminDashboardService {
       platformRevenue: {
         total:               d.platformRevenue.total,
         last30Days:          d.platformRevenue.last30Days,
-        transactionFees:     d.platformRevenue.transactionFees.total,
-        subscriptionRevenue: d.platformRevenue.subscriptionRevenue.total,
+        transactionFees:     d.platformRevenue.transactionFees?.total ?? 0,
+        subscriptionRevenue: d.platformRevenue.subscriptions?.total ?? 0,
       },
     };
   }
