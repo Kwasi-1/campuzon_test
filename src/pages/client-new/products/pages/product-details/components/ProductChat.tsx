@@ -165,7 +165,7 @@ export function ProductChat({
           >
             <button
               onClick={handleOpen}
-              className="group relative flex items-center justify-center h-12 md:h-14 w-12 md:w-14 bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground rounded-full shadow-lg hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 rotate-0 hover:rotate-6"
+              className="group relative flex items-center justify-center h-12 md:h-14 w-12 md:w-14 bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground rounded-full shadow-lg hover:shadow-xl transition-all duration-300 rotate-0 hover:rotate-6"
             >
               {/* Glow effect */}
               <span className="absolute inset-0 rounded-2xl bg-primary/40 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
