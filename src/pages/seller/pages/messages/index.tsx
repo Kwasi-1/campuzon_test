@@ -325,11 +325,7 @@ export function SellerMessagesPage() {
 
   return (
     <SellerPageTemplate messagesPadding={true}>
-      {store?.status != "active" && (
-        <Alert className={`mb-6 border-amber-200 bg-amber-50 text-amber-900`}>
-          {storeActionBlockReason || "Store status unavailable."}
-        </Alert>
-      )}
+
 
       <div className="flex h-[calc(100vh-7rem)] md:h-[calc(100vh-16rem)] -mb-10 -mt-2 md:mb-auto md:mt-auto min-h-[500px] w-full overflow-hidden md:rounded-xl md:border bg-background md:shadow-sm md:min-h-[600px]">
         <div

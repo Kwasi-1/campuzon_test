@@ -18,6 +18,7 @@ import { Toaster } from "react-hot-toast";
 import { useAuthStore } from "@/stores";
 import { useMyStore } from "@/hooks";
 import logo from "@/assets/images/CAMPUZONV2LT.png";
+import { StoreStatusAlert } from "@/pages/seller/components/StoreStatusAlert";
 
 const NAV_LINKS = [
   { to: "/seller/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -300,6 +301,7 @@ export function SellLayout() {
 
       {/* Main Content */}
       <main className="flex-1 lg:px-8">
+        <StoreStatusAlert />
         <Outlet />
       </main>
 

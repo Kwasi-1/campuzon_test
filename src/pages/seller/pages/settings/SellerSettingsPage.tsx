@@ -304,27 +304,7 @@ export function SellerSettingsPage() {
         headerActions={headerActions}
         sidebar={sidebar}
       >
-        {store?.status != "active" && (
-          <Alert
-            className={`flex items-center justify-between mb-6 border-amber-200 bg-amber-50 text-amber-900`}
-          >
-            {storeActionBlockReason || "Store status unavailable."}
-            <Button
-              asChild
-              size="sm"
-              variant="outline"
-              className="rounded-full"
-            >
-              <a
-                href={`mailto:support@campuzon.me?subject=Store Reactivation Request - ${encodeURIComponent(
-                  store?.storeName || "Seller Store",
-                )}`}
-              >
-                Request Reactivation
-              </a>
-            </Button>
-          </Alert>
-        )}
+
 
         {saveSuccess ? (
           <Alert variant="success" className="mb-6">

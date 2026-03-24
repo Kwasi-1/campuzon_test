@@ -385,11 +385,7 @@ export function SellerProductsPage() {
       }
       sidebar={sidebar}
     >
-      {store?.status != "active" && (
-        <Alert className={`mb-6 border-amber-200 bg-amber-50 text-amber-900`}>
-          {storeActionBlockReason || "Store status unavailable."}
-        </Alert>
-      )}
+
 
       <Button
         variant="ghost"

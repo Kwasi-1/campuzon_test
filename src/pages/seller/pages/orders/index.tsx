@@ -292,11 +292,7 @@ export function SellerOrdersPage() {
       headerActions={headerActions}
       sidebar={sidebar}
     >
-      {store?.status != "active" && (
-        <Alert className={`mb-6 border-amber-200 bg-amber-50 text-amber-900`}>
-          {storeActionBlockReason || "Store status unavailable."}
-        </Alert>
-      )}
+
 
       {isLoading ? (
         <div className="space-y-6">
