@@ -3,25 +3,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Clock, Lock, Info } from "lucide-react";
 import toast from "react-hot-toast";
 import { useSellerMyStore } from "@/hooks/useSellerPortal";
-
-const getStoreActionBlockReason = (storeStatus?: string) => {
-  switch (storeStatus) {
-    case "pending":
-      return "Your store is not active. Please wait for approval.";
-    case "suspended":
-      return "Your store is suspended. Only admin can reactivate this store.";
-    case "closed":
-      return "Your store is closed. Contact support for next steps.";
-    default:
-      return null;
-  }
-};
+import { Button } from "@/components/ui/button";
 
 export function StoreStatusAlert() {
   const { data: store, isLoading } = useSellerMyStore();
   const previousStatus = useRef<string | undefined>();
   const hasMounted = useRef(false);
-  const storeActionBlockReason = getStoreActionBlockReason(store?.status);
 
   useEffect(() => {
     if (isLoading || !store) return;
@@ -82,18 +69,30 @@ export function StoreStatusAlert() {
   const Icon = alertConfig.icon;
 
   return (
-    <div className="container mx-auto px-4 mt-6">
-      <Alert className={`flex items-center border ${alertConfig.colorClass}`}>
-        <div className="flex items-center gap1">
-          <Icon className={`h-5 w-5 mr-3 mt-0.5 ${alertConfig.iconColor}`} />
+    <div className="container mx-auto px-4 mt-4 md:mt-6">
+      <Alert
+        className={`flex flex-col md:flex-row items-start md:items-center border justify-start md:justify-between ${store.status != "pending" && "md:py-3"} ${alertConfig.colorClass}`}
+      >
+        <div className="flex items-center">
+          <Icon
+            className={`hidden md:block h-5 w-5 mr-3 mt-0.5 ${alertConfig.iconColor}`}
+          />
 
           {alertConfig.description}
-
-          {/* <AlertDescription>{alertConfig.description}</AlertDescription> */}
         </div>
-      </Alert>
-      <Alert className={`mb-6 border-amber-200 bg-amber-50 text-amber-900`}>
-        {storeActionBlockReason || "Store status unavailable."}
+        {store.status != "pending" && (
+          <Button
+            variant="link"
+            onClick={() => {
+              window.location.href = `mailto:support@campuzon.me?subject=Store Reactivation Request - ${encodeURIComponent(
+                store?.storeName || "Seller Store",
+              )}`;
+            }}
+            className="text-red-900 hidden md:block py-0"
+          >
+            Request Reactivation
+          </Button>
+        )}
       </Alert>
     </div>
   );
