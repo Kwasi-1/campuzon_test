@@ -292,32 +292,11 @@ export function SellerOrdersPage() {
       headerActions={headerActions}
       sidebar={sidebar}
     >
-      <Alert
-        className={`mb-4 ${
-          store?.status === "active"
-            ? "border-green-200 bg-green-50 text-green-800"
-            : "border-amber-200 bg-amber-50 text-amber-900"
-        }`}
-      >
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <span>
-            {store?.status === "active"
-              ? "Store status: Active. Order actions are enabled."
-              : storeActionBlockReason || "Store status unavailable."}
-          </span>
-          {store?.status === "suspended" || store?.status === "pending" ? (
-            <Button asChild size="sm" variant="outline" className="rounded-full">
-              <a
-                href={`mailto:support@campuzon.me?subject=Store Reactivation Request - ${encodeURIComponent(
-                  store?.storeName || "Seller Store",
-                )}`}
-              >
-                Request Reactivation
-              </a>
-            </Button>
-          ) : null}
-        </div>
-      </Alert>
+      {store?.status != "active" && (
+        <Alert className={`mb-6 border-amber-200 bg-amber-50 text-amber-900`}>
+          {storeActionBlockReason || "Store status unavailable."}
+        </Alert>
+      )}
 
       {isLoading ? (
         <div className="space-y-6">
@@ -426,8 +405,7 @@ export function SellerOrdersPage() {
                             onClick={() => handleOrderAction(order, action)}
                             disabled={areOrderActionsDisabled}
                             title={
-                              storeActionBlockReason ||
-                              "Perform order action"
+                              storeActionBlockReason || "Perform order action"
                             }
                             className={`w-full rounded-full ${
                               action === "cancel"
@@ -468,8 +446,7 @@ export function SellerOrdersPage() {
                             }
                             disabled={areOrderActionsDisabled}
                             title={
-                              storeActionBlockReason ||
-                              "Perform order action"
+                              storeActionBlockReason || "Perform order action"
                             }
                             className={`rounded-full ${
                               desktopPrimaryAction === "cancel"
@@ -503,8 +480,7 @@ export function SellerOrdersPage() {
                                 className="rounded-full"
                                 disabled={areOrderActionsDisabled}
                                 title={
-                                  storeActionBlockReason ||
-                                  "More order actions"
+                                  storeActionBlockReason || "More order actions"
                                 }
                               >
                                 <MoreHorizontal className="mr-1 h-4 w-4" />

@@ -167,9 +167,8 @@ export function SellerProductsPage() {
   const { data: store } = useSellerMyStore();
   const storeActionBlockReason = getStoreActionBlockReason(store?.status);
   const isProductActionsDisabled = Boolean(storeActionBlockReason);
-  const { data: storeProducts, isLoading: productsLoading } = useSellerStoreProducts(
-    store?.id || "",
-  );
+  const { data: storeProducts, isLoading: productsLoading } =
+    useSellerStoreProducts(store?.id || "");
   const createProduct = useSellerCreateProduct();
   const updateProduct = useSellerUpdateProduct();
   const deleteProduct = useSellerDeleteProduct();
@@ -272,7 +271,8 @@ export function SellerProductsPage() {
     data.append("name", formData.name);
     data.append("description", formData.description);
     data.append("price", formData.price);
-    if (formData.comparePrice) data.append("compare_price", formData.comparePrice);
+    if (formData.comparePrice)
+      data.append("compare_price", formData.comparePrice);
     data.append("quantity", formData.quantity);
     data.append("min_order_quantity", formData.minOrderQuantity || "1");
     if (formData.maxOrderQuantity) {
@@ -385,17 +385,11 @@ export function SellerProductsPage() {
       }
       sidebar={sidebar}
     >
-      <Alert
-        className={`mb-4 ${
-          store?.status === "active"
-            ? "border-green-200 bg-green-50 text-green-800"
-            : "border-amber-200 bg-amber-50 text-amber-900"
-        }`}
-      >
-        {store?.status === "active"
-          ? "Store status: Active. Product actions are enabled."
-          : storeActionBlockReason || "Store status unavailable."}
-      </Alert>
+      {store?.status != "active" && (
+        <Alert className={`mb-6 border-amber-200 bg-amber-50 text-amber-900`}>
+          {storeActionBlockReason || "Store status unavailable."}
+        </Alert>
+      )}
 
       <Button
         variant="ghost"
@@ -594,11 +588,11 @@ export function SellerProductsPage() {
                               size="icon"
                               className="h-9 w-9 rounded-full"
                               aria-label={`Open actions for ${product.name}`}
-                                  disabled={isProductActionsDisabled}
-                                  title={
-                                    storeActionBlockReason ||
-                                    `Open actions for ${product.name}`
-                                  }
+                              disabled={isProductActionsDisabled}
+                              title={
+                                storeActionBlockReason ||
+                                `Open actions for ${product.name}`
+                              }
                             >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>

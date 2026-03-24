@@ -195,7 +195,8 @@ export function SellerSettingsPage() {
     setSaveInfo(null);
 
     try {
-      const looksLikeUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const looksLikeUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       const canPatchLocation = looksLikeUuid.test(formData.institution);
 
       await Promise.all([
@@ -303,17 +304,27 @@ export function SellerSettingsPage() {
         headerActions={headerActions}
         sidebar={sidebar}
       >
-        <Alert
-          className={`mb-6 ${
-            store?.status === "active"
-              ? "border-green-200 bg-green-50 text-green-800"
-              : "border-amber-200 bg-amber-50 text-amber-900"
-          }`}
-        >
-          {store?.status === "active"
-            ? "Store status: Active. Settings updates are enabled."
-            : storeActionBlockReason || "Store status unavailable."}
-        </Alert>
+        {store?.status != "active" && (
+          <Alert
+            className={`flex items-center justify-between mb-6 border-amber-200 bg-amber-50 text-amber-900`}
+          >
+            {storeActionBlockReason || "Store status unavailable."}
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className="rounded-full"
+            >
+              <a
+                href={`mailto:support@campuzon.me?subject=Store Reactivation Request - ${encodeURIComponent(
+                  store?.storeName || "Seller Store",
+                )}`}
+              >
+                Request Reactivation
+              </a>
+            </Button>
+          </Alert>
+        )}
 
         {saveSuccess ? (
           <Alert variant="success" className="mb-6">
@@ -698,14 +709,16 @@ export function SellerSettingsPage() {
                     </Button>
                   </div>
 
-                  {(store?.status === "suspended" || store?.status === "pending") && (
+                  {(store?.status === "suspended" ||
+                    store?.status === "pending") && (
                     <div className="flex items-center justify-between rounded-xl border border-blue-200 p-4">
                       <div>
                         <p className="font-medium text-gray-900">
                           Request Reactivation
                         </p>
                         <p className="text-sm text-gray-500">
-                          Contact support and include your store name for faster review.
+                          Contact support and include your store name for faster
+                          review.
                         </p>
                       </div>
                       <Button
@@ -769,7 +782,9 @@ export function SellerSettingsPage() {
               onClick={() => void handleDeactivate()}
               disabled={deactivateStore.isPending}
             >
-              {deactivateStore.isPending ? "Deactivating..." : "Deactivate Store"}
+              {deactivateStore.isPending
+                ? "Deactivating..."
+                : "Deactivate Store"}
             </Button>
           </div>
         </div>

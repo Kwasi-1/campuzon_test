@@ -179,8 +179,8 @@ export function SellerMessagesPage() {
         );
         break;
       case "with-order":
-        nextConversations = nextConversations.filter(
-          (conversation) => Boolean(conversation.orderID),
+        nextConversations = nextConversations.filter((conversation) =>
+          Boolean(conversation.orderID),
         );
         break;
       case "no-order":
@@ -198,7 +198,8 @@ export function SellerMessagesPage() {
         const participantName =
           conversation.participant?.name?.toLowerCase() || "";
         const productName = conversation.product?.name?.toLowerCase() || "";
-        const lastMessage = conversation.lastMessage?.content?.toLowerCase() || "";
+        const lastMessage =
+          conversation.lastMessage?.content?.toLowerCase() || "";
         return (
           participantName.includes(query) ||
           productName.includes(query) ||
@@ -215,8 +216,8 @@ export function SellerMessagesPage() {
   ).length;
   const totalMessages = conversations.length;
   const starredCount = starredConversationIds.size;
-  const withOrderCount = conversations.filter(
-    (conversation) => Boolean(conversation.orderID),
+  const withOrderCount = conversations.filter((conversation) =>
+    Boolean(conversation.orderID),
   ).length;
 
   const getFilterCount = (value: SellerConversationFilter) => {
@@ -282,7 +283,8 @@ export function SellerMessagesPage() {
       });
     }
 
-    const content = newMessage.trim() || (attachmentUrl ? "Shared an image" : "");
+    const content =
+      newMessage.trim() || (attachmentUrl ? "Shared an image" : "");
     await sendMessage.mutateAsync({
       conversationId: selectedConversationId,
       content,
@@ -323,32 +325,11 @@ export function SellerMessagesPage() {
 
   return (
     <SellerPageTemplate messagesPadding={true}>
-      <Alert
-        className={`mb-4 ${
-          store?.status === "active"
-            ? "border-green-200 bg-green-50 text-green-800"
-            : "border-amber-200 bg-amber-50 text-amber-900"
-        }`}
-      >
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <span>
-            {store?.status === "active"
-              ? "Store status: Active. Message actions are enabled."
-              : storeActionBlockReason || "Store status unavailable."}
-          </span>
-          {store?.status === "suspended" || store?.status === "pending" ? (
-            <Button asChild size="sm" variant="outline" className="rounded-full">
-              <a
-                href={`mailto:support@campuzon.me?subject=Store Reactivation Request - ${encodeURIComponent(
-                  store?.storeName || "Seller Store",
-                )}`}
-              >
-                Request Reactivation
-              </a>
-            </Button>
-          ) : null}
-        </div>
-      </Alert>
+      {store?.status != "active" && (
+        <Alert className={`mb-6 border-amber-200 bg-amber-50 text-amber-900`}>
+          {storeActionBlockReason || "Store status unavailable."}
+        </Alert>
+      )}
 
       <div className="flex h-[calc(100vh-7rem)] md:h-[calc(100vh-16rem)] -mb-10 -mt-2 md:mb-auto md:mt-auto min-h-[500px] w-full overflow-hidden md:rounded-xl md:border bg-background md:shadow-sm md:min-h-[600px]">
         <div
@@ -406,14 +387,18 @@ export function SellerMessagesPage() {
               ) : (
                 filteredConversations.map((conversation) => {
                   const isStarred = starredConversationIds.has(conversation.id);
-                  const participantName = conversation.participant?.name || "Customer";
-                  const participantImage = conversation.participant?.image || undefined;
-                  const lastMessageContent = conversation.lastMessage?.content || "No messages yet";
+                  const participantName =
+                    conversation.participant?.name || "Customer";
+                  const participantImage =
+                    conversation.participant?.image || undefined;
+                  const lastMessageContent =
+                    conversation.lastMessage?.content || "No messages yet";
                   const lastMessageTimestamp =
                     conversation.lastMessage?.dateCreated ||
                     conversation.lastMessageAt ||
                     new Date().toISOString();
-                  const isFromCustomer = conversation.lastMessage?.senderID !== user.id;
+                  const isFromCustomer =
+                    conversation.lastMessage?.senderID !== user.id;
 
                   return (
                     <button
@@ -429,7 +414,9 @@ export function SellerMessagesPage() {
                       <div className="flex min-w-0 items-center space-x-3">
                         <Avatar className="h-12 w-12">
                           <AvatarImage src={participantImage} />
-                          <AvatarFallback>{participantName.charAt(0)}</AvatarFallback>
+                          <AvatarFallback>
+                            {participantName.charAt(0)}
+                          </AvatarFallback>
                         </Avatar>
 
                         <div className="min-w-0 flex-1">
@@ -443,14 +430,19 @@ export function SellerMessagesPage() {
                           </div>
 
                           <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                            <Badge variant="outline" className="h-5 text-[10px]">
+                            <Badge
+                              variant="outline"
+                              className="h-5 text-[10px]"
+                            >
                               {conversation.orderID ? "Order" : "Inquiry"}
                             </Badge>
                             {isStarred ? (
                               <Star className="h-3.5 w-3.5 fill-yellow-500 text-yellow-500" />
                             ) : null}
                             {conversation.orderID ? (
-                              <span className="truncate">{conversation.orderID}</span>
+                              <span className="truncate">
+                                {conversation.orderID}
+                              </span>
                             ) : null}
                           </div>
 
@@ -484,7 +476,9 @@ export function SellerMessagesPage() {
 
         <div
           className={`flex-1 overflow-hidden bg-muted/10 ${
-            selectedConversationId ? "flex flex-col" : "hidden md:flex md:flex-col"
+            selectedConversationId
+              ? "flex flex-col"
+              : "hidden md:flex md:flex-col"
           }`}
         >
           {selectedConversation ? (
@@ -525,7 +519,12 @@ export function SellerMessagesPage() {
                 </div>
 
                 <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" aria-label="Call" title="Call">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Call"
+                    title="Call"
+                  >
                     <Phone className="h-4 w-4" />
                   </Button>
                   <Button
@@ -533,7 +532,9 @@ export function SellerMessagesPage() {
                     size="icon"
                     aria-label="Star conversation"
                     title="Star conversation"
-                    onClick={() => toggleConversationStar(selectedConversation.id)}
+                    onClick={() =>
+                      toggleConversationStar(selectedConversation.id)
+                    }
                     disabled={areStarActionsDisabled}
                   >
                     <Star
@@ -561,7 +562,9 @@ export function SellerMessagesPage() {
                         className="h-12 w-12 rounded-sm object-cover"
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{selectedConversation.product.name}</p>
+                        <p className="truncate font-medium">
+                          {selectedConversation.product.name}
+                        </p>
                         <p className="text-sm font-semibold text-primary">
                           {formatAmount(selectedConversation.product.price)}
                         </p>
@@ -579,8 +582,11 @@ export function SellerMessagesPage() {
                 ) : (
                   <div className="space-y-4">
                     {activeMessages.map((message, index) => {
-                      const isSystemMessage = message.isSystemMessage || message.messageType === "system";
-                      const isOwnMessage = !isSystemMessage && message.senderID === user.id;
+                      const isSystemMessage =
+                        message.isSystemMessage ||
+                        message.messageType === "system";
+                      const isOwnMessage =
+                        !isSystemMessage && message.senderID === user.id;
                       const previousSender =
                         index > 0 ? activeMessages[index - 1].senderID : null;
                       const showAvatar =
@@ -616,19 +622,28 @@ export function SellerMessagesPage() {
                           {!isOwnMessage && showAvatar ? (
                             <Avatar className="h-8 w-8">
                               <AvatarImage
-                                src={selectedConversation.participant?.image || undefined}
+                                src={
+                                  selectedConversation.participant?.image ||
+                                  undefined
+                                }
                               />
                               <AvatarFallback>
-                                {(selectedConversation.participant?.name || "C").charAt(0)}
+                                {(
+                                  selectedConversation.participant?.name || "C"
+                                ).charAt(0)}
                               </AvatarFallback>
                             </Avatar>
                           ) : null}
 
-                          {!isOwnMessage && !showAvatar ? <div className="w-8" /> : null}
+                          {!isOwnMessage && !showAvatar ? (
+                            <div className="w-8" />
+                          ) : null}
 
                           <div
                             className={`max-w-[70%] ${
-                              isOwnMessage ? "ml-auto flex flex-col items-end" : ""
+                              isOwnMessage
+                                ? "ml-auto flex flex-col items-end"
+                                : ""
                             }`}
                           >
                             <div
