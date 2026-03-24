@@ -155,7 +155,9 @@ export function Header() {
     <header className="sticky top-0 z-40 w-full bg-background">
       {/* Top Navigation Bar */}
       <div className="md:border-b border-border relative">
-        <div className="container mx-auto px-3 lg:px-6">
+        <div
+          className={`container w-full mx-auto ${isProductsPage ? "px-0 lg:px-6" : "px-3 lg:px-6"}`}
+        >
           <div className="flex h-16 md:h-20 items-center justify-between py-3">
             {/* Left Column */}
             <div className="flex items-center gap-1 sm:gap-4 flex-1">
@@ -185,7 +187,7 @@ export function Header() {
                   </button>
 
                   {/* Mobile Search Header on Products Page */}
-                  <div className="md:hidden flex-1 w-full flex items-center -mx-4">
+                  <div className="md:hidden h-[68px] flex-1 w-full flex items-center">
                     <SearchHeader
                       value={searchQuery}
                       onChange={setSearchQuery}
@@ -216,7 +218,12 @@ export function Header() {
             </Link>
 
             {/* Right Column: Actions */}
-            <div className="flex items-center justify-end gap-1 sm:gap-3 md:flex-1">
+            <div
+              className={cn(
+                "flex items-center justify-end gap-1 sm:gap-3 md:flex-1",
+                isProductsPage && "hidden md:flex",
+              )}
+            >
               {isProductsPage ? (
                 <>
                   {/* Desktop search bar on products page */}
