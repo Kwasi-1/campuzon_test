@@ -88,13 +88,13 @@ class AdminTransactionsService {
     if (params?.page)     qs.set('page',     String(params.page));
     if (params?.per_page) qs.set('per_page', String(params.per_page));
 
-    const res = await api.get(`admin/orders?${qs}`);
+    const res = await api.get(`admin/analytics/orders?${qs}`);
     const d = extractData<BackendOrderList>(res);
     return { items: d.orders ?? [], total: d.pagination?.total ?? 0 };
   }
 
   /**
-   * GET /api/v1/admin/escrow
+   * GET /api/v1/admin/analytics/escrow
    * Lists escrow records. Supports: status, page, per_page
    */
   async getEscrows(params?: {
@@ -107,7 +107,7 @@ class AdminTransactionsService {
     if (params?.page)     qs.set('page',     String(params.page));
     if (params?.per_page) qs.set('per_page', String(params.per_page));
 
-    const res = await api.get(`admin/escrow-holdings?${qs}`);
+    const res = await api.get(`admin/analytics/escrow-holdings?${qs}`);
     const d = extractData<BackendEscrowList>(res);
     return { items: d.escrows ?? [], total: d.pagination?.total ?? 0 };
   }
