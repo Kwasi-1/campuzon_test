@@ -14,7 +14,7 @@ Owner: Frontend
 
 ## 2) Base URL and Versioning
 
-- Base URL: `{API_BASE_URL}`
+- Base URL: `{API_BASE_URL}`  
 - Version prefix: `/api/v1`
 - Seller prefix: `/seller`
 - Full prefix pattern: `{API_BASE_URL}/api/v1/seller`
