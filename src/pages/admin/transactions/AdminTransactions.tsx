@@ -169,7 +169,7 @@ const OrderDetailDialog: React.FC<{
                   ["Seller Gets", formatGHS(order.escrow.sellerAmount)],
                   ["Platform Fee", formatGHS(order.escrow.platformFee)],
                   ["Status", order.escrow.status],
-                  ["Held", new Date(order.escrow.heldAt).toLocaleDateString()],
+                  ["Held", new Date(order.escrow.dateCreated).toLocaleDateString()],
                   [
                     "Released",
                     order.escrow.releasedAt
@@ -390,7 +390,7 @@ const AdminTransactions: React.FC = () => {
   };
 
   const filteredOrders = filterByDate(orders, "dateCreated");
-  const filteredEscrows = filterByDate(escrows, "heldAt");
+  const filteredEscrows = filterByDate(escrows, "dateCreated");
 
   const orderPages = Math.ceil(ordersTotal / PER_PAGE);
   const escrowPages = Math.ceil(escrowTotal / PER_PAGE);

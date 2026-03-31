@@ -34,11 +34,12 @@ export interface OrderItem {
 export interface EscrowItem {
   id: string;
   orderId: string;
+  orderNumber: string;
   amount: number;
   sellerAmount: number;
   platformFee: number;
   status: string; // 'holding' | 'released' | 'refunded' | 'disputed'
-  heldAt: string;
+  dateCreated: string;
   releasedAt: string | null;
   buyerName?: string;
   storeName?: string;
@@ -88,7 +89,7 @@ class AdminTransactionsService {
     if (params?.page)     qs.set('page',     String(params.page));
     if (params?.per_page) qs.set('per_page', String(params.per_page));
 
-    const res = await api.get(`admin/analytics/orders?${qs}`);
+    const res = await api.get(`admin/orders?${qs}`);
     const d = extractData<BackendOrderList>(res);
     return { items: d.orders ?? [], total: d.pagination?.total ?? 0 };
   }
@@ -107,7 +108,7 @@ class AdminTransactionsService {
     if (params?.page)     qs.set('page',     String(params.page));
     if (params?.per_page) qs.set('per_page', String(params.per_page));
 
-    const res = await api.get(`admin/analytics/escrow-holdings?${qs}`);
+    const res = await api.get(`admin/escrow?${qs}`);
     const d = extractData<BackendEscrowList>(res);
     return { items: d.escrows ?? [], total: d.pagination?.total ?? 0 };
   }
@@ -151,11 +152,11 @@ class AdminTransactionsService {
 
   async exportEscrows(): Promise<Blob> {
     const { items } = await this.getEscrows({ per_page: 500 });
-    const headers = ['Escrow ID', 'Order ID', 'Buyer', 'Store', 'Amount (₵)', 'Seller Amount (₵)', 'Platform Fee (₵)', 'Status', 'Held At', 'Released At'];
+    const headers = ['Escrow ID', 'Order ID', 'Order Number', 'Buyer', 'Store', 'Amount (₵)', 'Seller Amount (₵)', 'Platform Fee (₵)', 'Status', 'Held At', 'Released At'];
     const rows = items.map((e) => [
-      e.id, e.orderId ?? '—', e.buyerName ?? '—', e.storeName ?? '—',
+      e.id, e.orderId ?? '—', e.orderNumber ?? '—', e.buyerName ?? '—', e.storeName ?? '—',
       e.amount.toFixed(2), e.sellerAmount.toFixed(2), e.platformFee.toFixed(2),
-      e.status, e.heldAt, e.releasedAt ?? '—',
+      e.status, e.dateCreated, e.releasedAt ?? '—',
     ]);
     const csv = [headers, ...rows].map((r) => r.map((v) => `"${v}"`).join(',')).join('\n');
     return new Blob([csv], { type: 'text/csv;charset=utf-8;' });

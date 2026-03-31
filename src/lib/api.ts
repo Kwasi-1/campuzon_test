@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { useAuthStore } from '@/stores/authStore';
 import { useAuthPromptStore } from '@/stores/authPromptStore';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://test-api.campuzon.me/api/v1/';
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://test-api.campuzon.me/api/v1/";
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
