@@ -381,9 +381,9 @@ const AdminStores: React.FC = () => {
                   <TableRow key={store.id} className="hover:bg-gray-50/50">
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 rounded-xl">
+                        <Avatar className="h-10 w-10 rounded-md">
                           <AvatarImage src={store.logoUrl ?? undefined} />
-                          <AvatarFallback className="rounded-xl bg-primary/10">
+                          <AvatarFallback className="rounded-md bg-muted">
                             <Store className="w-4 h-4 text-primary" />
                           </AvatarFallback>
                         </Avatar>

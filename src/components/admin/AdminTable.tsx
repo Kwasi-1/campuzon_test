@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, ChevronDown } from "lucide-react";
+import { Search } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -56,7 +56,6 @@ const AdminTable: React.FC<AdminTableProps> = ({
   children,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -83,44 +82,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
             />
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {(filters.length > 0 || showDateFilter) && (
-              <Button
-                variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
-                className="shrink-0"
-              >
-                <Filter className="w-4 h-4 mr-2" />
-                Filters
-                <ChevronDown
-                  className={`w-4 h-4 ml-2 transition-transform ${showFilters ? "rotate-180" : ""}`}
-                />
-              </Button>
-            )}
-
-            {showDateFilter && !actionButton && !secondaryActionButton && (
-              <DateFilter />
-            )}
-
-            {secondaryActionButton && (
-               <Button variant="outline" onClick={secondaryActionButton.onClick} className="shrink-0">
-                {secondaryActionButton.icon}
-                {secondaryActionButton.label}
-              </Button>
-            )}
-
-            {actionButton && (
-              <Button onClick={actionButton.onClick} className="shrink-0">
-                {actionButton.icon}
-                {actionButton.label}
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Filters Row */}
-        {showFilters && (filters.length > 0 || showDateFilter) && (
-          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 p-4 bg-gray-50 rounded-lg">
+          <div className="flex flex-wrap items-center gap-2">
             {filters.map((filter) => (
               <div key={filter.key} className="w-full sm:w-auto sm:min-w-48">
                 <Select value={filter.value} onValueChange={filter.onChange}>
@@ -137,13 +99,28 @@ const AdminTable: React.FC<AdminTableProps> = ({
                 </Select>
               </div>
             ))}
-            {showDateFilter && (actionButton || secondaryActionButton) && (
-              <div className="w-full sm:w-auto">
-                <DateFilter />
-              </div>
+
+            {showDateFilter && <DateFilter />}
+
+            {secondaryActionButton && (
+              <Button
+                variant="outline"
+                onClick={secondaryActionButton.onClick}
+                className="shrink-0"
+              >
+                {secondaryActionButton.icon}
+                {secondaryActionButton.label}
+              </Button>
+            )}
+
+            {actionButton && (
+              <Button onClick={actionButton.onClick} className="shrink-0">
+                {actionButton.icon}
+                {actionButton.label}
+              </Button>
             )}
           </div>
-        )}
+        </div>
 
         {/* Table Content */}
         <div className="overflow-x-auto">{children}</div>
