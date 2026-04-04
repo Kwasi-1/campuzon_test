@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -268,7 +268,13 @@ const SummaryCard = ({
 
 const AdminTransactions: React.FC = () => {
   const { toast } = useToast();
-  const { dateRange, isFiltered } = useDateFilter();
+  const {
+    dateRange,
+    isFiltered,
+    selectedPeriod,
+    setSelectedPeriod,
+    setDateRange,
+  } = useDateFilter();
   const { formatGHS } = useCurrency();
 
   const [tab, setTab] = useState<"orders" | "escrow">("orders");
@@ -289,30 +295,12 @@ const AdminTransactions: React.FC = () => {
   const [escrowLoading, setEscrowLoading] = useState(true);
 
   // Summary state
-  const [summary, setSummary] = useState<TransactionSummary | null>(null);
-  const [summaryLoading, setSummaryLoading] = useState(true);
+  const [summaryLoading] = useState(false);
 
   // Detail dialog
   const [viewOrder, setViewOrder] = useState<AdminOrder | null>(null);
 
   const PER_PAGE = 20;
-
-  // ── Load summary ──────────────────────────
-  const loadSummary = useCallback(async () => {
-    setSummaryLoading(true);
-    try {
-      const s = await adminTransactionsService.getSummary();
-      setSummary(s);
-    } catch (err) {
-      toast({
-        title: "Failed to load summary",
-        description: (err as Error).message,
-        variant: "destructive",
-      });
-    } finally {
-      setSummaryLoading(false);
-    }
-  }, [toast]);
 
   // ── Load orders ───────────────────────────
   const loadOrders = useCallback(async () => {
@@ -360,8 +348,10 @@ const AdminTransactions: React.FC = () => {
   }, [escrowStatus, escrowPage, toast]);
 
   useEffect(() => {
-    void loadSummary();
-  }, [loadSummary]);
+    setSelectedPeriod("All Time");
+    setDateRange({ from: undefined, to: undefined });
+  }, [setDateRange, setSelectedPeriod]);
+
   useEffect(() => {
     void loadOrders();
   }, [loadOrders]);
@@ -391,6 +381,80 @@ const AdminTransactions: React.FC = () => {
 
   const filteredOrders = filterByDate(orders, "dateCreated");
   const filteredEscrows = filterByDate(escrows, "dateCreated");
+
+  const filteredSummary = useMemo<TransactionSummary>(() => {
+    const completedOrderStatuses = new Set(["delivered", "completed"]);
+    const completedOrders = filteredOrders.filter((o) =>
+      completedOrderStatuses.has((o.status || "").toLowerCase()),
+    );
+
+    const totalRevenue = completedOrders.reduce(
+      (sum, o) => sum + (Number.isFinite(o.totalAmount) ? o.totalAmount : 0),
+      0,
+    );
+
+    const platformFees = filteredOrders.reduce(
+      (sum, o) => sum + (Number.isFinite(o.serviceFee) ? o.serviceFee : 0),
+      0,
+    );
+
+    const escrowHeld = filteredEscrows
+      .filter((e) => (e.status || "").toLowerCase() === "holding")
+      .reduce((sum, e) => sum + (Number.isFinite(e.amount) ? e.amount : 0), 0);
+
+    const escrowReleased = filteredEscrows
+      .filter((e) => (e.status || "").toLowerCase() === "released")
+      .reduce(
+        (sum, e) =>
+          sum + (Number.isFinite(e.sellerAmount) ? e.sellerAmount : 0),
+        0,
+      );
+
+    const completedCount = completedOrders.length;
+    const totalOrderCount = filteredOrders.length;
+
+    return {
+      totalRevenue,
+      platformFees,
+      escrowHeld,
+      escrowReleased,
+      totalOrders: totalOrderCount,
+      completedOrders: completedCount,
+      successRate:
+        totalOrderCount > 0 ? (completedCount / totalOrderCount) * 100 : 0,
+    };
+  }, [filteredEscrows, filteredOrders]);
+
+  const dateFilterLabel = useMemo(() => {
+    if (!isFiltered) return "All time";
+
+    if (selectedPeriod === "Custom Date" && dateRange.from && dateRange.to) {
+      const from = dateRange.from.toLocaleDateString();
+      const to = dateRange.to.toLocaleDateString();
+      return `${from} - ${to}`;
+    }
+
+    return selectedPeriod;
+  }, [dateRange.from, dateRange.to, isFiltered, selectedPeriod]);
+
+  const holdingCount = useMemo(
+    () =>
+      filteredEscrows.filter(
+        (e) => (e.status || "").toLowerCase() === "holding",
+      ).length,
+    [filteredEscrows],
+  );
+
+  const ordersTabCount = filteredOrders.length;
+  const escrowTabCount = filteredEscrows.length;
+
+  const releasedCount = useMemo(
+    () =>
+      filteredEscrows.filter(
+        (e) => (e.status || "").toLowerCase() === "released",
+      ).length,
+    [filteredEscrows],
+  );
 
   const orderPages = Math.ceil(ordersTotal / PER_PAGE);
   const escrowPages = Math.ceil(escrowTotal / PER_PAGE);
@@ -436,23 +500,23 @@ const AdminTransactions: React.FC = () => {
   const dashboardStats = [
     {
       label: "Gross Revenue",
-      value: summary ? formatGHS(summary.totalRevenue) : "₵0.00",
-      subtext: "Total completed order value",
+      value: formatGHS(filteredSummary.totalRevenue),
+      subtext: `${filteredSummary.completedOrders}/${filteredSummary.totalOrders} completed • ${dateFilterLabel}`,
     },
     {
       label: "Platform Fees",
-      value: summary ? formatGHS(summary.platformFees) : "₵0.00",
-      subtext: "Transaction + subscription fees",
+      value: formatGHS(filteredSummary.platformFees),
+      subtext: `${filteredSummary.totalOrders} filtered orders • ${dateFilterLabel}`,
     },
     {
       label: "Escrow Held",
-      value: summary ? formatGHS(summary.escrowHeld) : "₵0.00",
-      subtext: "Pending buyer protection release",
+      value: formatGHS(filteredSummary.escrowHeld),
+      subtext: `${holdingCount} holding records • ${dateFilterLabel}`,
     },
     {
       label: "Released to Sellers",
-      value: summary ? formatGHS(summary.escrowReleased) : "₵0.00",
-      subtext: "Total seller payouts",
+      value: formatGHS(filteredSummary.escrowReleased),
+      subtext: `${releasedCount} released records • ${dateFilterLabel}`,
     },
   ];
 
@@ -471,7 +535,6 @@ const AdminTransactions: React.FC = () => {
         headerActions={
           <>
             <DateFilter />
-            
           </>
         }
       >
@@ -484,52 +547,52 @@ const AdminTransactions: React.FC = () => {
             <TabsList className="bg-gray-100 mb-4">
               <TabsTrigger value="orders">
                 Orders
-                {ordersTotal > 0 && (
+                {ordersTabCount > 0 && (
                   <span className="ml-1.5 bg-primary/10 text-primary text-xs rounded-full px-1.5 py-0.5">
-                    {ordersTotal}
+                    {ordersTabCount}
                   </span>
                 )}
               </TabsTrigger>
               <TabsTrigger value="escrow">
                 Escrow
-                {escrowTotal > 0 && (
+                {escrowTabCount > 0 && (
                   <span className="ml-1.5 bg-orange-100 text-orange-600 text-xs rounded-full px-1.5 py-0.5">
-                    {escrowTotal}
+                    {escrowTabCount}
                   </span>
                 )}
               </TabsTrigger>
             </TabsList>
             <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                tab === "orders" ? void loadOrders() : void loadEscrow()
-              }
-              disabled={tab === "orders" ? ordersLoading : escrowLoading}
-            >
-              <RefreshCw
-                className={`w-4 h-4 mr-1.5 ${
-                  (tab === "orders" && ordersLoading) ||
-                  (tab === "escrow" && escrowLoading)
-                    ? "animate-spin"
-                    : ""
-                }`}
-              />
-              {(tab === "orders" && ordersLoading) ||
-              (tab === "escrow" && escrowLoading)
-                ? "Refreshing..."
-                : "Refresh"}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                tab === "orders" ? handleExportOrders() : handleExportEscrow()
-              }
-            >
-              <Download className="w-4 h-4 mr-1.5" /> Export
-            </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  tab === "orders" ? void loadOrders() : void loadEscrow()
+                }
+                disabled={tab === "orders" ? ordersLoading : escrowLoading}
+              >
+                <RefreshCw
+                  className={`w-4 h-4 mr-1.5 ${
+                    (tab === "orders" && ordersLoading) ||
+                    (tab === "escrow" && escrowLoading)
+                      ? "animate-spin"
+                      : ""
+                  }`}
+                />
+                {(tab === "orders" && ordersLoading) ||
+                (tab === "escrow" && escrowLoading)
+                  ? "Refreshing..."
+                  : "Refresh"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  tab === "orders" ? handleExportOrders() : handleExportEscrow()
+                }
+              >
+                <Download className="w-4 h-4 mr-1.5" /> Export
+              </Button>
             </div>
           </div>
 
