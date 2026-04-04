@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -293,30 +293,12 @@ const AdminTransactions: React.FC = () => {
   const [escrowLoading, setEscrowLoading] = useState(true);
 
   // Summary state
-  const [summary, setSummary] = useState<TransactionSummary | null>(null);
-  const [summaryLoading, setSummaryLoading] = useState(true);
+  const [summaryLoading] = useState(false);
 
   // Detail dialog
   const [viewOrder, setViewOrder] = useState<AdminOrder | null>(null);
 
   const PER_PAGE = 20;
-
-  // ── Load summary ──────────────────────────
-  const loadSummary = useCallback(async () => {
-    setSummaryLoading(true);
-    try {
-      const s = await adminTransactionsService.getSummary();
-      setSummary(s);
-    } catch (err) {
-      toast({
-        title: "Failed to load summary",
-        description: (err as Error).message,
-        variant: "destructive",
-      });
-    } finally {
-      setSummaryLoading(false);
-    }
-  }, [toast]);
 
   // ── Load orders ───────────────────────────
   const loadOrders = useCallback(async () => {
@@ -369,9 +351,6 @@ const AdminTransactions: React.FC = () => {
   }, [setDateRange, setSelectedPeriod]);
 
   useEffect(() => {
-    void loadSummary();
-  }, [loadSummary]);
-  useEffect(() => {
     void loadOrders();
   }, [loadOrders]);
   useEffect(() => {
@@ -400,6 +379,49 @@ const AdminTransactions: React.FC = () => {
 
   const filteredOrders = filterByDate(orders, "dateCreated");
   const filteredEscrows = filterByDate(escrows, "dateCreated");
+
+  const filteredSummary = useMemo<TransactionSummary>(() => {
+    const completedOrderStatuses = new Set(["delivered", "completed"]);
+    const completedOrders = filteredOrders.filter((o) =>
+      completedOrderStatuses.has((o.status || "").toLowerCase()),
+    );
+
+    const totalRevenue = completedOrders.reduce(
+      (sum, o) => sum + (Number.isFinite(o.totalAmount) ? o.totalAmount : 0),
+      0,
+    );
+
+    const platformFees = filteredOrders.reduce(
+      (sum, o) => sum + (Number.isFinite(o.serviceFee) ? o.serviceFee : 0),
+      0,
+    );
+
+    const escrowHeld = filteredEscrows
+      .filter((e) => (e.status || "").toLowerCase() === "holding")
+      .reduce((sum, e) => sum + (Number.isFinite(e.amount) ? e.amount : 0), 0);
+
+    const escrowReleased = filteredEscrows
+      .filter((e) => (e.status || "").toLowerCase() === "released")
+      .reduce(
+        (sum, e) =>
+          sum + (Number.isFinite(e.sellerAmount) ? e.sellerAmount : 0),
+        0,
+      );
+
+    const completedCount = completedOrders.length;
+    const totalOrderCount = filteredOrders.length;
+
+    return {
+      totalRevenue,
+      platformFees,
+      escrowHeld,
+      escrowReleased,
+      totalOrders: totalOrderCount,
+      completedOrders: completedCount,
+      successRate:
+        totalOrderCount > 0 ? (completedCount / totalOrderCount) * 100 : 0,
+    };
+  }, [filteredEscrows, filteredOrders]);
 
   const orderPages = Math.ceil(ordersTotal / PER_PAGE);
   const escrowPages = Math.ceil(escrowTotal / PER_PAGE);
@@ -445,23 +467,23 @@ const AdminTransactions: React.FC = () => {
   const dashboardStats = [
     {
       label: "Gross Revenue",
-      value: summary ? formatGHS(summary.totalRevenue) : "₵0.00",
-      subtext: "Total completed order value",
+      value: formatGHS(filteredSummary.totalRevenue),
+      subtext: "Completed order value (filtered)",
     },
     {
       label: "Platform Fees",
-      value: summary ? formatGHS(summary.platformFees) : "₵0.00",
-      subtext: "Transaction + subscription fees",
+      value: formatGHS(filteredSummary.platformFees),
+      subtext: "Order fees (filtered)",
     },
     {
       label: "Escrow Held",
-      value: summary ? formatGHS(summary.escrowHeld) : "₵0.00",
-      subtext: "Pending buyer protection release",
+      value: formatGHS(filteredSummary.escrowHeld),
+      subtext: "Holding status (filtered)",
     },
     {
       label: "Released to Sellers",
-      value: summary ? formatGHS(summary.escrowReleased) : "₵0.00",
-      subtext: "Total seller payouts",
+      value: formatGHS(filteredSummary.escrowReleased),
+      subtext: "Released escrow (filtered)",
     },
   ];
 
