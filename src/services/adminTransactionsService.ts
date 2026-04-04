@@ -39,6 +39,7 @@ export interface EscrowItem {
   sellerAmount: number;
   platformFee: number;
   status: string; // 'holding' | 'released' | 'refunded' | 'disputed'
+  heldAt: string;
   dateCreated: string;
   releasedAt: string | null;
   buyerName?: string;
@@ -72,6 +73,88 @@ interface BackendAnalyticsOverview {
   escrowHoldings: { totalHeld: number; pendingSellerPayouts: number; releasedToSellers: number };
 }
 
+function toNumber(value: unknown, fallback = 0): number {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+  if (value && typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    if ('parsedValue' in record) {
+      return toNumber(record.parsedValue, fallback);
+    }
+    if ('source' in record) {
+      return toNumber(record.source, fallback);
+    }
+  }
+  return fallback;
+}
+
+function normalizeOrder(rawOrder: unknown): AdminOrder {
+  const raw = (rawOrder ?? {}) as Record<string, unknown>;
+  const buyer =
+    raw.buyer && typeof raw.buyer === 'object'
+      ? (raw.buyer as Record<string, unknown>)
+      : null;
+  const store =
+    raw.store && typeof raw.store === 'object'
+      ? (raw.store as Record<string, unknown>)
+      : null;
+
+  return {
+    id: String(raw.id ?? ''),
+    orderNumber: String(raw.orderNumber ?? ''),
+    status: String(raw.status ?? 'pending').toLowerCase(),
+    totalAmount: toNumber(raw.totalAmount, 0),
+    serviceFee: toNumber(raw.serviceFee, 0),
+    buyerFee: toNumber(raw.buyerFee, 0),
+    sellerCommission: toNumber(raw.sellerCommission, 0),
+    paymentMethod: String(raw.paymentMethod ?? 'N/A'),
+    paymentStatus: String(raw.paymentStatus ?? raw.status ?? 'pending'),
+    dateCreated: String(raw.dateCreated ?? new Date().toISOString()),
+    completedAt: raw.completedAt ? String(raw.completedAt) : null,
+    buyer: buyer
+      ? {
+          id: String(buyer.id ?? ''),
+          firstName: String(buyer.firstName ?? ''),
+          lastName: String(buyer.lastName ?? ''),
+          email: String(buyer.email ?? ''),
+        }
+      : null,
+    store: store
+      ? {
+          id: String(store.id ?? ''),
+          storeName: String(store.storeName ?? ''),
+        }
+      : null,
+    escrow: null,
+    items: [],
+  };
+}
+
+function normalizeEscrow(rawEscrow: unknown): EscrowItem {
+  const raw = (rawEscrow ?? {}) as Record<string, unknown>;
+  const heldAt = String(raw.holdUntil ?? raw.dateCreated ?? new Date().toISOString());
+
+  return {
+    id: String(raw.id ?? ''),
+    orderId: String(raw.orderId ?? ''),
+    orderNumber: String(raw.orderNumber ?? ''),
+    amount: toNumber(raw.amount, 0),
+    sellerAmount: toNumber(raw.sellerAmount, 0),
+    platformFee: toNumber(raw.platformFee, 0),
+    status: String(raw.status ?? 'holding').toLowerCase(),
+    heldAt,
+    dateCreated: String(raw.dateCreated ?? heldAt),
+    releasedAt: raw.releasedAt ? String(raw.releasedAt) : null,
+    buyerName: raw.buyerName ? String(raw.buyerName) : undefined,
+    storeName: raw.storeName ? String(raw.storeName) : undefined,
+  };
+}
+
 class AdminTransactionsService {
   /**
    * GET /api/v1/admin/transactions (orders endpoint)
@@ -91,7 +174,10 @@ class AdminTransactionsService {
 
     const res = await api.get(`admin/orders?${qs}`);
     const d = extractData<BackendOrderList>(res);
-    return { items: d.orders ?? [], total: d.pagination?.total ?? 0 };
+    return {
+      items: (d.orders ?? []).map(normalizeOrder),
+      total: d.pagination?.total ?? 0,
+    };
   }
 
   /**
@@ -110,7 +196,10 @@ class AdminTransactionsService {
 
     const res = await api.get(`admin/escrow?${qs}`);
     const d = extractData<BackendEscrowList>(res);
-    return { items: d.escrows ?? [], total: d.pagination?.total ?? 0 };
+    return {
+      items: (d.escrows ?? []).map(normalizeEscrow),
+      total: d.pagination?.total ?? 0,
+    };
   }
 
   /**

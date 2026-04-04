@@ -169,7 +169,10 @@ const OrderDetailDialog: React.FC<{
                   ["Seller Gets", formatGHS(order.escrow.sellerAmount)],
                   ["Platform Fee", formatGHS(order.escrow.platformFee)],
                   ["Status", order.escrow.status],
-                  ["Held", new Date(order.escrow.dateCreated).toLocaleDateString()],
+                  [
+                    "Held",
+                    new Date(order.escrow.dateCreated).toLocaleDateString(),
+                  ],
                   [
                     "Released",
                     order.escrow.releasedAt
@@ -268,7 +271,8 @@ const SummaryCard = ({
 
 const AdminTransactions: React.FC = () => {
   const { toast } = useToast();
-  const { dateRange, isFiltered } = useDateFilter();
+  const { dateRange, isFiltered, setSelectedPeriod, setDateRange } =
+    useDateFilter();
   const { formatGHS } = useCurrency();
 
   const [tab, setTab] = useState<"orders" | "escrow">("orders");
@@ -358,6 +362,11 @@ const AdminTransactions: React.FC = () => {
       setEscrowLoading(false);
     }
   }, [escrowStatus, escrowPage, toast]);
+
+  useEffect(() => {
+    setSelectedPeriod("All Time");
+    setDateRange({ from: undefined, to: undefined });
+  }, [setDateRange, setSelectedPeriod]);
 
   useEffect(() => {
     void loadSummary();
@@ -471,7 +480,6 @@ const AdminTransactions: React.FC = () => {
         headerActions={
           <>
             <DateFilter />
-            
           </>
         }
       >
@@ -500,36 +508,36 @@ const AdminTransactions: React.FC = () => {
               </TabsTrigger>
             </TabsList>
             <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                tab === "orders" ? void loadOrders() : void loadEscrow()
-              }
-              disabled={tab === "orders" ? ordersLoading : escrowLoading}
-            >
-              <RefreshCw
-                className={`w-4 h-4 mr-1.5 ${
-                  (tab === "orders" && ordersLoading) ||
-                  (tab === "escrow" && escrowLoading)
-                    ? "animate-spin"
-                    : ""
-                }`}
-              />
-              {(tab === "orders" && ordersLoading) ||
-              (tab === "escrow" && escrowLoading)
-                ? "Refreshing..."
-                : "Refresh"}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                tab === "orders" ? handleExportOrders() : handleExportEscrow()
-              }
-            >
-              <Download className="w-4 h-4 mr-1.5" /> Export
-            </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  tab === "orders" ? void loadOrders() : void loadEscrow()
+                }
+                disabled={tab === "orders" ? ordersLoading : escrowLoading}
+              >
+                <RefreshCw
+                  className={`w-4 h-4 mr-1.5 ${
+                    (tab === "orders" && ordersLoading) ||
+                    (tab === "escrow" && escrowLoading)
+                      ? "animate-spin"
+                      : ""
+                  }`}
+                />
+                {(tab === "orders" && ordersLoading) ||
+                (tab === "escrow" && escrowLoading)
+                  ? "Refreshing..."
+                  : "Refresh"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  tab === "orders" ? handleExportOrders() : handleExportEscrow()
+                }
+              >
+                <Download className="w-4 h-4 mr-1.5" /> Export
+              </Button>
             </div>
           </div>
 
@@ -757,7 +765,9 @@ const AdminTransactions: React.FC = () => {
                         <TableCell className="text-xs text-gray-500">
                           <span className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            {new Date(e.heldAt).toLocaleDateString()}
+                            {new Date(
+                              e.heldAt || e.dateCreated,
+                            ).toLocaleDateString()}
                           </span>
                         </TableCell>
                         <TableCell className="text-xs text-gray-500">
