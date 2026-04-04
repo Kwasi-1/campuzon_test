@@ -448,6 +448,9 @@ const AdminTransactions: React.FC = () => {
     [filteredEscrows],
   );
 
+  const ordersTabCount = filteredOrders.length;
+  const escrowTabCount = filteredEscrows.length;
+
   const releasedCount = useMemo(
     () =>
       filteredEscrows.filter(
@@ -547,17 +550,17 @@ const AdminTransactions: React.FC = () => {
             <TabsList className="bg-gray-100 mb-4">
               <TabsTrigger value="orders">
                 Orders
-                {ordersTotal > 0 && (
+                {ordersTabCount > 0 && (
                   <span className="ml-1.5 bg-primary/10 text-primary text-xs rounded-full px-1.5 py-0.5">
-                    {ordersTotal}
+                    {ordersTabCount}
                   </span>
                 )}
               </TabsTrigger>
               <TabsTrigger value="escrow">
                 Escrow
-                {escrowTotal > 0 && (
+                {escrowTabCount > 0 && (
                   <span className="ml-1.5 bg-orange-100 text-orange-600 text-xs rounded-full px-1.5 py-0.5">
-                    {escrowTotal}
+                    {escrowTabCount}
                   </span>
                 )}
               </TabsTrigger>
