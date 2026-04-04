@@ -271,8 +271,13 @@ const SummaryCard = ({
 
 const AdminTransactions: React.FC = () => {
   const { toast } = useToast();
-  const { dateRange, isFiltered, setSelectedPeriod, setDateRange } =
-    useDateFilter();
+  const {
+    dateRange,
+    isFiltered,
+    selectedPeriod,
+    setSelectedPeriod,
+    setDateRange,
+  } = useDateFilter();
   const { formatGHS } = useCurrency();
 
   const [tab, setTab] = useState<"orders" | "escrow">("orders");
@@ -423,6 +428,34 @@ const AdminTransactions: React.FC = () => {
     };
   }, [filteredEscrows, filteredOrders]);
 
+  const dateFilterLabel = useMemo(() => {
+    if (!isFiltered) return "All time";
+
+    if (selectedPeriod === "Custom Date" && dateRange.from && dateRange.to) {
+      const from = dateRange.from.toLocaleDateString();
+      const to = dateRange.to.toLocaleDateString();
+      return `${from} - ${to}`;
+    }
+
+    return selectedPeriod;
+  }, [dateRange.from, dateRange.to, isFiltered, selectedPeriod]);
+
+  const holdingCount = useMemo(
+    () =>
+      filteredEscrows.filter(
+        (e) => (e.status || "").toLowerCase() === "holding",
+      ).length,
+    [filteredEscrows],
+  );
+
+  const releasedCount = useMemo(
+    () =>
+      filteredEscrows.filter(
+        (e) => (e.status || "").toLowerCase() === "released",
+      ).length,
+    [filteredEscrows],
+  );
+
   const orderPages = Math.ceil(ordersTotal / PER_PAGE);
   const escrowPages = Math.ceil(escrowTotal / PER_PAGE);
 
@@ -468,22 +501,22 @@ const AdminTransactions: React.FC = () => {
     {
       label: "Gross Revenue",
       value: formatGHS(filteredSummary.totalRevenue),
-      subtext: "Completed order value (filtered)",
+      subtext: `${filteredSummary.completedOrders}/${filteredSummary.totalOrders} completed • ${dateFilterLabel}`,
     },
     {
       label: "Platform Fees",
       value: formatGHS(filteredSummary.platformFees),
-      subtext: "Order fees (filtered)",
+      subtext: `${filteredSummary.totalOrders} filtered orders • ${dateFilterLabel}`,
     },
     {
       label: "Escrow Held",
       value: formatGHS(filteredSummary.escrowHeld),
-      subtext: "Holding status (filtered)",
+      subtext: `${holdingCount} holding records • ${dateFilterLabel}`,
     },
     {
       label: "Released to Sellers",
       value: formatGHS(filteredSummary.escrowReleased),
-      subtext: "Released escrow (filtered)",
+      subtext: `${releasedCount} released records • ${dateFilterLabel}`,
     },
   ];
 
