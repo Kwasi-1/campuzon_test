@@ -380,8 +380,8 @@ const AdminStores: React.FC = () => {
                 stores.map((store) => (
                   <TableRow key={store.id} className="hover:bg-gray-50/50">
                     <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 rounded-md">
+                      <div className="flex items-center gap-3 min-w-28">
+                        <Avatar className="hidden md:block h-10 w-10 rounded-md">
                           <AvatarImage src={store.logoUrl ?? undefined} />
                           <AvatarFallback className="rounded-md bg-muted">
                             <Store className="w-4 h-4 text-primary" />
@@ -402,8 +402,8 @@ const AdminStores: React.FC = () => {
                       <div className="text-xs text-gray-400">{store.owner?.email ?? "—"}</div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1 text-sm text-gray-600">
-                        <MapPin className="w-3 h-3 text-gray-400" />
+                      <div className="flex items-center gap-1 text-sm text-gray-600 min-w-28">
+                        <MapPin className="w-3 h-3 text-gray-400 hidden md:block" />
                         {store.institution || store.institutionName || "—"}
                       </div>
                       {store.hall && <div className="text-xs text-gray-400 ml-4">{store.hall}</div>}
