@@ -94,7 +94,7 @@ const StoreDetailDialog: React.FC<{ store: AdminStoreItem | null; open: boolean;
     ["Total Orders",  String(store.totalOrders)],
     ["Revenue",       formatGHS(store.totalRevenue || 0)],
     ["Verified",      store.isVerified ? "Yes" : "No"],
-    ["Subscription",  store.subscriptionPlan ?? "Free"],
+    ["Subscription",  store.subscriptionPlan || "Free"],
     ["Institution",   store.institutionName ?? "—"],
     ["Hall",          store.hall ?? "—"],
     ["Owner",         store.owner ? (store.owner.name || `${store.owner.firstName} ${store.owner.lastName}`.trim()) : "—"],

@@ -169,11 +169,11 @@ const OrderDetailDialog: React.FC<{
                   ["Seller Gets", formatGHS(order.escrow.sellerAmount)],
                   ["Platform Fee", formatGHS(order.escrow.platformFee)],
                   ["Status", order.escrow.status],
-                  ["Held", new Date(order.escrow.dateCreated).toLocaleDateString()],
+                  ["Created At", new Date(order.escrow.dateCreated).toLocaleString()],
                   [
                     "Released",
                     order.escrow.releasedAt
-                      ? new Date(order.escrow.releasedAt).toLocaleDateString()
+                      ? new Date(order.escrow.releasedAt).toLocaleString()
                       : "—",
                   ],
                 ].map(([k, v]) => (
@@ -401,7 +401,7 @@ const AdminTransactions: React.FC = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `orders-${Date.now()}.csv`;
+      a.download = `Orders-Report-${Date.now()}.csv`;
       a.click();
       URL.revokeObjectURL(url);
       toast({ title: "Export complete" });
@@ -420,7 +420,7 @@ const AdminTransactions: React.FC = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `escrow-${Date.now()}.csv`;
+      a.download = `Escrow-Report-${Date.now()}.csv`;
       a.click();
       URL.revokeObjectURL(url);
       toast({ title: "Export complete" });
@@ -710,7 +710,7 @@ const AdminTransactions: React.FC = () => {
                     <TableHead>Seller Gets</TableHead>
                     <TableHead>Platform Fee</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Held</TableHead>
+                    <TableHead>Date Created</TableHead>
                     <TableHead>Released</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -757,7 +757,7 @@ const AdminTransactions: React.FC = () => {
                         <TableCell className="text-xs text-gray-500">
                           <span className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            {new Date(e.heldAt).toLocaleDateString()}
+                            {new Date(e.dateCreated).toLocaleDateString()}
                           </span>
                         </TableCell>
                         <TableCell className="text-xs text-gray-500">

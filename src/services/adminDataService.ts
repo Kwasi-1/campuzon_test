@@ -50,7 +50,7 @@ export interface AdminStoreItem {
   institution?: string;
   institutionName?: string;
   hall?: string;
-  subscriptionPlan?: string;
+  subscriptionPlan: string;
   subscriptionStatus?: string;
 }
 
