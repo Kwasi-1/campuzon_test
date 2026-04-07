@@ -41,26 +41,23 @@ import { useAuthStore } from "@/stores";
 import { SellerPageTemplate } from "../../components/SellerPageTemplate";
 import toast from "react-hot-toast";
 
-// Mock store data
-const mockStoreData = {
-  id: "store-1",
-  storeName: "TechHub GH",
-  storeSlug: "techhub-gh",
-  institution: "ug",
-  description:
-    "Your trusted source for premium electronics and gadgets. We offer authentic products with warranty and excellent customer service.",
-  logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=200",
-  banner: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800",
-  email: "contact@techhub.gh",
-  phoneNumber: "+233 24 123 4567",
-  location: "University of Ghana, Legon",
-  website: "https://techhub.gh",
-  businessHours: "Mon-Fri: 9AM-6PM, Sat: 10AM-4PM",
-  autoResponderEnabled: true,
-  autoResponderName: "TechBot",
-  autoResponderMessage:
-    "Thanks for reaching out! We'll get back to you within 30 minutes during business hours.",
-};
+const createEmptyStoreData = () => ({
+  id: "",
+  storeName: "",
+  storeSlug: "",
+  institution: "",
+  description: "",
+  logo: "",
+  banner: "",
+  email: "",
+  phoneNumber: "",
+  location: "",
+  website: "",
+  businessHours: "",
+  autoResponderEnabled: false,
+  autoResponderName: "",
+  autoResponderMessage: "",
+});
 
 const INSTITUTION_OPTIONS = [
   { value: "ug", label: "University of Ghana" },
@@ -99,7 +96,7 @@ export function SellerSettingsPage() {
   const updateStorePreferences = useSellerUpdateStorePreferences();
   const deactivateStore = useSellerDeactivateStore();
 
-  const [formData, setFormData] = useState(mockStoreData);
+  const [formData, setFormData] = useState(createEmptyStoreData);
   const [activeSection, setActiveSection] = useState<SettingsSection>("all");
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -140,13 +137,13 @@ export function SellerSettingsPage() {
     setFormData((prev) => ({
       ...prev,
       id: store.id,
-      storeName: store.storeName || prev.storeName,
-      storeSlug: store.storeSlug || prev.storeSlug,
-      description: store.description || prev.description,
-      logo: store.logo || prev.logo,
-      banner: store.banner || prev.banner,
-      email: store.email || prev.email,
-      phoneNumber: store.phoneNumber || prev.phoneNumber,
+      storeName: store.storeName ?? "",
+      storeSlug: store.storeSlug ?? "",
+      description: store.description ?? "",
+      logo: store.logo ?? "",
+      banner: store.banner ?? "",
+      email: store.email ?? "",
+      phoneNumber: store.phoneNumber ?? "",
     }));
   }, [store]);
 
@@ -304,8 +301,6 @@ export function SellerSettingsPage() {
         headerActions={headerActions}
         sidebar={sidebar}
       >
-
-
         {saveSuccess ? (
           <Alert variant="success" className="mb-6">
             Settings saved successfully!
