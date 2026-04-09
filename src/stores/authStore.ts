@@ -65,7 +65,7 @@ interface AuthState {
   setTokens: (accessToken: string, refreshToken: string) => void;
   login: (email: string, password: string) => Promise<TwoFactorRequired | null>;
   verify2FA: (tempToken: string, code: string) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
+  register: (data: RegisterData) => Promise<RegisterResult>;
   loginWithGoogle: (accessToken: string, refreshToken: string) => Promise<boolean>;
   logout: () => void;
   fetchProfile: () => Promise<void>;
@@ -81,6 +81,13 @@ interface RegisterData {
   institutionID: string;
   institutionName: string;
   hallID?: string;
+}
+
+interface RegisterResult {
+  verificationRequired: boolean;
+  userId?: string;
+  email?: string;
+  phoneNumber?: string;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -237,7 +244,12 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
           });
-          return;
+          return {
+            verificationRequired: false,
+            userId: newUser.id,
+            email: newUser.email,
+            phoneNumber: newUser.phoneNumber,
+          };
         }
         
         // Real API call
@@ -245,15 +257,46 @@ export const useAuthStore = create<AuthState>()(
           const api = (await import('@/lib/api')).default;
           const { extractData } = await import('@/lib/api');
           const response = await api.post('/auth/register', data);
-          const result = extractData<{ user: User; accessToken: string; refreshToken: string }>(response);
-          
+          const result = extractData<{
+            user: User;
+            accessToken?: string;
+            refreshToken?: string;
+            verificationRequired?: boolean;
+          }>(response);
+
+          const verificationRequired = Boolean(result.verificationRequired);
+
+          if (verificationRequired) {
+            set({
+              user: null,
+              accessToken: null,
+              refreshToken: null,
+              isAuthenticated: false,
+              isLoading: false,
+            });
+
+            return {
+              verificationRequired: true,
+              userId: result.user?.id,
+              email: result.user?.email,
+              phoneNumber: result.user?.phoneNumber,
+            };
+          }
+
           set({
             user: result.user,
-            accessToken: result.accessToken,
-            refreshToken: result.refreshToken,
+            accessToken: result.accessToken || null,
+            refreshToken: result.refreshToken || null,
             isAuthenticated: true,
             isLoading: false,
           });
+
+          return {
+            verificationRequired: false,
+            userId: result.user?.id,
+            email: result.user?.email,
+            phoneNumber: result.user?.phoneNumber,
+          };
         } catch (error) {
           set({ isLoading: false });
           throw error;

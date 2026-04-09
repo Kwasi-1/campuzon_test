@@ -74,7 +74,7 @@ export function RegisterPage() {
       const institutionName =
         selectedInstitution?.name || "Unknown Institution";
 
-      await registerUser({
+      const registerResult = await registerUser({
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -83,6 +83,20 @@ export function RegisterPage() {
         institutionID: data.institutionID,
         institutionName: institutionName,
       });
+
+      if (registerResult.verificationRequired && registerResult.userId) {
+        navigate("/verify-account", {
+          replace: true,
+          state: {
+            userId: registerResult.userId,
+            email: registerResult.email || data.email,
+            phoneNumber: registerResult.phoneNumber || data.phoneNumber,
+            redirect: "/",
+          },
+        });
+        return;
+      }
+
       navigate("/");
     } catch (err: unknown) {
       setError(extractError(err));

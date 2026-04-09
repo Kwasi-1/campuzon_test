@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import axios from "axios";
 import { Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,28 @@ const Login = () => {
   const { login, isLoading } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  const goToVerification = (
+    userId?: string,
+    email?: string,
+    phoneNumber?: string,
+  ) => {
+    if (!userId) {
+      setError(
+        "Your account is not verified yet. Please check your email or contact support.",
+      );
+      return;
+    }
+
+    navigate("/verify-account", {
+      state: {
+        userId,
+        email,
+        phoneNumber,
+        redirect,
+      },
+    });
+  };
 
   const {
     register,
@@ -55,6 +78,20 @@ const Login = () => {
       // No 2FA, proceed to destination
       navigate(redirect);
     } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const apiError = err.response?.data?.error;
+        const message = apiError?.message;
+
+        if (message === "ACCOUNT_NOT_VERIFIED") {
+          goToVerification(
+            apiError?.data?.userId,
+            apiError?.data?.email,
+            apiError?.data?.phoneNumber,
+          );
+          return;
+        }
+      }
+
       setError(extractError(err));
     }
   };

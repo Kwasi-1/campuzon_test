@@ -44,6 +44,8 @@ import { ProductDetailPage } from "./pages/client-new/products/pages/product-det
 import { StoresPage } from "./pages/client-new/stores";
 import { StoreDetailPage } from "./pages/client-new/stores/store-detail/StoreDetailPage";
 import Login from "./pages/auth-new/Login";
+import { VerifyTFAPage } from "./pages/auth-new/VerifyTFAPage";
+import { VerifyAccountPage } from "./pages/auth-new/VerifyAccountPage";
 import { ProfilePage } from "./pages/client-new/profile";
 import { NextUIProvider } from "@nextui-org/react";
 import { RegisterPage } from "./pages/auth-new/RegisterPage";
@@ -93,6 +95,11 @@ const App = () => (
                       {/* Updated Auth pages without layout */}
                       <Route path="/login" element={<Login />} />
                       <Route path="/register" element={<RegisterPage />} />
+                      <Route path="/verify-2fa" element={<VerifyTFAPage />} />
+                      <Route
+                        path="/verify-account"
+                        element={<VerifyAccountPage />}
+                      />
                       <Route
                         path="/become-seller"
                         element={<BecomeSellerPage />}
