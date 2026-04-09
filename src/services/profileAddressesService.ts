@@ -1,24 +1,18 @@
 import api, { extractData } from "@/lib/api";
 
-export type AddressType = "hall" | "home" | "other";
+export type AddressType = "home" | "off_campus_hostel";
 
 export interface ProfileAddress {
   id: string;
-  label: string;
-  fullAddress: string;
-  hall?: string;
-  room?: string;
-  phone?: string;
+  name: string;
+  gpsLocation: string;
   isDefault: boolean;
   type: AddressType;
 }
 
 interface AddressPayload {
-  label: string;
-  fullAddress: string;
-  hall?: string;
-  room?: string;
-  phone?: string;
+  name: string;
+  gpsLocation: string;
   isDefault: boolean;
   type: AddressType;
 }
@@ -30,23 +24,75 @@ const ENABLE_REMOTE_ADDRESSES =
 const defaultAddresses: ProfileAddress[] = [
   {
     id: "addr-1",
-    label: "My Hall",
-    fullAddress: "Legon Hall, Room A101",
-    hall: "Legon Hall",
-    room: "A101",
-    phone: "+233 24 123 4567",
+    name: "Home",
+    gpsLocation: "GA-123-4567",
     isDefault: true,
-    type: "hall",
+    type: "home",
   },
   {
     id: "addr-2",
-    label: "Home",
-    fullAddress: "15 Independence Avenue, Accra",
-    phone: "+233 20 987 6543",
+    name: "Off-campus Hostel",
+    gpsLocation: "GA-456-1234",
     isDefault: false,
-    type: "home",
+    type: "off_campus_hostel",
   },
 ];
+
+const normalizeAddressType = (value: unknown): AddressType => {
+  const raw = String(value ?? "").trim().toLowerCase();
+
+  if (
+    raw === "off_campus_hostel" ||
+    raw === "off-campus-hostel" ||
+    raw === "off campus hostel"
+  ) {
+    return "off_campus_hostel";
+  }
+
+  return "home";
+};
+
+const normalizeAddress = (item: unknown): ProfileAddress => {
+  const value = (item ?? {}) as Record<string, unknown>;
+  const fallbackName = String(value.label ?? "Address").trim();
+
+  return {
+    id: String(value.id ?? `addr-${Date.now()}`),
+    name: String(value.name ?? value.hostelName ?? fallbackName).trim(),
+    gpsLocation: String(
+      value.gpsLocation ?? value.fullAddress ?? "",
+    ).trim(),
+    isDefault: Boolean(value.isDefault),
+    type: normalizeAddressType(value.type ?? value.hostel),
+  };
+};
+
+const toAddressList = (data: unknown): ProfileAddress[] => {
+  if (Array.isArray(data)) {
+    return ensureSingleDefault(data.map(normalizeAddress));
+  }
+
+  if (data && typeof data === "object") {
+    const record = data as Record<string, unknown>;
+
+    if (Array.isArray(record.addresses)) {
+      return ensureSingleDefault(record.addresses.map(normalizeAddress));
+    }
+
+    if (record.address && typeof record.address === "object") {
+      return ensureSingleDefault([normalizeAddress(record.address)]);
+    }
+  }
+
+  return [];
+};
+
+const toRequestPayload = (payload: AddressPayload): AddressPayload => ({
+  ...payload,
+  name: payload.name.trim(),
+  gpsLocation: payload.gpsLocation.trim().toUpperCase(),
+  type: normalizeAddressType(payload.type),
+});
 
 const ensureSingleDefault = (items: ProfileAddress[]) => {
   const defaultCount = items.filter((a) => a.isDefault).length;
@@ -68,8 +114,8 @@ const readLocal = (): ProfileAddress[] => {
   if (!raw) return defaultAddresses;
 
   try {
-    const parsed = JSON.parse(raw) as ProfileAddress[];
-    return ensureSingleDefault(parsed);
+    const parsed = JSON.parse(raw) as unknown;
+    return toAddressList(parsed);
   } catch {
     return defaultAddresses;
   }
@@ -83,11 +129,8 @@ class ProfileAddressesService {
   async getAddresses(): Promise<ProfileAddress[]> {
     if (ENABLE_REMOTE_ADDRESSES) {
       const response = await api.get("/user/me/addresses");
-      const data = extractData<{ addresses?: ProfileAddress[] } | ProfileAddress[]>(
-        response,
-      );
-      const items = Array.isArray(data) ? data : data.addresses || [];
-      return ensureSingleDefault(items);
+      const data = extractData<unknown>(response);
+      return toAddressList(data);
     }
 
     const items = readLocal();
@@ -97,16 +140,13 @@ class ProfileAddressesService {
 
   async createAddress(payload: AddressPayload): Promise<ProfileAddress[]> {
     if (ENABLE_REMOTE_ADDRESSES) {
-      const response = await api.post("/user/me/addresses", payload);
-      const data = extractData<{ addresses?: ProfileAddress[] } | ProfileAddress[]>(
-        response,
-      );
-      return Array.isArray(data) ? data : data.addresses || [];
+      await api.post("/user/me/addresses", toRequestPayload(payload));
+      return this.getAddresses();
     }
 
     const nextAddress: ProfileAddress = {
       id: `addr-${Date.now()}`,
-      ...payload,
+      ...toRequestPayload(payload),
     };
 
     const current = readLocal();
@@ -123,17 +163,15 @@ class ProfileAddressesService {
     payload: AddressPayload,
   ): Promise<ProfileAddress[]> {
     if (ENABLE_REMOTE_ADDRESSES) {
-      const response = await api.patch(`/user/me/addresses/${id}`, payload);
-      const data = extractData<{ addresses?: ProfileAddress[] } | ProfileAddress[]>(
-        response,
-      );
-      return Array.isArray(data) ? data : data.addresses || [];
+      await api.patch(`/user/me/addresses/${id}`, toRequestPayload(payload));
+      return this.getAddresses();
     }
 
+    const nextPayload = toRequestPayload(payload);
     const current = readLocal();
     const updated = current.map((a) => {
-      if (a.id === id) return { ...a, ...payload };
-      if (payload.isDefault) return { ...a, isDefault: false };
+      if (a.id === id) return { ...a, ...nextPayload };
+      if (nextPayload.isDefault) return { ...a, isDefault: false };
       return a;
     });
 
@@ -143,11 +181,8 @@ class ProfileAddressesService {
 
   async deleteAddress(id: string): Promise<ProfileAddress[]> {
     if (ENABLE_REMOTE_ADDRESSES) {
-      const response = await api.delete(`/user/me/addresses/${id}`);
-      const data = extractData<{ addresses?: ProfileAddress[] } | ProfileAddress[]>(
-        response,
-      );
-      return Array.isArray(data) ? data : data.addresses || [];
+      await api.delete(`/user/me/addresses/${id}`);
+      return this.getAddresses();
     }
 
     const current = readLocal();
@@ -162,11 +197,8 @@ class ProfileAddressesService {
 
   async setDefaultAddress(id: string): Promise<ProfileAddress[]> {
     if (ENABLE_REMOTE_ADDRESSES) {
-      const response = await api.post(`/user/me/addresses/${id}/set-default`);
-      const data = extractData<{ addresses?: ProfileAddress[] } | ProfileAddress[]>(
-        response,
-      );
-      return Array.isArray(data) ? data : data.addresses || [];
+      await api.post(`/user/me/addresses/${id}/set-default`);
+      return this.getAddresses();
     }
 
     const current = readLocal();

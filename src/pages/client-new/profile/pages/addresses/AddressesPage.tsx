@@ -20,12 +20,20 @@ import { Modal } from "@/components/shared/Modal";
 import { Skeleton } from "@/components/shared/Skeleton";
 import { useAuthStore } from "@/stores";
 import profileAddressesService, {
+  type AddressType,
   type ProfileAddress,
 } from "@/services/profileAddressesService";
 
+const GPS_LOCATION_REGEX = /^[A-Z]{2}-\d{3}-\d{4}$/;
+
+const ADDRESS_TYPE_LABELS: Record<AddressType, string> = {
+  home: "Home",
+  off_campus_hostel: "Off-campus Hostel",
+};
+
 export function AddressesPage() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const [addresses, setAddresses] = useState<ProfileAddress[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState<ProfileAddress | null>(
@@ -34,35 +42,35 @@ export function AddressesPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "hall" | "home" | "other">(
-    "all",
-  );
+  const [filter, setFilter] = useState<"all" | AddressType>("all");
 
   // Form state
   const [formData, setFormData] = useState({
-    label: "",
-    fullAddress: "",
-    hall: "",
-    room: "",
-    phone: "",
-    type: "hall" as "hall" | "home" | "other",
+    name: "",
+    gpsLocation: "",
+    type: "home" as AddressType,
     isDefault: false,
   });
 
+  const isResident = Boolean(user?.hallID);
+
   const resetForm = () => {
     setFormData({
-      label: "",
-      fullAddress: "",
-      hall: "",
-      room: "",
-      phone: "",
-      type: "hall",
+      name: "",
+      gpsLocation: "",
+      type: "home",
       isDefault: false,
     });
     setEditingAddress(null);
   };
 
   const handleOpenAddModal = () => {
+    if (isResident) {
+      setError(
+        "Residents use their assigned hall for deliveries and cannot add saved addresses.",
+      );
+      return;
+    }
     resetForm();
     setShowAddModal(true);
   };
@@ -87,12 +95,16 @@ export function AddressesPage() {
   }, [isAuthenticated]);
 
   const handleEdit = (address: ProfileAddress) => {
+    if (isResident) {
+      setError(
+        "Residents use their assigned hall for deliveries and cannot edit saved addresses.",
+      );
+      return;
+    }
+
     setFormData({
-      label: address.label,
-      fullAddress: address.fullAddress,
-      hall: address.hall || "",
-      room: address.room || "",
-      phone: address.phone || "",
+      name: address.name,
+      gpsLocation: address.gpsLocation,
       type: address.type,
       isDefault: address.isDefault,
     });
@@ -101,19 +113,33 @@ export function AddressesPage() {
   };
 
   const handleSave = async () => {
+    if (isResident) {
+      setError(
+        "Residents use their assigned hall for deliveries and cannot save addresses.",
+      );
+      return;
+    }
+
+    const nextName = formData.name.trim();
+    const nextGpsLocation = formData.gpsLocation.trim().toUpperCase();
+
+    if (!nextName || !nextGpsLocation) {
+      setError("Address name and GPS location are required.");
+      return;
+    }
+
+    if (!GPS_LOCATION_REGEX.test(nextGpsLocation)) {
+      setError("Use valid Ghana Post GPS format, for example EX-123-4567.");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
       const payload = {
-        label: formData.label,
-        fullAddress:
-          formData.type === "hall"
-            ? `${formData.hall}, Room ${formData.room}`
-            : formData.fullAddress,
-        hall: formData.hall || undefined,
-        room: formData.room || undefined,
-        phone: formData.phone || undefined,
+        name: nextName,
+        gpsLocation: nextGpsLocation,
         type: formData.type,
         isDefault: formData.isDefault,
       };
@@ -136,6 +162,13 @@ export function AddressesPage() {
   };
 
   const handleDelete = async (id: string) => {
+    if (isResident) {
+      setError(
+        "Residents use their assigned hall for deliveries and cannot delete saved addresses.",
+      );
+      return;
+    }
+
     setError(null);
     try {
       const next = await profileAddressesService.deleteAddress(id);
@@ -146,6 +179,13 @@ export function AddressesPage() {
   };
 
   const handleSetDefault = async (id: string) => {
+    if (isResident) {
+      setError(
+        "Residents use their assigned hall for deliveries and cannot update saved addresses.",
+      );
+      return;
+    }
+
     setError(null);
     try {
       const next = await profileAddressesService.setDefaultAddress(id);
@@ -162,22 +202,26 @@ export function AddressesPage() {
     return null;
   }
 
-  const hallCount = addresses.filter((a) => a.type === "hall").length;
   const homeCount = addresses.filter((a) => a.type === "home").length;
-  const otherCount = addresses.filter((a) => a.type === "other").length;
+  const offCampusHostelCount = addresses.filter(
+    (a) => a.type === "off_campus_hostel",
+  ).length;
 
   const filteredAddresses =
     filter === "all" ? addresses : addresses.filter((a) => a.type === filter);
 
   const sidebarCategories: {
-    key: "all" | "hall" | "home" | "other";
+    key: "all" | AddressType;
     label: string;
     count: number;
   }[] = [
     { key: "all", label: "All Addresses", count: addresses.length },
-    { key: "hall", label: "Hall", count: hallCount },
     { key: "home", label: "Home", count: homeCount },
-    { key: "other", label: "Other", count: otherCount },
+    {
+      key: "off_campus_hostel",
+      label: "Off-campus Hostel",
+      count: offCampusHostelCount,
+    },
   ];
 
   return (
@@ -194,12 +238,25 @@ export function AddressesPage() {
         </div>
         <Button
           onClick={handleOpenAddModal}
+          disabled={isResident}
+          title={
+            isResident
+              ? "Residents use their assigned hall for delivery"
+              : "Add Address"
+          }
           className="rounded-full h-11 px-5 bg-[#1C1C1E] hover:bg-black text-white"
         >
           <Plus className="h-4 w-4 mr-2" />
           Add Address
         </Button>
       </div>
+
+      {isResident && (
+        <Alert className="mb-6 border-blue-200 bg-blue-50 text-blue-900">
+          You are assigned to a hall. Saved custom addresses are available only
+          for non-resident users.
+        </Alert>
+      )}
 
       {/* Body: sidebar + content */}
       <div className="flex flex-col xl:flex-row gap-8 pb-12">
@@ -264,36 +321,40 @@ export function AddressesPage() {
             </div>
           ) : filteredAddresses.length === 0 ? (
             <div className="border border-gray-100 bg-white rounded-[28px] overflow-hidden shadow-sm">
-            <div className="text-center py-16 flex flex-col justify-center h-full items-center">
-            <EmptyState
-              icon={<MapPin className="h-16 w-16" />}
-              title="No addresses saved"
-              description={
-                filter !== "all"
-                  ? `No ${filter} addresses saved`
-                  : "Add a delivery address to make checkout faster"
-              }
-              action={
-                filter === "all" ? (
-                  <Button
-                    onClick={handleOpenAddModal}
-                    className="rounded-full px-6 bg-[#1C1C1E] hover:bg-black text-white"
-                  >
-                    Add Address
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    onClick={() => setFilter("all")}
-                    className="rounded-full"
-                  >
-                    View All
-                  </Button>
-                )
-              }
-            />
+              <div className="text-center py-16 flex flex-col justify-center h-full items-center">
+                <EmptyState
+                  icon={<MapPin className="h-16 w-16" />}
+                  title="No addresses saved"
+                  description={
+                    filter !== "all"
+                      ? `No ${
+                          filter === "off_campus_hostel"
+                            ? "off-campus hostel"
+                            : filter
+                        } addresses saved`
+                      : "Add a delivery address to make checkout faster"
+                  }
+                  action={
+                    filter === "all" && !isResident ? (
+                      <Button
+                        onClick={handleOpenAddModal}
+                        className="rounded-full px-6 bg-[#1C1C1E] hover:bg-black text-white"
+                      >
+                        Add Address
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        onClick={() => setFilter("all")}
+                        className="rounded-full"
+                      >
+                        View All
+                      </Button>
+                    )
+                  }
+                />
+              </div>
             </div>
-          </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               {filteredAddresses.map((address, index) => (
@@ -315,23 +376,21 @@ export function AddressesPage() {
                         <div className="flex items-center gap-3 min-w-0">
                           <div
                             className={`w-11 h-11 rounded-2xl flex items-center justify-center ${
-                              address.type === "hall"
-                                ? "bg-blue-100 text-blue-600"
-                                : address.type === "home"
-                                  ? "bg-green-100 text-green-600"
-                                  : "bg-gray-100 text-gray-600"
+                              address.type === "home"
+                                ? "bg-green-100 text-green-600"
+                                : "bg-blue-100 text-blue-600"
                             }`}
                           >
-                            {address.type === "hall" ? (
-                              <Building2 className="h-5 w-5" />
-                            ) : (
+                            {address.type === "home" ? (
                               <Home className="h-5 w-5" />
+                            ) : (
+                              <Building2 className="h-5 w-5" />
                             )}
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <h3 className="font-semibold text-gray-900 truncate">
-                                {address.label}
+                                {address.name}
                               </h3>
                               {address.isDefault && (
                                 <Badge className="text-[11px] rounded-full bg-[#1C1C1E] text-white hover:bg-black">
@@ -340,11 +399,7 @@ export function AddressesPage() {
                               )}
                             </div>
                             <p className="text-sm text-gray-500">
-                              {address.type === "hall"
-                                ? "Campus Hall"
-                                : address.type === "home"
-                                  ? "Home Address"
-                                  : "Other Address"}
+                              {ADDRESS_TYPE_LABELS[address.type]}
                             </p>
                           </div>
                         </div>
@@ -353,13 +408,8 @@ export function AddressesPage() {
                       <div className="space-y-2">
                         <div className="flex items-start gap-2 text-sm text-gray-700">
                           <MapPin className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                          <span>{address.fullAddress}</span>
+                          <span>{address.gpsLocation}</span>
                         </div>
-                        {address.phone && (
-                          <p className="text-sm text-gray-500">
-                            Phone: {address.phone}
-                          </p>
-                        )}
                       </div>
                     </div>
 
@@ -389,7 +439,7 @@ export function AddressesPage() {
                             size="sm"
                             className="rounded-full text-red-500 hover:text-red-600 hover:bg-red-50"
                             onClick={() => handleDelete(address.id)}
-                            aria-label={`Delete ${address.label}`}
+                            aria-label={`Delete ${address.name}`}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -420,7 +470,7 @@ export function AddressesPage() {
               Address Type
             </label>
             <div className="flex flex-wrap gap-2">
-              {(["hall", "home", "other"] as const).map((type) => (
+              {(["home", "off_campus_hostel"] as const).map((type) => (
                 <Button
                   key={type}
                   type="button"
@@ -433,89 +483,48 @@ export function AddressesPage() {
                   }`}
                   onClick={() => setFormData({ ...formData, type })}
                 >
-                  {type === "hall" && <Building2 className="h-4 w-4 mr-1" />}
                   {type === "home" && <Home className="h-4 w-4 mr-1" />}
-                  {type === "other" && <MapPin className="h-4 w-4 mr-1" />}
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                  {type === "off_campus_hostel" && (
+                    <Building2 className="h-4 w-4 mr-1" />
+                  )}
+                  {ADDRESS_TYPE_LABELS[type]}
                 </Button>
               ))}
             </div>
           </div>
 
-          {/* Label */}
+          {/* Name */}
           <div>
             <label className="block text-sm font-medium mb-2 text-gray-700">
-              Label
+              Address Name
             </label>
             <Input
-              placeholder="e.g., My Hall, Office"
-              value={formData.label}
+              placeholder="e.g., Home, Uncle Kojo Hostel"
+              value={formData.name}
               onChange={(e) =>
-                setFormData({ ...formData, label: e.target.value })
+                setFormData({ ...formData, name: e.target.value })
               }
               className="h-11 rounded-xl"
             />
           </div>
 
-          {/* Hall-specific fields */}
-          {formData.type === "hall" ? (
-            <>
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  Hall Name
-                </label>
-                <Input
-                  placeholder="e.g., Legon Hall"
-                  value={formData.hall}
-                  onChange={(e) =>
-                    setFormData({ ...formData, hall: e.target.value })
-                  }
-                  className="h-11 rounded-xl"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  Room Number
-                </label>
-                <Input
-                  placeholder="e.g., A101"
-                  value={formData.room}
-                  onChange={(e) =>
-                    setFormData({ ...formData, room: e.target.value })
-                  }
-                  className="h-11 rounded-xl"
-                />
-              </div>
-            </>
-          ) : (
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700">
-                Full Address
-              </label>
-              <Input
-                placeholder="Enter your full address"
-                value={formData.fullAddress}
-                onChange={(e) =>
-                  setFormData({ ...formData, fullAddress: e.target.value })
-                }
-                className="h-11 rounded-xl"
-              />
-            </div>
-          )}
-
-          {/* Phone */}
+          {/* GPS */}
           <div>
             <label className="block text-sm font-medium mb-2 text-gray-700">
-              Phone Number
+              Ghana Post GPS Location
             </label>
             <Input
-              placeholder="+233 XX XXX XXXX"
-              value={formData.phone}
+              placeholder="EX-123-4567"
+              value={formData.gpsLocation}
               onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
+                setFormData({
+                  ...formData,
+                  gpsLocation: e.target.value.toUpperCase(),
+                })
               }
               className="h-11 rounded-xl"
             />
+            <p className="mt-2 text-xs text-gray-500">Format: EX-123-4567</p>
           </div>
 
           {/* Default */}
@@ -548,10 +557,10 @@ export function AddressesPage() {
             <Button
               onClick={handleSave}
               disabled={
-                !formData.label ||
-                (formData.type === "hall"
-                  ? !formData.hall || !formData.room
-                  : !formData.fullAddress) ||
+                !formData.name ||
+                !formData.gpsLocation ||
+                !GPS_LOCATION_REGEX.test(formData.gpsLocation.trim()) ||
+                isResident ||
                 isLoading
               }
               className="rounded-full bg-[#1C1C1E] hover:bg-black text-white"

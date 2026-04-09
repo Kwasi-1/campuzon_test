@@ -109,6 +109,7 @@ export function CheckoutPage() {
   > | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isResident = Boolean(user?.hallID);
 
   // Calculate totals
   const subtotal = items.reduce(
@@ -143,7 +144,11 @@ export function CheckoutPage() {
 
   const handleNextStep = () => {
     if (currentStep === "delivery") {
-      if (deliveryMethod === "delivery" && !deliveryAddress.trim()) {
+      if (
+        deliveryMethod === "delivery" &&
+        !isResident &&
+        !deliveryAddress.trim()
+      ) {
         setError("Please enter a delivery address");
         return;
       }
@@ -402,14 +407,21 @@ export function CheckoutPage() {
                         exit={{ opacity: 0, height: 0 }}
                         className="space-y-4 pt-4"
                       >
+                        {isResident && (
+                          <Alert className="border-blue-200 bg-blue-50 text-blue-900">
+                            Delivery will use your assigned hall from your
+                            profile.
+                          </Alert>
+                        )}
                         <div>
                           <label className="block text-sm font-medium mb-2">
-                            Delivery Address *
+                            Delivery Address{isResident ? "" : " *"}
                           </label>
                           <Input
                             placeholder="e.g., Legon Hall, Room A101"
                             value={deliveryAddress}
                             onChange={(e) => setDeliveryAddress(e.target.value)}
+                            disabled={isResident}
                           />
                         </div>
                         <div>
@@ -694,7 +706,12 @@ export function CheckoutPage() {
                         ) : (
                           <>
                             <MapPin className="h-4 w-4 text-muted-foreground" />
-                            <span>{deliveryAddress}</span>
+                            <span>
+                              {deliveryAddress ||
+                                (isResident
+                                  ? "Assigned hall from profile"
+                                  : "Address not provided")}
+                            </span>
                           </>
                         )}
                       </div>
