@@ -62,7 +62,7 @@ import { useCurrency } from "@/hooks";
 
 const ORDER_STATUS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700",
-  confirmed: "bg-blue-100   text-blue-700",
+  offered: "bg-blue-100   text-blue-700",
   processing: "bg-blue-100   text-blue-700",
   shipped: "bg-purple-100 text-purple-700",
   delivered: "bg-emerald-100 text-emerald-700",
@@ -618,7 +618,7 @@ const AdminTransactions: React.FC = () => {
                   options: [
                     { value: "all", label: "All Status" },
                     { value: "pending", label: "Pending" },
-                    { value: "confirmed", label: "Confirmed" },
+                    { value: "offered", label: "Offered" },
                     { value: "delivered", label: "Delivered" },
                     { value: "completed", label: "Completed" },
                     { value: "cancelled", label: "Cancelled" },
