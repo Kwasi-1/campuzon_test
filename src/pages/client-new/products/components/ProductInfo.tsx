@@ -1,23 +1,18 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  MessageCircle,
-  TrendingUp,
-  Eye,
   ChevronDown,
   ChevronUp,
-  Info,
   MapPin,
   Shield,
   Users,
+  MessageCircle,
+  TrendingUp,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/hooks";
 import type { Product } from "@/types-new";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CustomSelectField } from "@/components/shared/text-field";
 
 interface ProductInfoProps {
   product: Product;
@@ -29,6 +24,36 @@ interface ProductInfoProps {
   onContactSeller: () => void;
   isInWishlist?: boolean;
   hideActionButtons?: boolean;
+}
+
+function AccordionRow({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-t border-gray-200">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between py-4 text-left text-xs font-semibold uppercase tracking-widest text-gray-900 hover:text-gray-600 transition-colors"
+      >
+        {label}
+        {open ? (
+          <ChevronUp className="h-4 w-4 shrink-0 text-gray-500" />
+        ) : (
+          <ChevronDown className="h-4 w-4 shrink-0 text-gray-500" />
+        )}
+      </button>
+      {open && (
+        <div className="pb-5 text-sm text-gray-700 leading-relaxed space-y-2">
+          {children}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function ProductInfo({
@@ -43,27 +68,11 @@ export function ProductInfo({
   hideActionButtons = false,
 }: ProductInfoProps) {
   const { formatGHS } = useCurrency();
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const [selectedCondition, setSelectedCondition] = useState<string>(
-    product.condition || "new",
-  );
+
   const currentPrice = Number.isFinite(product.price) ? product.price : 0;
   const comparePrice = Number.isFinite(product.comparePrice)
     ? product.comparePrice
     : null;
-  const storeInitial = product.store?.name?.charAt(0) || "S";
-
-  const toggleSection = (section: string) => {
-    setExpandedSection(expandedSection === section ? null : section);
-  };
-
-  const maxQuantity = Math.min(product.quantity || 10, 10);
-  const quantityOptions = Array.from({ length: maxQuantity }, (_, i) => ({
-    value: (i + 1).toString(),
-    label: (i + 1).toString(),
-  }));
-
-  // Calculate savings if comparePrice exists
   const savings =
     comparePrice && comparePrice > currentPrice
       ? comparePrice - currentPrice
@@ -72,296 +81,242 @@ export function ProductInfo({
     ? Math.round((savings / comparePrice!) * 100)
     : null;
 
+  const storeInitial = product.store?.name?.charAt(0)?.toUpperCase() || "S";
+  const maxQty = Math.min(product.quantity || 10, 10);
+  const isOutOfStock = product.quantity === 0;
+
+  // Category label
+  const categoryLabel = product.category
+    ? product.category.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    : null;
+
   return (
-    <div className="space-y-4 md:space-y-6">
-      {/* Product Title */}
-      <div>
-        <h1 className="text-xl sm:text-2xl lg:text-2xl font-bold text-gray-900 leading-tight tracking-normal">
-          {product.name}
-        </h1>
+    <div className="flex flex-col">
+      {/* Store / Brand line */}
+      <div className="flex items-center justify-between mb-1">
+        <Link
+          to={`/stores/${product.store?.slug}`}
+          className="text-xs uppercase tracking-widest text-gray-500 hover:text-gray-900 transition-colors font-medium"
+        >
+          {product.store?.name || "Campus Store"}
+        </Link>
+        <button
+          onClick={onContactSeller}
+          aria-label="Message seller"
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:border-gray-900 hover:text-gray-900 transition-colors"
+        >
+          <MessageCircle className="h-4 w-4" />
+        </button>
       </div>
 
-      {/* Seller Info Card */}
-      <div className="p-3 sm:p-4 border border-gray-200 rounded-lg">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <Link to={`/stores/${product.store?.slug}`}>
-              <Avatar className="w-12 h-12">
-                <AvatarImage
-                  src={product.store?.logo}
-                  alt={product.store?.name}
-                />
-                <AvatarFallback>{storeInitial}</AvatarFallback>
-              </Avatar>
-            </Link>
-            <div>
-              <Link
-                to={`/stores/${product.store?.slug}`}
-                className="font-semibold text-gray-900 hover:underline block"
-              >
-                {product.store?.name}
-              </Link>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-sm text-gray-500">
-                  {product.store?.location || "Campus Store"}
-                </span>
-              </div>
-              {/* {product.store?.totalSales && product.store.totalSales > 100 && (
-                <div className="flex items-center gap-1 mt-1">
-                  <Badge variant="success" className="text-xs">
-                    <Award className="w-3 h-3 mr-1" />
-                    Top Rated Plus
-                  </Badge>
-                </div>
-              )} */}
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onContactSeller}
-            className="flex items-center gap-1"
-          >
-            <MessageCircle className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
+      {/* Product name */}
+      <h1 className="text-base sm:text-lg font-normal text-gray-900 leading-snug mb-4">
+        {product.name}
+      </h1>
 
-      {/* Price Section */}
-      <div>
-        <div className="flex items-baseline gap-2">
-          <span className="text-2xl sm:text-3xl lg:text-3xl font-bold text-gray-900">
+      {/* Price */}
+      <div className="mb-5">
+        <div className="flex items-baseline gap-3">
+          <span className="text-xl font-medium text-gray-900">
             {formatGHS(currentPrice)}
           </span>
-        </div>
-        {savings && savingsPercent && (
-          <div className="mt-2 sm:mt-3 flex items-center gap-2">
-            <span className="text-sm text-gray-500 line-through">
-              {formatGHS(comparePrice!)}
+          {comparePrice && comparePrice > currentPrice && (
+            <span className="text-sm text-gray-400 line-through">
+              {formatGHS(comparePrice)}
             </span>
-            <Badge variant="destructive" className="text-xs">
-              Save {formatGHS(savings)} ({savingsPercent}% off)
-            </Badge>
-          </div>
-        )}
-      </div>
-
-      {/* Condition */}
-      <div className="py-1">
-        <div className="flex items-center gap-2 mb-2">
-          <label className="text-xs sm:text-sm font-medium text-gray-700">
-            Condition:
-          </label>
-          <button
-            className="text-gray-400 hover:text-gray-600"
-            aria-label="Condition information"
-          >
-            <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          </button>
+          )}
+          {savingsPercent && (
+            <span className="text-sm font-medium text-red-600">
+              -{savingsPercent}%
+            </span>
+          )}
         </div>
-        <CustomSelectField
-          value={selectedCondition}
-          inputProps={{
-            onChange: (e) => setSelectedCondition(e.target.value),
-          }}
-          className="w-full"
-          options={[
-            { label: "New", value: "new" },
-            { label: "Like New", value: "like-new" },
-            { label: "Used - Excellent", value: "used-excellent" },
-            { label: "Used - Good", value: "used-good" },
-            { label: "Open box", value: "open-box" },
-          ]}
-        />
       </div>
 
-      {/* Quantity */}
-      <div className="py-1">
-        <label className="text-xs sm:text-sm font-medium text-gray-700 block mb-2">
-          Quantity:
-        </label>
-        <CustomSelectField
-          value={quantity.toString()}
-          inputProps={{
-            onChange: (e) => onQuantityChange(parseInt(e.target.value)),
-          }}
-          className="w-28 sm:w-32"
-          options={quantityOptions}
-        />
-        {product.quantity && product.quantity < 10 && (
-          <p className="text-xs sm:text-sm text-orange-600 mt-2">
-            Only {product.quantity} left in stock
-          </p>
-        )}
-      </div>
-
-      {/* Action Buttons */}
-      {!hideActionButtons && (
-        <div className="space-y-3">
-          <Button
-            onClick={onBuyNow}
-            className="w-full h-12 rounded-[24px] text-base font-semibold"
-            size="lg"
-          >
-            Buy It Now
-          </Button>
-          <Button
-            onClick={onAddToCart}
-            variant="outline"
-            className="w-full h-12 rounded-[24px] text-base font-semibold  text-primary hover:bg-primary/5"
-            size="lg"
-          >
-            Add to cart
-          </Button>
-          <Button
-            onClick={onAddToWatchlist}
-            variant="outline"
-            className={cn(
-              "w-full h-12 rounded-[24px] text-base font-semibold",
-              isInWishlist
-                ? "border-red-500 text-red-500 hover:bg-red-50"
-                : "border-primary text-primary hover:bg-primary/5",
-            )}
-            size="lg"
-          >
-            <Eye className="w-5 h-5 mr-2" />
-            {isInWishlist ? "Remove from Watchlist" : "Add to Watchlist"}
-          </Button>
+      {/* Category / condition tags */}
+      {(categoryLabel || product.condition) && (
+        <div className="flex flex-wrap gap-2 mb-5">
+          {categoryLabel && (
+            <span className="text-xs border border-gray-300 px-2.5 py-1 text-gray-600 uppercase tracking-wide">
+              {categoryLabel}
+            </span>
+          )}
+          {product.condition && product.condition !== "new" && (
+            <span className="text-xs border border-gray-300 px-2.5 py-1 text-gray-600 uppercase tracking-wide">
+              {product.condition.replace(/-/g, " ")}
+            </span>
+          )}
         </div>
       )}
 
-      {/* Activity Indicators */}
-      <div className="flex flex-wrap gap-3 sm:gap-4 py-3 sm:py-4 border-y border-gray-200">
-        {product.soldCount && product.soldCount > 0 && (
-          <div className="flex items-center gap-2 text-sm">
-            <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 text-green-600" />
-            </div>
-            <span className="text-gray-700">
-              <span className="font-semibold">{product.soldCount} sold</span> -
-              Trending
+      {/* Stock / demand signals */}
+      {(product.soldCount || product.viewCount) ? (
+        <div className="flex items-center gap-3 mb-5 text-xs text-gray-500">
+          {product.soldCount && product.soldCount > 0 ? (
+            <span className="flex items-center gap-1">
+              <TrendingUp className="h-3 w-3" />
+              {product.soldCount} sold
             </span>
-          </div>
-        )}
-        {product.viewCount && product.viewCount > 0 && (
-          <div className="flex items-center gap-2 text-sm text-gray-700">
-            <Eye className="w-4 h-4" />
-            <span>
-              <span className="font-semibold">{product.viewCount} people</span>{" "}
-              are watching
-            </span>
-          </div>
-        )}
-      </div>
+          ) : null}
+          {product.viewCount && product.viewCount > 0 ? (
+            <span>{product.viewCount} people viewing</span>
+          ) : null}
+        </div>
+      ) : null}
 
-      {/* Delivery & Pickup Info */}
-      <div className="space-y-3">
-        {/* Peer Delivery */}
-        <button
-          onClick={() => toggleSection("peerDelivery")}
-          className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-              <Users className="w-5 h-5 text-blue-600" />
+      {/* Out of stock banner */}
+      {isOutOfStock && (
+        <div className="mb-5 border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+          This item is currently out of stock.
+        </div>
+      )}
+
+      {/* Low-stock warning */}
+      {!isOutOfStock && product.quantity && product.quantity < 10 ? (
+        <p className="mb-4 text-xs text-orange-600 font-medium">
+          Only {product.quantity} left in stock
+        </p>
+      ) : null}
+
+      {/* Quantity selector (Farfetch-style full-width dropdown) */}
+      {!hideActionButtons && !isOutOfStock && (
+        <div className="mb-3">
+          <div className="relative border border-gray-300 bg-white hover:border-gray-900 transition-colors">
+            <select
+              value={quantity}
+              onChange={(e) => onQuantityChange(Number(e.target.value))}
+              className="w-full appearance-none bg-transparent px-4 py-3.5 pr-10 text-sm text-gray-900 cursor-pointer focus:outline-none"
+            >
+              {Array.from({ length: maxQty }, (_, i) => i + 1).map((n) => (
+                <option key={n} value={n}>
+                  Qty: {n}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-600" />
+          </div>
+        </div>
+      )}
+
+      {/* CTA buttons */}
+      {!hideActionButtons && (
+        <div className="space-y-2 mb-6">
+          <button
+            onClick={onAddToCart}
+            disabled={isOutOfStock}
+            className="w-full bg-gray-900 text-white py-4 text-sm font-medium uppercase tracking-widest hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            {isOutOfStock ? "Out of Stock" : "Add to Bag"}
+          </button>
+          <button
+            onClick={onAddToWatchlist}
+            className={cn(
+              "w-full border py-4 text-sm font-medium uppercase tracking-widest transition-colors",
+              isInWishlist
+                ? "border-gray-900 bg-gray-900 text-white hover:bg-gray-700"
+                : "border-gray-300 text-gray-900 hover:border-gray-900",
+            )}
+          >
+            {isInWishlist ? "Saved to Wishlist" : "Save to Wishlist"}
+          </button>
+        </div>
+      )}
+
+      {/* Delivery / fulfilment accordions */}
+      <div className="border-t border-gray-200">
+        <AccordionRow label="Delivery, Returns & Seller">
+          <div className="space-y-4 text-sm text-gray-700">
+            <div className="flex items-start gap-3">
+              <Users className="h-4 w-4 mt-0.5 shrink-0 text-gray-400" />
+              <div>
+                <p className="font-medium text-gray-900 mb-0.5">Peer Delivery</p>
+                <p>
+                  A fellow student on campus will deliver this item to you —
+                  typically same-day or next-day depending on availability.
+                  Coordinate handoff after purchase.
+                </p>
+              </div>
             </div>
-            <div className="text-left">
-              <div className="font-medium text-gray-900">Peer Delivery</div>
-              <div className="text-sm text-gray-600">
-                Delivered by a fellow student on campus
+            <div className="flex items-start gap-3">
+              <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-gray-400" />
+              <div>
+                <p className="font-medium text-gray-900 mb-0.5">Campus Pickup</p>
+                <p>
+                  Meet the seller at a convenient, well-lit campus location.
+                  Agree on time and spot after purchase.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Shield className="h-4 w-4 mt-0.5 shrink-0 text-gray-400" />
+              <div>
+                <p className="font-medium text-gray-900 mb-0.5">
+                  Campuzon Buyer Protection
+                </p>
+                <p>
+                  Your payment is held in escrow and released to the seller only
+                  12 hours after you confirm receipt — giving you time to inspect
+                  the item.
+                </p>
               </div>
             </div>
           </div>
-          {expandedSection === "peerDelivery" ? (
-            <ChevronUp className="w-5 h-5 text-gray-400" />
-          ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
-          )}
-        </button>
-        {expandedSection === "peerDelivery" && (
-          <div className="px-4 pb-4 text-sm text-gray-700 space-y-2">
-            <p>
-              A student on campus will deliver this item directly to you.
-              Delivery is typically completed within the same day or the next
-              day, depending on availability.
-            </p>
-            <p>
-              Coordinate a handoff time and location with the seller after
-              purchase.
-            </p>
-          </div>
-        )}
+        </AccordionRow>
 
-        {/* Campus Pickup */}
-        <button
-          onClick={() => toggleSection("pickup")}
-          className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-green-600" />
+        <AccordionRow label="The Details">
+          <p className="whitespace-pre-wrap text-gray-700">
+            {product.description || "No description provided."}
+          </p>
+          {product.tags && product.tags.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {product.tags.map((tag, i) => (
+                <span
+                  key={i}
+                  className="border border-gray-200 px-2 py-0.5 text-xs text-gray-600"
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
-            <div className="text-left">
-              <div className="font-medium text-gray-900">Campus Pickup</div>
-              <div className="text-sm text-gray-600">
-                Pick up from the seller on campus
-              </div>
-            </div>
-          </div>
-          {expandedSection === "pickup" ? (
-            <ChevronUp className="w-5 h-5 text-gray-400" />
-          ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
           )}
-        </button>
-        {expandedSection === "pickup" && (
-          <div className="px-4 pb-4 text-sm text-gray-700 space-y-2">
-            <p>
-              Arrange to meet the seller at a convenient campus location to pick
-              up your item. You'll agree on a time and spot after purchase.
-            </p>
-            <p>
-              We recommend meeting in a public, well-lit area on campus for
-              safety.
-            </p>
-          </div>
-        )}
+        </AccordionRow>
 
-        {/* Buyer Protection */}
-        <button
-          onClick={() => toggleSection("protection")}
-          className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-purple-600" />
+        {/* Seller info */}
+        <AccordionRow label="About the Seller">
+          <Link
+            to={`/stores/${product.store?.slug}`}
+            className="flex items-center gap-3 group"
+          >
+            <Avatar className="h-10 w-10 shrink-0">
+              <AvatarImage src={product.store?.logo} alt={product.store?.name} />
+              <AvatarFallback className="text-xs font-semibold bg-gray-100">
+                {storeInitial}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="text-sm font-medium text-gray-900 group-hover:underline">
+                {product.store?.name || "Campus Seller"}
+              </p>
+              {product.store?.location && (
+                <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                  <MapPin className="h-3 w-3" />
+                  {product.store.location}
+                </p>
+              )}
+              {product.store?.totalSales ? (
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {product.store.totalSales} sales
+                </p>
+              ) : null}
             </div>
-            <div className="text-left">
-              <div className="font-medium text-gray-900">Buyer Protection</div>
-              <div className="text-sm text-gray-600">
-                12-Hour Escrow Protection
-              </div>
-            </div>
-          </div>
-          {expandedSection === "protection" ? (
-            <ChevronUp className="w-5 h-5 text-gray-400" />
-          ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
-          )}
-        </button>
-        {expandedSection === "protection" && (
-          <div className="px-4 pb-4 text-sm text-gray-700 space-y-2">
-            <p>
-              <strong>Campuzon Escrow:</strong> Your payment is held securely in
-              escrow and only released to the seller 12 hours after you confirm
-              delivery.
-            </p>
-            <p>
-              This gives you plenty of time to inspect your item and ensure it
-              matches the description before the seller receives payment.
-            </p>
-          </div>
-        )}
+          </Link>
+          <button
+            onClick={onContactSeller}
+            className="mt-4 w-full border border-gray-300 py-2.5 text-xs font-medium uppercase tracking-widest text-gray-900 hover:border-gray-900 transition-colors"
+          >
+            Message Seller
+          </button>
+        </AccordionRow>
       </div>
     </div>
   );

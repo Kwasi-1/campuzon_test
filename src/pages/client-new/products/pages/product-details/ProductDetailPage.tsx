@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { Heart, ShoppingBag, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/shared/Skeleton";
 import {
   ProductImageGallery,
@@ -22,6 +21,7 @@ import {
 import { useCartStore, useAuthStore } from "@/stores";
 import { useAuthPromptStore } from "@/stores/authPromptStore";
 import type { Conversation } from "@/types-new";
+import { cn } from "@/lib/utils";
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -31,10 +31,7 @@ export function ProductDetailPage() {
   const { addItem, getItem } = useCartStore();
 
   const { data: product, isLoading, error } = useProduct(id!);
-
-  // Only fetch related products when we have a product with a storeID
   const { data: relatedProducts } = useStoreProducts(product?.storeID || "");
-
   const { data: isInWishlist } = useIsInWishlist(id!);
   const addToWishlist = useAddToWishlist();
   const removeFromWishlist = useRemoveFromWishlist();
@@ -50,10 +47,7 @@ export function ProductDetailPage() {
 
   const handleWishlistToggle = () => {
     if (!isAuthenticated) {
-      openAuthPrompt(
-        getCurrentPath(),
-        "Sign in to add items to your wishlist.",
-      );
+      openAuthPrompt(getCurrentPath(), "Sign in to save items to your wishlist.");
       return;
     }
     if (isInWishlist) {
@@ -85,213 +79,194 @@ export function ProductDetailPage() {
       return;
     }
     if (!product?.id) return;
-
     try {
       const conversation = (await startConversation.mutateAsync({
         productID: product.id,
       })) as Conversation;
       navigate(`/messages/${conversation.id}`);
-    } catch (error) {
-      console.error("Failed to start conversation", error);
+    } catch (err) {
+      console.error("Failed to start conversation", err);
     }
   };
 
+  // ── Loading skeleton ──────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-2 gap-8">
-          <Skeleton className="aspect-square rounded-xl" />
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-6 w-1/4" />
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-12 w-full" />
+      <div className="min-h-screen bg-white">
+        <div className="container mx-auto px-4 py-6 md:py-10">
+          {/* Breadcrumb skeleton */}
+          <Skeleton className="h-4 w-48 mb-8" />
+
+          <div className="grid md:grid-cols-[1fr_380px] lg:grid-cols-[1fr_420px] xl:grid-cols-[1fr_460px] gap-8 lg:gap-16">
+            {/* Gallery skeleton */}
+            <div className="flex gap-3">
+              <div className="hidden md:flex flex-col gap-2 w-[72px]">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="aspect-[3/4] w-full" />
+                ))}
+              </div>
+              <Skeleton className="flex-1 aspect-[3/4] md:aspect-[4/5]" />
+            </div>
+
+            {/* Info skeleton */}
+            <div className="space-y-4 pt-0 md:pt-2">
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-5 w-full" />
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="h-6 w-24 mt-4" />
+              <Skeleton className="h-14 w-full mt-4" />
+              <Skeleton className="h-14 w-full" />
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
+  // ── Error state ───────────────────────────────────────────────────────────
   if (error || !product) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Alert variant="destructive" title="Product Not Found">
-          The product you're looking for doesn't exist or has been removed.
-        </Alert>
-        <Link to="/products">
-          <Button className="mt-4">Back to Products</Button>
-        </Link>
+      <div className="min-h-screen bg-white flex items-center justify-center px-4">
+        <div className="text-center max-w-sm">
+          <p className="text-sm uppercase tracking-widest text-gray-500 mb-3">
+            Product not found
+          </p>
+          <p className="text-gray-600 text-sm mb-6">
+            This item doesn't exist or has been removed by the seller.
+          </p>
+          <Link
+            to="/products"
+            className="text-sm font-medium underline text-gray-900 hover:text-gray-600"
+          >
+            ← Continue browsing
+          </Link>
+        </div>
       </div>
     );
   }
 
-  const images = product.images?.length
-    ? product.images
-    : ["/placeholder-product.jpg"];
-
-  // Get cart count for badge
+  const images = product.images?.length ? product.images : ["/placeholder-product.jpg"];
   const cartItem = getItem(id!);
   const cartCount = cartItem?.quantity || 0;
+  const similarProducts = relatedProducts?.filter((p) => p.id !== product.id).slice(0, 6) || [];
 
-  // Filter related products (exclude current product and get wishlist IDs)
-  const similarProducts =
-    relatedProducts?.filter((p) => p.id !== product.id).slice(0, 4) || [];
+  const categoryLabel = product.category
+    ? product.category.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    : "";
 
   return (
-    <div className="min-h-screen pb-24 md:pb-28">
-      <div className="container mx-auto px-4 sm:px-4 md:px-6 py-4 sm:py-6">
+    <div className="min-h-screen bg-white pb-28 md:pb-0">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-8">
         {/* Breadcrumb */}
-        {/* <Breadcrumb
-          items={[
-            { label: "Products", href: "/products" },
-            {
-              label: product.category,
-              href: `/products?category=${product.category}`,
-            },
-            { label: product.name },
-          ]}
-          className="mb-6"
-        /> */}
-
-        {/* Main Content */}
-        <div className="bg-white overflow-hidden rounded-lg sm:rounded-xl">
-          <div className="grid lg:grid-cols-[1.2fr_1fr] gap-4 sm:gap-6 md:gap-8 lg:gap-16 py-3 sm:py-4 md:py-6 lg:py-8">
-            {/* Left Section - Image Gallery */}
-            <div className="lg:max-w-[884px]">
-              <ProductImageGallery
-                images={images}
-                productName={product.name}
-                cartCount={cartCount}
-                isInWishlist={isInWishlist}
-                watchersCount={product.viewCount}
-                onWishlistToggle={handleWishlistToggle}
-                onImageClick={(index) => {
-                  // Optional: Open image in modal/lightbox
-                  console.log("Open image", index);
-                }}
-              />
-
-              {/* Product Description Section */}
-              <div className="hidden lg:block border-t border-gray-200 p-4 md:p-6 lg:p-8 mt-6 lg:mt-8">
-                <h2 className="text-lg md:text-xl font-bold mb-3 md:mb-4">
-                  About this product
-                </h2>
-                <div className="prose prose-sm max-w-none text-gray-700">
-                  <p className="whitespace-pre-wrap">{product.description}</p>
-                </div>
-
-                {/* Product Details */}
-                <div className="mt-8">
-                  <h3 className="text-lg font-semibold mb-4">
-                    Product Details
-                  </h3>
-                  <div className="grid md:grid-cols-2 gap-6 text-sm">
-                    {product.category && (
-                      <div className="flex items-start gap-3">
-                        <span className="text-gray-600 min-w-[120px]">
-                          Category:
-                        </span>
-                        <span className="font-medium text-gray-900">
-                          {product.category
-                            .replace(/_/g, " ")
-                            .split(" ")
-                            .map(
-                              (word) =>
-                                word.charAt(0).toUpperCase() + word.slice(1),
-                            )
-                            .join(" ")}
-                        </span>
-                      </div>
-                    )}
-                    {product.tags && product.tags.length > 0 && (
-                      <div className="flex items-start gap-3">
-                        <span className="text-gray-600 min-w-[120px]">
-                          Tags:
-                        </span>
-                        <div className="flex flex-wrap gap-2">
-                          {product.tags.map((tag, i) => (
-                            <span
-                              key={i}
-                              className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Section - Product Info */}
-            <div className="lg:w-[540px] lg:pt-2 w-full">
-              <ProductInfo
-                product={product}
-                quantity={quantity}
-                onQuantityChange={setQuantity}
-                onBuyNow={handleBuyNow}
-                onAddToCart={handleAddToCart}
-                onAddToWatchlist={handleWishlistToggle}
-                onContactSeller={handleContactSeller}
-                isInWishlist={isInWishlist}
-                hideActionButtons
-              />
-            </div>
-          </div>
-
-          {/* Product Reviews */}
-          <div className="border-t border-gray-200 p-4 sm:p-6 lg:p-8">
-            <ProductReviews productId={id!} />
-          </div>
-
-          {/* Similar Products */}
-          {similarProducts.length > 0 && (
-            <div className="border-t border-gray-200 p-4 sm:p-6 lg:p-8">
-              <SimilarProducts products={similarProducts} />
-            </div>
+        <nav className="flex items-center gap-1.5 text-xs md:text-sm text-gray-500 mb-8">
+          <Link to="/" className="hover:text-gray-900 transition-colors hidden md:block">Home</Link>
+          <ChevronRight className="h-3 w-3 hidden md:block" />
+          <Link to="/products" className="hover:text-gray-900 transition-colors hidden md:block">Products</Link>
+          {categoryLabel && (
+            <>
+              <ChevronRight className="h-3 w-3 hidden md:block" />
+              <Link
+                to={`/products?category=${product.category}`}
+                className="hover:text-gray-900 transition-colors capitalize"
+              >
+                {categoryLabel}
+              </Link>
+            </>
           )}
+          <ChevronRight className="h-3 w-3" />
+          <span className="text-gray-900 truncate max-w-[240px]">{product.name}</span>
+        </nav>
+
+        {/* Main layout — gallery + info panel */}
+        <div className="grid md:grid-cols-[1fr_360px] lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_440px] gap-6 md:gap-10 lg:gap-16">
+          {/* Left — Image Gallery */}
+          <div>
+            <ProductImageGallery
+              images={images}
+              productName={product.name}
+              cartCount={cartCount}
+              isInWishlist={isInWishlist}
+              watchersCount={product.viewCount}
+              onWishlistToggle={handleWishlistToggle}
+              onImageClick={(index) => console.log("image", index)}
+            />
+          </div>
+
+          {/* Right — Info panel (sticky on desktop) */}
+          <div className="md:sticky md:top-6 md:self-start">
+            <ProductInfo
+              product={product}
+              quantity={quantity}
+              onQuantityChange={setQuantity}
+              onBuyNow={handleBuyNow}
+              onAddToCart={handleAddToCart}
+              onAddToWatchlist={handleWishlistToggle}
+              onContactSeller={handleContactSeller}
+              isInWishlist={isInWishlist}
+            />
+          </div>
         </div>
 
-        {/* Chat Widget */}
-        <ProductChat
-          product={product}
-          onLoginRequired={() =>
-            openAuthPrompt(getCurrentPath(), "Sign in to message this seller.")
-          }
-        />
+        {/* Reviews */}
+        <div className="mt-12 md:mt-16 border-t border-gray-200 pt-10">
+          <ProductReviews productId={id!} />
+        </div>
+
+        {/* Similar / More from Store */}
+        {similarProducts.length > 0 && (
+          <div className="mt-12 md:mt-16 border-t border-gray-200 pt-10">
+            <SimilarProducts products={similarProducts} />
+          </div>
+        )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white/98 backdrop-blur-md supports-[backdrop-filter]:bg-white/95 shadow-lg">
-        <div className="mx-auto flex w-full max-w-[1408px] items-center gap-2 px-3 sm:px-4 md:px-6 py-2.5 sm:py-3">
-          <div className="hidden sm:flex min-w-0 flex-1 flex-col">
-            <p className="truncate text-xs sm:text-sm font-medium text-gray-700">
-              {product.name}
-            </p>
-            <p className="text-sm sm:text-base font-bold text-gray-900">
+      {/* ── Sticky bottom bar — mobile only ─────────────────────────────────── */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white border-t border-gray-200 px-4 py-3">
+        <div className="flex items-center gap-2">
+          {/* Wishlist icon */}
+          <button
+            onClick={handleWishlistToggle}
+            aria-label="Save to wishlist"
+            className={cn(
+              "h-12 w-12 shrink-0 flex items-center justify-center border border-gray-300 transition-colors",
+              isInWishlist ? "bg-gray-900 border-gray-900" : "hover:border-gray-900",
+            )}
+          >
+            <Heart
+              className={cn(
+                "h-5 w-5",
+                isInWishlist ? "fill-white text-white" : "text-gray-900",
+              )}
+            />
+          </button>
+
+          {/* Price */}
+          <div className="flex-1 min-w-0 px-1">
+            <p className="text-xs text-gray-500 truncate">{product.name}</p>
+            <p className="text-sm font-semibold text-gray-900">
               {formatGHS(Number.isFinite(product.price) ? product.price : 0)}
             </p>
           </div>
-          <Button
+
+          {/* Add to bag */}
+          <button
             onClick={handleAddToCart}
-            variant="outline"
-            size="lg"
             disabled={isOutOfStock}
-            className="h-12 sm:h-12 md:h-14 flex-1 rounded-full text-sm sm:text-sm md:text-base font-semibold"
+            className="flex items-center gap-2 bg-gray-900 text-white px-6 h-12 text-sm font-medium uppercase tracking-widest hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            Add to Cart
-          </Button>
-          <Button
-            onClick={handleBuyNow}
-            size="sm"
-            disabled={isOutOfStock}
-            className="h-12 sm:h-12 md:h-14 flex-1 rounded-full text-sm sm:text-sm md:text-base font-semibold"
-          >
-            Buy It Now
-          </Button>
+            <ShoppingBag className="h-4 w-4" />
+            {isOutOfStock ? "Sold Out" : "Add to Bag"}
+          </button>
         </div>
       </div>
+
+      {/* Chat widget */}
+      <ProductChat
+        product={product}
+        onLoginRequired={() =>
+          openAuthPrompt(getCurrentPath(), "Sign in to message this seller.")
+        }
+      />
     </div>
   );
 }

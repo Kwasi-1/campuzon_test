@@ -41,7 +41,7 @@ function normalizeProduct(rawProduct: unknown): Product {
 
   return {
     id: String(raw.id ?? ''),
-    storeID: String(raw.storeID ?? raw.store_id ?? ''),
+    storeID: String(raw.storeID ?? raw.storeId ?? raw.store_id ?? ''),
     name: String(raw.name ?? raw.productName ?? raw.title ?? 'Untitled Product'),
     slug: String(raw.slug ?? ''),
     description: String(raw.description ?? ''),
@@ -213,9 +213,7 @@ export function useCreateProduct() {
 
   return useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await api.post('/products', data, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await api.post('/store/products', data);
       return extractData(response);
     },
     onSuccess: () => {
@@ -234,9 +232,7 @@ export function useUpdateProduct() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: FormData }) => {
-      const response = await api.put(`/products/${id}`, data, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await api.put(`/store/products/${id}`, data);
       return extractData(response);
     },
     onSuccess: (_, { id }) => {
