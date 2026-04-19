@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Outlet, NavLink, Link, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, Link, useNavigate, Navigate } from "react-router-dom";
 import {
   ArrowLeft,
   Package,
@@ -30,7 +30,10 @@ const NAV_LINKS = [
 
 export function SellLayout() {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
+  // useMyStore() doubles as a passive session probe:
+  // if the token is expired the backend returns 401 → the api.ts interceptor
+  // catches it, calls logout(), and shows the "Session expired" toast.
   const { data: store } = useMyStore();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -46,6 +49,11 @@ export function SellLayout() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  // Auth guard — redirect unauthenticated users to login
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ returnTo: window.location.pathname }} />;
+  }
 
   const handleLogout = () => {
     logout();
