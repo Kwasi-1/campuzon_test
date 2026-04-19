@@ -124,7 +124,7 @@ export function ProductCard({
                 "/placeholder-product.jpg"
               }
               alt={product.name}
-              className="h-full w-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
+              className="h-full w-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
             />
 
@@ -160,7 +160,7 @@ export function ProductCard({
           {/* Content */}
           <div className="flex flex-col px-1">
             {/* Title */}
-            <h3 className="text-[14px] leading-snug text-gray-800 font-medium truncate group-hover:text-primary transition-colors">
+            <h3 className="text-[14px] leading-snug text-gray-800 font-medium whitespace-nowrap truncat group-hover:text-primary transition-colors overflow-x-auto scrollbar-hide">
               {product.name}
             </h3>
 
@@ -170,8 +170,8 @@ export function ProductCard({
             </p>
 
             {/* Price Row */}
-            <div className="mt-1.5 flex items-baseline gap-2">
-              <span className="text-[17px] font-bold text-gray-900">
+            <div className="mt-1.5 flex items-baseline gap-2 overflow-x-auto scrollbar-hide">
+              <span className="lg:text-[17px] font-bold text-gray-900">
                 {formatGHS(product.price)}
               </span>
               {(product.comparePrice || product.price * 1.5) > product.price && (
@@ -182,7 +182,7 @@ export function ProductCard({
             </div>
 
             {/* Meta tags */}
-            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+            <div className="hidden items-center justify-between mt-2 pt-2 border-t border-gray-100">
               <span className="text-[11px] text-gray-500 flex items-center gap-1">
                 <span className="w-1 h-1 rounded-full bg-gray-300"></span>
                 {product.store?.location || "UG Campus"}
@@ -243,7 +243,7 @@ function ListCard({
       >
         <article className="flex flex-col sm:flex-row gap-5 py-4 border-b border-gray-100 transition-colors hover:bg-gray-50/50 -mx-4 px-4 sm:mx-0 sm:px-2 rounded-lg">
           {/* Image - Left Side */}
-          <div className="relative w-full sm:w-[200px] aspect-square shrink-0 bg-[#f8f9fa] rounded-md overflow-hidden transition-all duration-300 ">
+          <div className="relative w-full sm:w-[220px] aspect-square shrink-0 bg-[#f8f9fa] rounded-md overflow-hidden transition-all duration-300 ">
             <img
               src={
                 product.images?.[0] ||
@@ -251,7 +251,7 @@ function ListCard({
                 "/placeholder-product.jpg"
               }
               alt={product.name}
-              className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
             />
 

@@ -44,12 +44,12 @@ export function ProductsToolbar({
   return (
     <div className={cn("flex items-center justify-end gap-4", className)}>
       {/* Sort Dropdown */}
-      <div className="relative border border-gray-200 rounded text-gray-800 hover:border-gray-300 transition-colors">
+      <div className="relative border border-gray-200 rounded-sm text-gray-800 hover:border-gray-300 transition-colors">
         <select
           value={sortBy}
           onChange={(e) => onSortChange(e.target.value as SortOption)}
           aria-label="Sort products"
-          className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-xs font-medium cursor-pointer focus:outline-none"
+          className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-sm font-medium cursor-pointer focus:outline-none"
         >
           {sortOptions.map((option) => (
             <option key={option.value} value={option.value}>

@@ -224,227 +224,170 @@ export function Header() {
                 isProductsPage && "hidden md:flex",
               )}
             >
-              {isProductsPage ? (
-                <>
-                  {/* Desktop search bar on products page */}
-                  <form
-                    onSubmit={handleSearch}
-                    className="hidden md:flex items-center h-10 bg-muted px-4 rounded-full w-[240px] lg:w-[320px] transition-all mr-4"
-                  >
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search..."
-                      className="bg-transparent border-none outline-none text-sm text-gray-800 w-full"
-                    />
-                    <Search className="h-4 w-4 text-gray-400 shrink-0" />
-                  </form>
-
-                  {/* Desktop-only icons on products page */}
-                  <div className="hidden md:flex items-center justify-end gap-1 sm:gap-3">
-                    <Link
-                      to="/notifications"
-                      className="relative h-10 w-10 inline-flex items-center justify-center rounded-full hover:bg-muted transition-colors"
-                      aria-label="Notifications"
-                    >
-                      <Bell className="h-5 w-5" />
-                    </Link>
-
-                    <Link
-                      to="/cart"
-                      className="relative h-10 w-10 inline-flex items-center justify-center rounded-full hover:bg-muted transition-colors"
-                      aria-label="Cart"
-                    >
-                      <ShoppingCart className="h-5 w-5" />
-                      {cartCount > 0 && (
-                        <span className="absolute top-1.5 right-1.5 h-4 min-w-4 px-1 flex items-center justify-center rounded-full bg-primary text-white text-[10px] font-bold">
-                          {cartCount > 99 ? "99+" : cartCount}
-                        </span>
-                      )}
-                    </Link>
-
-                    {isAuthenticated && user ? (
-                      <UserMenu />
-                    ) : (
-                      <Link
-                        to="/login"
-                        className="h-10 w-10 inline-flex items-center justify-center rounded-full hover:bg-muted transition-colors border border-transparent"
-                        aria-label="Account"
-                      >
-                        <User className="h-5 w-5" />
-                      </Link>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <div className="flex items-center justify-end gap-1 sm:gap-3">
-                  {/* Desktop Nav Links */}
-                  <nav className="hidden md:flex items-center gap-6">
-                    <Link
-                      to="/become-seller"
-                      className="text-[14px] font-medium text-gray-800 hover:text-primary transition-colors"
-                    >
-                      Sell
-                    </Link>
-                    <Link
-                      to="/wishlist"
-                      className="text-[14px] font-medium text-gray-800 hover:text-primary transition-colors flex items-center gap-1"
-                    >
-                      Watchlist
-                      {wishlistCount > 0 && (
-                        <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full flex items-center justify-center font-bold">
-                          {wishlistCount}
-                        </span>
-                      )}
-                    </Link>
-                  </nav>
-
-                  {/* Mobile Search Icon - non-products pages only */}
-                  <button
-                    onClick={() => setShowMobileSearch(true)}
-                    className="md:hidden relative h-10 w-10 inline-flex items-center justify-center rounded-full hover:bg-muted transition-colors"
-                    aria-label="Search"
-                  >
-                    <Search className="h-5 w-5" />
-                  </button>
-
-                  {/* Notifications: mobile only when logged in, desktop always */}
+              <div className="flex items-center justify-end gap-1 sm:gap-3">
+                {/* Desktop Nav Links */}
+                <nav className="hidden md:flex items-center gap-6">
                   <Link
-                    to="/notifications"
-                    className={cn(
-                      "relative h-10 w-10 inline-flex items-center justify-center rounded-full hover:bg-muted transition-colors",
-                      !isAuthenticated && "hidden md:inline-flex",
-                    )}
-                    aria-label="Notifications"
+                    to="/become-seller"
+                    className="text-[14px] font-medium text-gray-800 hover:text-primary transition-colors"
                   >
-                    <Bell className="h-5 w-5" />
+                    Sell
                   </Link>
-
-                  {/* Cart — hidden on mobile */}
                   <Link
-                    to="/cart"
-                    className="hidden md:inline-flex relative h-10 w-10 items-center justify-center rounded-full hover:bg-muted transition-colors"
-                    aria-label="Cart"
+                    to="/wishlist"
+                    className="text-[14px] font-medium text-gray-800 hover:text-primary transition-colors flex items-center gap-1"
                   >
-                    <ShoppingCart className="h-5 w-5" />
-                    {cartCount > 0 && (
-                      <span className="absolute top-1.5 right-1.5 h-4 min-w-4 px-1 flex items-center justify-center rounded-full bg-primary text-white text-[10px] font-bold">
-                        {cartCount > 99 ? "99+" : cartCount}
+                    Watchlist
+                    {wishlistCount > 0 && (
+                      <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full flex items-center justify-center font-bold">
+                        {wishlistCount}
                       </span>
                     )}
                   </Link>
+                </nav>
 
-                  {/* User — hidden on mobile */}
-                  {isAuthenticated && user ? (
-                    <div className="hidden md:block">
-                      <UserMenu />
-                    </div>
-                  ) : (
-                    <Link
-                      to="/login"
-                      className="hidden md:inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted transition-colors border border-transparent"
-                      aria-label="Account"
-                    >
-                      <User className="h-5 w-5" />
-                    </Link>
+                {/* Mobile Search Icon - non-products pages only */}
+                <button
+                  onClick={() => setShowMobileSearch(true)}
+                  className="md:hidden relative h-10 w-10 inline-flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+                  aria-label="Search"
+                >
+                  <Search className="h-5 w-5" />
+                </button>
+
+                {/* Notifications: mobile only when logged in, desktop always */}
+                <Link
+                  to="/notifications"
+                  className={cn(
+                    "relative h-10 w-10 inline-flex items-center justify-center rounded-full hover:bg-muted transition-colors",
+                    !isAuthenticated && "hidden md:inline-flex",
                   )}
-                </div>
-              )}
+                  aria-label="Notifications"
+                >
+                  <Bell className="h-5 w-5" />
+                </Link>
+
+                {/* Cart — hidden on mobile */}
+                <Link
+                  to="/cart"
+                  className="hidden md:inline-flex relative h-10 w-10 items-center justify-center rounded-full hover:bg-muted transition-colors"
+                  aria-label="Cart"
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  {cartCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 h-4 min-w-4 px-1 flex items-center justify-center rounded-full bg-primary text-white text-[10px] font-bold">
+                      {cartCount > 99 ? "99+" : cartCount}
+                    </span>
+                  )}
+                </Link>
+
+                {/* User — hidden on mobile */}
+                {isAuthenticated && user ? (
+                  <div className="hidden md:block">
+                    <UserMenu />
+                  </div>
+                ) : (
+                  <Link
+                    to="/login"
+                    className="hidden md:inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted transition-colors border border-transparent"
+                    aria-label="Account"
+                  >
+                    <User className="h-5 w-5" />
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Search & Filter Bar - Desktop only, non-products pages */}
-      {!isProductsPage && (
-        <div className="hidden md:block bg-background border-b border-border">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center gap-3 h-14 overflow-x-auto scrollbar-hide">
-              {/* Category Dropdown */}
-              <div className="relative shrink-0">
-                <button
-                  onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                  className="flex items-center gap-2 h-10 px-4 bg-muted rounded-full text-sm font-medium hover:bg-muted/80 transition-colors"
-                >
-                  Browse Campus
-                  <ChevronDown className="h-4 w-4" />
-                </button>
+      {/* Search & Filter Bar - Desktop only, */}
+      <div className="hidden md:block bg-background border-b border-border">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center gap-3 h-14 overflow-x-auto scrollbar-hide">
+            {/* Category Dropdown */}
+            <div className="relative shrink-0">
+              <button
+                onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                className="flex items-center gap-2 h-10 px-4 bg-muted rounded-full text-sm font-medium hover:bg-muted/80 transition-colors"
+              >
+                Browse Campus
+                <ChevronDown className="h-4 w-4" />
+              </button>
 
-                {showCategoryDropdown && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-40"
-                      onClick={() => setShowCategoryDropdown(false)}
-                    />
-                    <div className="absolute left-0 top-12 z-50 w-56 rounded-lg border border-border bg-background shadow-lg py-2">
-                      {categories.map((cat) => (
-                        <Link
-                          key={cat.value}
-                          to={`/products?category=${cat.value}`}
-                          onClick={() => setShowCategoryDropdown(false)}
-                          className="block px-4 py-2 text-sm hover:bg-muted transition-colors"
-                        >
-                          {cat.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Quick Links */}
-              <div className="hidden sm:flex items-center gap-2 shrink-0">
-                <Link
-                  to="/products?filter=trending"
-                  className="h-10 px-4 inline-flex items-center justify-center rounded-full border border-border text-sm font-medium hover:bg-muted transition-colors"
-                >
-                  Trending
-                </Link>
-                <Link
-                  to="/products?category=services"
-                  className="h-10 px-4 inline-flex items-center justify-center rounded-full border border-border text-sm font-medium hover:bg-muted transition-colors"
-                >
-                  Gigs & Services
-                </Link>
-              </div>
-
-              {/* Search */}
-              <form onSubmit={handleSearch} className="flex-1 min-w-0">
-                <div className="relative">
-                  <input
-                    type="search"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full h-10 pl-4 pr-10 rounded-full border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+              {showCategoryDropdown && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowCategoryDropdown(false)}
                   />
-                  <button
-                    type="submit"
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
-                    aria-label="Search"
-                  >
-                    <Search className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                </div>
-              </form>
+                  <div className="absolute left-0 top-12 z-50 w-56 rounded-lg border border-border bg-background shadow-lg py-2">
+                    {categories.map((cat) => (
+                      <Link
+                        key={cat.value}
+                        to={`/products?category=${cat.value}`}
+                        onClick={() => setShowCategoryDropdown(false)}
+                        className="block px-4 py-2 text-sm hover:bg-muted transition-colors"
+                      >
+                        {cat.label}
+                      </Link>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
 
-              {/* Filter Tabs */}
-              <div className="hidden lg:flex items-center gap-2 shrink-0">
-                {filterTabs.map((tab) => (
-                  <Link
-                    key={tab.value}
-                    to={`/products?filter=${tab.value}`}
-                    className="h-10 px-4 inline-flex items-center justify-center rounded-full border border-border text-sm font-medium hover:bg-muted transition-colors whitespace-nowrap"
-                  >
-                    {tab.label}
-                  </Link>
-                ))}
+            {/* Quick Links */}
+            <div className="hidden sm:flex items-center gap-2 shrink-0">
+              <Link
+                to="/products?filter=trending"
+                className="h-10 px-4 inline-flex items-center justify-center rounded-full border border-border text-sm font-medium hover:bg-muted transition-colors"
+              >
+                Trending
+              </Link>
+              <Link
+                to="/products?category=services"
+                className="h-10 px-4 inline-flex items-center justify-center rounded-full border border-border text-sm font-medium hover:bg-muted transition-colors"
+              >
+                Gigs & Services
+              </Link>
+            </div>
+
+            {/* Search */}
+            <form onSubmit={handleSearch} className="flex-1 min-w-0">
+              <div className="relative">
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full h-10 pl-4 pr-10 rounded-full border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  aria-label="Search"
+                >
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                </button>
               </div>
+            </form>
+
+            {/* Filter Tabs */}
+            <div className="hidden lg:flex items-center gap-2 shrink-0">
+              {filterTabs.map((tab) => (
+                <Link
+                  key={tab.value}
+                  to={`/products?filter=${tab.value}`}
+                  className="h-10 px-4 inline-flex items-center justify-center rounded-full border border-border text-sm font-medium hover:bg-muted transition-colors whitespace-nowrap"
+                >
+                  {tab.label}
+                </Link>
+              ))}
             </div>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Mobile Menu Drawer */}
       <MobileMenu
