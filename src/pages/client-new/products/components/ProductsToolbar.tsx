@@ -94,7 +94,7 @@ export function ProductsToolbar({
       {onFilterClick && (
         <button
           onClick={onFilterClick}
-          className="md:hidden flex items-center justify-center p-1.5 px-3 bg-gray-100 rounded-[5px] text-gray-700 hover:bg-gray-200 hover:text-gray-900 transition-colors"
+          className="xl:hidden flex items-center justify-center p-2 px-3 bg-gray-100 rounded-[7px] text-gray-700 hover:bg-gray-200 hover:text-gray-900 transition-colors"
           aria-label="Open filters"
         >
           <span className="text-[13px] font-medium flex items-center gap-1.5">

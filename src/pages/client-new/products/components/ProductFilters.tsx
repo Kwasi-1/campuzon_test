@@ -304,7 +304,7 @@ export function ProductFilters({
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:block w-60 shrink-0">
+      <aside className="hidden lg:block w-[265px] 2xl:w-72 border p-4 rounded-lg shrink-0">
         <div className="sticky top-20 ">
           <FilterContent {...filterContentProps} />
         </div>
