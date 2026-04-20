@@ -54,8 +54,8 @@ export function ProductImageGallery({
               className={cn(
                 "relative aspect-[3/4] w-full overflow-hidden bg-[#f2f2f2] border transition-all duration-150",
                 i === selectedIndex
-                  ? "border-gray-900"
-                  : "border-transparent hover:border-gray-400",
+                  ? "opacity-100"
+                  : "border-transparent opacity-50 hover:border-gray-400",
               )}
             >
               <img

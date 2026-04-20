@@ -207,21 +207,26 @@ export function ProductDetailPage() {
           </div>
         </div>
 
+        {/* More from this seller (appears below main content, before reviews) */}
+        {similarProducts.length > 0 && (
+          <div className="mt-16 bordert border-gray-200 pt-10">
+            <SimilarProducts
+              products={similarProducts}
+              title="More from this seller"
+              storeName={product.store?.name}
+              storeSlug={product.store?.slug}
+            />
+          </div>
+        )}
+
         {/* Reviews */}
         <div className="mt-12 md:mt-16 border-t border-gray-200 pt-10">
           <ProductReviews productId={id!} />
         </div>
-
-        {/* Similar / More from Store */}
-        {similarProducts.length > 0 && (
-          <div className="mt-12 md:mt-16 border-t border-gray-200 pt-10">
-            <SimilarProducts products={similarProducts} />
-          </div>
-        )}
       </div>
 
       {/* ── Sticky bottom bar — mobile only ─────────────────────────────────── */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white border-t border-gray-200 px-4 py-3">
+      <div className="hidden fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white border-t border-gray-200 px-4 py-3">
         <div className="flex items-center gap-2">
           {/* Wishlist icon */}
           <button
