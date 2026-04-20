@@ -49,7 +49,7 @@ export function DetailedAccordionRow({
     <div className={`${isborder ? "border-t" : ""} border-gray-200`}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between py-5 text-left text-[13px] font-semibold text-gray-900 hover:text-gray-600 transition-colors uppercase tracking-wide"
+        className="flex w-full items-center justify-between py-5 text-left text-[15px] font-semibold text-gray-900 hover:text-gray-600 transition-colors uppercase tracking-wide"
       >
         {label}
         {open ? (
@@ -98,7 +98,7 @@ export function ProductInfo({
   return (
     <div className="flex flex-col pr-1 md:pr-0 md:pt-4">
       {/* Brand line (Store Name equivalent) */}
-      <h1 className="text-xl md:text-[22px] font-medium text-gray-900 mb-1 lg:mb-2 leading-tight overflow-x-auto scrollbar-hide whitespace-nowrap overflow-y-hidden">
+      <h1 className="text-xl md:text-[22px] font-medium text-gray-900 mb-2 leading-tight overflow-x-auto scrollbar-hide whitespace-nowrap overflow-y-hidden tracking-normal">
         {product.name}
       </h1>
 
@@ -154,18 +154,18 @@ export function ProductInfo({
 
       {/* Buttons block */}
       {!hideActionButtons && (
-        <div id="main-product-actions" className="flex gap-2 mb-4 h-[48px] md:h-[50px]">
+        <div id="main-product-actions" className="flex flex-col lg:flex-row gap-3 mb-4">
           <button
             onClick={onAddToCart}
             disabled={isOutOfStock}
-            className="flex-1 bg-[#222222] text-white text-[14px] font-semibold hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-full"
+            className="w-full lg:flex-1 bg-[#222222] text-white text-[14px] font-semibold hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-full h-[48px] lg:h-[50px] shrink-0"
           >
             {isOutOfStock ? "Sold Out" : "Add To Bag"}
           </button>
           <button
             onClick={onAddToWatchlist}
             className={cn(
-              "hidden w-[120px] md:w-[130px] md:flex items-center justify-center gap-2 border text-[14px] font-semibold transition-colors bg-white rounded-full",
+              "hidden w-full lg:w-[130px] md:flex items-center justify-center gap-2 border text-[14px] font-semibold transition-colors bg-white rounded-full h-[48px] lg:h-[50px] shrink-0",
               isInWishlist
                 ? "border-gray-900 text-gray-900"
                 : "border-[#dddddd] text-gray-900 hover:border-gray-900",
@@ -184,7 +184,7 @@ export function ProductInfo({
 
       {/* Availability Warning */}
       {isOutOfStock ? null : product.quantity && product.quantity <= 3 ? (
-        <p className="text-[12px] font-semibold text-gray-900 mb-6">
+        <p className="text-[13px] font-semibold mb-6 text-xs text-orange-600 fontmedium">
           Last {product.quantity} left — make it yours!
         </p>
       ) : (
@@ -193,12 +193,12 @@ export function ProductInfo({
 
       {/* Delivery Estimate */}
       <div className="mb-6">
-        <p className="text-[12px] font-semibold text-gray-900 mb-0.5">Estimated delivery</p>
-        <p className="text-[13px] text-gray-700">Same day - Next day</p>
+        <p className="text-[13px] font-semibold text-gray-900 mb-0.5">Estimated delivery</p>
+        <p className="text-[14px] text-gray-700">Same day - Next day</p>
       </div>
 
       {/* Extra info box */}
-      <div className="bg-[#f5f5f5] px-4 py-3.5 text-[13px] md:text-sm text-gray-600 leading-relaxed mb-6 flex flex-col md:flex-row md:items-center rounded-md">
+      <div className="p-4 bg-gray-50 font-medium text-gray-900 text-[13px] md:text-sm lg:text-[14px] leading-relaxed mb-6 flex flex-col md:flex-row md:items-center rounded-md md:rounded-lg">
         <span>Free campus returns within 12 hours | Verified Student Seller</span>
       </div>
     </div>

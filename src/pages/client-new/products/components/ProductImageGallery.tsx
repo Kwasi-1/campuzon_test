@@ -1,17 +1,25 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart, X, ZoomIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ProductImageGalleryProps {
   images: string[];
   productName: string;
+  cartCount?: number;
+  isInWishlist?: boolean;
+  watchersCount?: number;
+  onWishlistToggle?: () => void;
   onImageClick?: (index: number) => void;
 }
 
 export function ProductImageGallery({
   images,
   productName,
+  cartCount,
+  isInWishlist,
+  watchersCount,
+  onWishlistToggle,
   onImageClick,
 }: ProductImageGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -35,25 +43,25 @@ export function ProductImageGallery({
     setSelectedIndex((i) => (i === images.length - 1 ? 0 : i + 1));
 
   return (
-    <div className="flex gap-4 md:gap-[30px] max-h-[600px]">
-      {/* Vertical Thumbnail Strip — desktop only */}
+    <div className="flex flex-col-reverse xl:flex-row gap-3 md:gap-4 lg:gap-5">
+      {/* Thumbnail Strip — desktop/tablet only */}
       {images.length > 1 && (
-        <div className="hidden md:flex flex-col gap-2.5 w-[65px] lg:w-[75px] shrink-0 pt-0">
+        <div className="hidden md:flex flex-row xl:flex-col gap-2 xl:w-[72px] shrink-0 overflow-x-auto xl:overflow-x-visible overflow-y-hidden xl:overflow-y-auto xl:max-h-[560px] scrollbar-hide snap-x pb-2 lg:pb-0">
           {images.map((img, i) => (
             <button
               key={i}
               onClick={() => setSelectedIndex(i)}
               className={cn(
-                "relative aspect-[4/5] w-full overflow-hidden bg-white transition-all duration-150",
+                "relative shrink-0 snap-start w-[64px] xl:w-full aspect-[7/8] xl:aspect-[4/5] overflow-hidden bg-white transition-all duration-150 rounded-[6px]",
                 i === selectedIndex
-                  ? "border border-gray-300 opacity-100"
-                  : "border border-transparent opacity-60 hover:opacity-100",
+                  ? "opacity-100 border border-gray-300"
+                  : "border-transparent opacity-50 hover:border-gray-400",
               )}
             >
               <img
                 src={img}
                 alt={`${productName} view ${i + 1}`}
-                className="h-full w-full object-contain p-1"
+                className="h-full w-full object-contain p-1 rounded-md"
               />
             </button>
           ))}
@@ -61,18 +69,52 @@ export function ProductImageGallery({
       )}
 
       {/* Main Image */}
-      <div className="relative flex-1 min-w-0 bg-white group cursor-zoom-in max-h-[600px]">
-        {/* Zoom Overlay (visible on hover) */}
-        <button
-          onClick={() => {
-            openLightbox(selectedIndex);
-            onImageClick?.(selectedIndex);
-          }}
-          aria-label="Zoom image"
-          className="absolute top-4 right-4 z-10 hidden md:flex h-10 w-10 items-center justify-center rounded-full bg-white/50 opacity-0 group-hover:opacity-100 transition-opacity"
-        >
-          <ZoomIn className="h-5 w-5 text-gray-700" />
-        </button>
+      <div className="relative flex-1 min-w-0">
+        {/* Wishlist + zoom overlay (top right) */}
+        <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
+          {onWishlistToggle && (
+            <button
+              onClick={onWishlistToggle}
+              aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow hover:bg-white transition-colors"
+            >
+              <Heart
+                className={cn(
+                  "h-5 w-5 transition-colors",
+                  isInWishlist ? "fill-gray-900 text-gray-900" : "text-gray-700",
+                )}
+              />
+            </button>
+          )}
+          <button
+            onClick={() => {
+              openLightbox(selectedIndex);
+              onImageClick?.(selectedIndex);
+            }}
+            aria-label="Zoom image"
+            className="hidden md:flex h-10 w-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow hover:bg-white transition-colors"
+          >
+            <ZoomIn className="h-4 w-4 text-gray-700" />
+          </button>
+        </div>
+
+        {/* In-cart badge */}
+        {cartCount && cartCount > 0 ? (
+          <div className="absolute top-3 left-3 z-10">
+            <span className="bg-gray-900 text-white text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-sm">
+              In Cart ({cartCount})
+            </span>
+          </div>
+        ) : null}
+
+        {/* Watchers */}
+        {watchersCount && watchersCount > 1 ? (
+          <div className="absolute bottom-3 left-3 z-10">
+            <span className="bg-white/80 backdrop-blur-sm text-gray-800 text-xs font-medium px-2.5 py-1 rounded-full shadow">
+              {watchersCount} people viewing
+            </span>
+          </div>
+        ) : null}
 
         <AnimatePresence mode="wait">
           <motion.div
@@ -80,8 +122,8 @@ export function ProductImageGallery({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="aspect-square md:aspect-[4/5] lg:aspect-square w-full overflow-hidden flex items-center justify-center max-h-[600px]"
+            transition={{ duration: 0.18 }}
+            className="aspect-square md:aspect-[4/5] w-full overflow-hidden bg-[#f2f2f2] cursor-zoom-in rounded md:rounded-md lg:rounded-lg lg:max-h-[560px]"
             onClick={() => {
               openLightbox(selectedIndex);
               onImageClick?.(selectedIndex);
@@ -90,8 +132,8 @@ export function ProductImageGallery({
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.15}
             onDragEnd={(_, { offset }) => {
-              if (offset.x < -40) next();
-              else if (offset.x > 40) prev();
+              if (offset.x < -50) next();
+              else if (offset.x > 50) prev();
             }}
           >
             <img
@@ -105,40 +147,32 @@ export function ProductImageGallery({
 
         {/* Mobile — swipe dots */}
         {images.length > 1 && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 md:hidden flex gap-[5px] pointer-events-none">
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 md:hidden flex gap-1 pointer-events-none">
             {images.map((_, i) => (
               <span
                 key={i}
                 className={cn(
-                  "h-[5px] rounded-full transition-all duration-200",
-                  i === selectedIndex
-                    ? "w-4 bg-gray-900"
-                    : "w-[5px] bg-gray-300",
+                  "h-1.5 rounded-full transition-all duration-200",
+                  i === selectedIndex ? "w-4 bg-gray-900" : "w-1.5 bg-gray-400",
                 )}
               />
             ))}
           </div>
         )}
 
-        {/* Desktop arrow navigation (Optional if you prefer them over thumbnails. Usually Farfetch hides them if thumbnails exist, but let's keep them on hover) */}
+        {/* Desktop arrow navigation */}
         {images.length > 1 && (
           <>
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                prev();
-              }}
-              className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow-sm opacity-0 group-hover:opacity-100 transition-all z-10"
+              onClick={prev}
+              className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm shadow hover:bg-white transition-colors z-10"
               aria-label="Previous image"
             >
               <ChevronLeft className="h-5 w-5 text-gray-800" />
             </button>
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                next();
-              }}
-              className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow-sm opacity-0 group-hover:opacity-100 transition-all z-10"
+              onClick={next}
+              className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm shadow hover:bg-white transition-colors z-10"
               aria-label="Next image"
             >
               <ChevronRight className="h-5 w-5 text-gray-800" />
@@ -155,15 +189,15 @@ export function ProductImageGallery({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-white flex items-center justify-center"
+            className="fixed inset-0 z-[80] bg-black/95 flex items-center justify-center"
             onClick={closeLightbox}
           >
             <button
               onClick={closeLightbox}
-              className="absolute top-6 right-6 md:top-8 md:right-10 z-10 h-12 w-12 flex items-center justify-center hover:bg-gray-100 rounded-full text-gray-900 transition-colors"
+              className="absolute top-4 right-4 z-10 h-11 w-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
               aria-label="Close"
             >
-              <X className="h-6 w-6 lg:h-8 lg:w-8 font-light" />
+              <X className="h-5 w-5" />
             </button>
 
             {images.length > 1 && (
@@ -171,68 +205,54 @@ export function ProductImageGallery({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setLightboxIndex((i) =>
-                      i === 0 ? images.length - 1 : i - 1,
-                    );
+                    setLightboxIndex((i) => (i === 0 ? images.length - 1 : i - 1));
                   }}
-                  className="absolute left-6 md:left-10 top-1/2 -translate-y-1/2 z-10 h-14 w-14 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-colors"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-10 h-11 w-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
                   aria-label="Previous"
                 >
-                  <ChevronLeft
-                    className="h-8 w-8 lg:h-10 lg:w-10 font-light"
-                    strokeWidth={1}
-                  />
+                  <ChevronLeft className="h-6 w-6" />
                 </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setLightboxIndex((i) =>
-                      i === images.length - 1 ? 0 : i + 1,
-                    );
+                    setLightboxIndex((i) => (i === images.length - 1 ? 0 : i + 1));
                   }}
-                  className="absolute right-6 md:right-10 top-1/2 -translate-y-1/2 z-10 h-14 w-14 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 h-11 w-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
                   aria-label="Next"
                 >
-                  <ChevronRight
-                    className="h-8 w-8 lg:h-10 lg:w-10 font-light"
-                    strokeWidth={1}
-                  />
+                  <ChevronRight className="h-6 w-6" />
                 </button>
               </>
             )}
 
             <div
-              className="flex flex-col items-center gap-6 px-16 py-8 h-full w-full max-w-screen-xl mx-auto justify-center"
+              className="flex flex-col items-center gap-4 px-16 py-8 max-h-screen"
               onClick={(e) => e.stopPropagation()}
             >
               <motion.img
                 key={lightboxIndex}
-                initial={{ opacity: 0, scale: 0.98 }}
+                initial={{ opacity: 0, scale: 0.97 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 src={images[lightboxIndex]}
                 alt={productName}
-                className="max-h-[75vh] max-w-full object-contain select-none"
+                className="max-h-[80vh] max-w-full object-contain select-none"
               />
               {images.length > 1 && (
-                <div className="flex gap-3 overflow-x-auto pb-2 px-4 max-w-full">
+                <div className="flex gap-2 overflow-x-auto pb-1">
                   {images.map((img, i) => (
                     <button
                       key={i}
                       onClick={() => setLightboxIndex(i)}
                       className={cn(
-                        "h-16 w-16 md:h-20 md:w-20 shrink-0 overflow-hidden bg-white transition-all duration-200 border",
+                        "h-14 w-14 shrink-0 overflow-hidden border-2 transition-all",
                         i === lightboxIndex
-                          ? "border-gray-900 opacity-100"
-                          : "border-transparent opacity-50 hover:opacity-100",
+                          ? "border-white opacity-100"
+                          : "border-transparent opacity-50 hover:opacity-80",
                       )}
                     >
-                      <img
-                        src={img}
-                        className="h-full w-full object-contain p-1"
-                        alt=""
-                      />
+                      <img src={img} className="h-full w-full object-cover" alt="" />
                     </button>
                   ))}
                 </div>

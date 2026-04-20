@@ -115,28 +115,56 @@ export function ProductDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="container mx-auto px-4 py-8 md:py-12">
-          {/* Breadcrumb skeleton */}
-          <Skeleton className="h-4 w-48 mb-8 rounded" />
-          <div className="grid md:grid-cols-[1fr_360px] lg:grid-cols-[1fr_560px] gap-8 lg:gap-[60px]">
-            <div className="flex gap-4">
-              <div className="hidden md:flex flex-col gap-2.5 w-[75px]">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="aspect-[4/5] w-full" />
-                ))}
+      <div className="min-h-screen bg-white pb-24 md:pb-14">
+        <div className="container mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10 lg:pb-0">
+          {/* Breadcrumb skeleton mobile */}
+          <div className="md:hidden mb-6 flex gap-2">
+            <Skeleton className="h-4 w-12 rounded" />
+            <Skeleton className="h-4 w-4 rounded" />
+            <Skeleton className="h-4 w-16 rounded" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-[1.3fr_1fr] lg:grid-cols-[1fr_440px] xl:grid-cols-[1fr_0.65fr] gap-8 md:gap-9 lg:gap-12 xl:gap-[60px] items-start md:mb-16">
+            
+            {/* Gallery Skeleton */}
+            <div className="flex flex-col min-w-0 order-1">
+              <div className="flex flex-col-reverse xl:flex-row gap-3 md:gap-4 lg:gap-5">
+                {/* Thumbnails */}
+                <div className="hidden md:flex flex-row xl:flex-col gap-2 xl:w-[72px] shrink-0">
+                  {[1, 2, 3, 4].map((i) => (
+                    <Skeleton key={i} className="shrink-0 w-[64px] xl:w-full aspect-[7/8] xl:aspect-[4/5] rounded-[6px]" />
+                  ))}
+                </div>
+                {/* Main image */}
+                <Skeleton className="flex-1 w-full aspect-square md:aspect-[4/5] lg:max-h-[560px] rounded md:rounded-md lg:rounded-lg" />
               </div>
-              <Skeleton className="flex-1 aspect-[4/5]" />
+              
+              {/* Desktop breadcrumb */}
+              <div className="hidden md:flex gap-2 mt-6 lg:mt-8">
+                 <Skeleton className="h-4 w-16 rounded" />
+                 <Skeleton className="h-4 w-4 rounded" />
+                 <Skeleton className="h-4 w-20 rounded" />
+                 <Skeleton className="h-4 w-4 rounded" />
+                 <Skeleton className="h-4 w-32 rounded" />
+              </div>
             </div>
-            <div className="space-y-4 pt-4">
-              <Skeleton className="h-8 w-3/4" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-6 w-32 mt-6" />
-              <Skeleton className="h-12 w-full mt-8" />
-              <div className="flex gap-2">
-                <Skeleton className="h-12 flex-1" />
-                <Skeleton className="h-12 w-[120px]" />
+
+            {/* Info Skeleton */}
+            <div className="md:sticky md:top-28 order-2 pt-4 md:pt-0">
+              <Skeleton className="h-8 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-1/2 mb-6" />
+              <Skeleton className="h-6 w-32 mb-8" />
+
+              <div className="space-y-3 mb-6">
+                <Skeleton className="h-12 w-full rounded-full" />
               </div>
+
+              <div className="flex flex-col lg:flex-row gap-3 mb-4">
+                <Skeleton className="w-full lg:flex-1 h-[48px] lg:h-[50px] rounded-full" />
+                <Skeleton className="hidden md:block w-full lg:w-[130px] h-[48px] lg:h-[50px] rounded-full" />
+              </div>
+
+              <Skeleton className="h-16 w-full mt-6 rounded-md md:rounded-lg" />
             </div>
           </div>
         </div>
@@ -176,9 +204,9 @@ export function ProductDetailPage() {
   const storeInitial = product.store?.name?.charAt(0)?.toUpperCase() || "S";
 
   return (
-    <div className="min-h-screen bg-white pb-32 md:pb-16 text-gray-900 font-sans">
-      <div className="container mx-auto px-4 md:px-8 py-6 md:py-10">
-        <nav className="md:hidden flex items-center gap-1.5 text-xs md:text-sm text-gray-500 mb-8">
+    <div className="min-h-screen bg-white pb-24 md:pb-14 text-gray-900 font-sans">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10 lg:pb-0">
+        <nav className="md:hidden flex items-center gap-1.5 text-xs md:text-sm text-gray-500 mb-6">
           <Link to="/" className="hover:text-gray-900 transition-colors">Home</Link>
           <ChevronRight className="h-3 w-3" />
           <Link to="/products" className="hover:text-gray-900 transition-colors hidden md:block">Products</Link>
@@ -198,7 +226,7 @@ export function ProductDetailPage() {
         </nav>
         
         {/* Main Product Section layout */}
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_360px] lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_560px] gap-8 md:gap-11 lg:gap-12 xl:gap-[60px] items-start md:mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-[1.3fr_1fr] lg:grid-cols-[1fr_440px] xl:grid-cols-[1fr_0.65fr] gap-8 md:gap9 lg:gap-12 xl:gap-[60px] items-start md:mb-16 ">
           
           {/* Left panel: Gallery & Breadcrumbs */}
           <div className="flex flex-col min-w-0 order-1">
