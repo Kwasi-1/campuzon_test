@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Heart, ChevronRight, Shield, MapPin, Users } from "lucide-react";
 import { Skeleton } from "@/components/shared/Skeleton";
 import {
   ProductImageGallery,
   ProductInfo,
-  // DetailedAccordionRow,
+  DetailedAccordionRow,
   SimilarProducts,
   ProductReviews,
 } from "../../components";
@@ -39,7 +40,31 @@ export function ProductDetailPage() {
   const startConversation = useStartConversation();
 
   const [quantity, setQuantity] = useState(1);
+  const [showStickyCart, setShowStickyCart] = useState(false);
   const isOutOfStock = product?.quantity === 0;
+
+  useEffect(() => {
+    // Only initialize observer if we have loaded the product
+    if (!product || isLoading) return;
+
+    const target = document.getElementById("main-product-actions");
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // Show sticky cart only if the main button is scrolled OUT OF VIEW upwards
+        if (!entry.isIntersecting && entry.boundingClientRect.top < 0) {
+          setShowStickyCart(true);
+        } else {
+          setShowStickyCart(false);
+        }
+      },
+      { threshold: 0 }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [product, isLoading]);
 
   const getCurrentPath = () =>
     `${window.location.pathname}${window.location.search}${window.location.hash}`;
@@ -93,7 +118,7 @@ export function ProductDetailPage() {
       <div className="min-h-screen bg-white">
         <div className="container mx-auto px-4 py-8 md:py-12">
           {/* Breadcrumb skeleton */}
-          <Skeleton className="h-4 w-48 mb-8" />
+          <Skeleton className="h-4 w-48 mb-8 rounded" />
           <div className="grid md:grid-cols-[1fr_360px] lg:grid-cols-[1fr_560px] gap-8 lg:gap-[60px]">
             <div className="flex gap-4">
               <div className="hidden md:flex flex-col gap-2.5 w-[75px]">
@@ -153,9 +178,27 @@ export function ProductDetailPage() {
   return (
     <div className="min-h-screen bg-white pb-32 md:pb-16 text-gray-900 font-sans">
       <div className="container mx-auto px-4 md:px-8 py-6 md:py-10">
+        <nav className="md:hidden flex items-center gap-1.5 text-xs md:text-sm text-gray-500 mb-8">
+          <Link to="/" className="hover:text-gray-900 transition-colors">Home</Link>
+          <ChevronRight className="h-3 w-3" />
+          <Link to="/products" className="hover:text-gray-900 transition-colors hidden md:block">Products</Link>
+          {categoryLabel && (
+            <>
+              <ChevronRight className="h-3 w-3 hidden md:block" />
+              <Link
+                to={`/products?category=${product.category}`}
+                className="hover:text-gray-900 transition-colors capitalize"
+              >
+                {categoryLabel}
+              </Link>
+            </>
+          )}
+          <ChevronRight className="h-3 w-3" />
+          <span className="text-gray-900 truncate max-w-[240px]">{product.name}</span>
+        </nav>
         
         {/* Main Product Section layout */}
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_360px] lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_560px] gap-8 md:gap-11 lg:gap-12 xl:gap-[60px] items-start mb-16 lg:mb-24">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_360px] lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_560px] gap-8 md:gap-11 lg:gap-12 xl:gap-[60px] items-start md:mb-16">
           
           {/* Left panel: Gallery & Breadcrumbs */}
           <div className="flex flex-col min-w-0 order-1">
@@ -185,13 +228,6 @@ export function ProductDetailPage() {
 
           {/* Right panel: Details (Sticky) */}
           <div className="md:sticky md:top-28 order-2">
-            
-            {/* Breadcrumb — Mobile (Above title) */}
-            <nav className="md:hidden flex items-center gap-1.5 text-[12px] font-semibold text-gray-500 mb-6 tracking-wide">
-              <Link to="/">Home</Link> <ChevronRight className="h-3 w-3" />
-              <span className="truncate">{categoryLabel}</span> <ChevronRight className="h-3 w-3" />
-              <span className="text-gray-900 truncate flex-1">{product.name}</span>
-            </nav>
 
             <ProductInfo
               product={product}
@@ -207,11 +243,93 @@ export function ProductDetailPage() {
         </div>
 
         {/* Detailed Accordions Section (Below main visual content) */}
+        <div className="max-w-6xl ">
+          <DetailedAccordionRow label="THE DETAILS" defaultOpen={true} isborder={false}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-[14px] md:text-[15px] leading-relaxed">
+              <div>
+                <p className="whitespace-pre-wrap">{product.description || "No description provided for this product."}</p>
+                {product.condition && product.condition !== "new" && (
+                  <p className="mt-4 text-gray-500 font-medium tracking-wide uppercase text-[11px]">
+                    Condition: {product.condition.replace(/-/g, " ")}
+                  </p>
+                )}
+              </div>
+              <div className="md:pl-8">
+                <span className="font-semibold text-gray-900 block mb-2">Highlights</span>
+                <ul className="list-disc pl-4 space-y-1 text-gray-700">
+                  <li>Premium quality guarantee</li>
+                  <li>Available directly from {product.store?.name || "campus seller"}</li>
+                  {product.tags?.map((t, idx) => (
+                    <li key={idx} className="capitalize">{t.replace(/-/g, " ")}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </DetailedAccordionRow>
 
+          <DetailedAccordionRow label="DELIVERY, RETURNS & SELLER">
+            <div className="space-y-6 md:space-y-0">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <h4 className="flex items-center gap-2 font-semibold text-[13px] mb-2">
+                    <Users className="h-4 w-4" /> Peer Delivery
+                  </h4>
+                  <p className="text-[13px] text-gray-600">
+                    A fellow student will deliver this item to you — typically same-day or next-day.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="flex items-center gap-2 font-semibold text-[13px] mb-2">
+                    <MapPin className="h-4 w-4" /> Campus Pickup
+                  </h4>
+                  <p className="text-[13px] text-gray-600">
+                    Meet the seller at a convenient, well-lit campus location. Agree after purchase.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="flex items-center gap-2 font-semibold text-[13px] mb-2">
+                    <Shield className="h-4 w-4" /> Buyer Protection
+                  </h4>
+                  <p className="text-[13px] text-gray-600">
+                    Payment held securely in escrow. Released hours after you confirm delivery.
+                  </p>
+                </div>
+              </div>
+
+              {/* Seller details compact view */}
+              <div className="mt-8 pt-8 border-t border-[#f2f2f2]">
+                <div className="flex items-center justify-between">
+                  <Link to={`/stores/${product.store?.slug}`} className="flex items-center gap-4 group">
+                    <Avatar className="h-12 w-12 border border-gray-100">
+                      <AvatarImage src={product.store?.logo} alt={product.store?.name} />
+                      <AvatarFallback className="text-[13px] font-semibold bg-gray-50">
+                        {storeInitial}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 group-hover:underline text-[14px]">
+                        {product.store?.name || "Campus Seller"}
+                      </h4>
+                      <p className="text-gray-500 text-[12px] mt-0.5 tracking-wide flex items-center gap-1.5">
+                        <MapPin className="h-3 w-3" /> {product.store?.location || "Campus Seller"}
+                      </p>
+                    </div>
+                  </Link>
+                  <button
+                    onClick={handleContactSeller}
+                    className="border border-[#dddddd] px-6 py-2.5 text-[11px] font-semibold uppercase tracking-widest text-gray-900 hover:border-gray-900 transition-colors"
+                  >
+                    Contact Seller
+                  </button>
+                </div>
+              </div>
+            </div>
+          </DetailedAccordionRow>
+        </div>
 
         {/* Similar Products */}
         {similarProducts.length > 0 && (
-          <div className="mt-12 lg:mt-16 lg:pt-10">
+          <div className="mt-12 lg:mt-16">
             <SimilarProducts
               products={similarProducts}
               title="More from this seller"
@@ -228,35 +346,28 @@ export function ProductDetailPage() {
       </div>
 
       {/* ── Sticky bottom bar — mobile only ─────────────────────────────────── */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white border-t border-gray-200 px-4 py-3 pb-8">
-        <div className="flex items-center gap-2 h-12">
-          {/* Wishlist icon */}
-          <button
-            onClick={handleWishlistToggle}
-            aria-label="Save to wishlist"
-            className={cn(
-              "h-12 w-12 shrink-0 flex items-center justify-center border transition-colors",
-              isInWishlist ? "bg-gray-900 border-gray-900" : "border-[#dddddd] bg-white hover:border-gray-900",
-            )}
+      <AnimatePresence>
+        {showStickyCart && (
+          <motion.div
+            initial={{ y: "100%", opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: "100%", opacity: 0 }}
+            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+            className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-transparent px-4 py-3 pb-8 pointer-events-none"
           >
-            <Heart
-              className={cn(
-                "h-5 w-5",
-                isInWishlist ? "fill-white text-white" : "text-gray-900",
-              )}
-            />
-          </button>
-
-          {/* Add to bag */}
-          <button
-            onClick={handleAddToCart}
-            disabled={isOutOfStock}
-            className="flex-1 bg-[#222222] text-white h-12 text-[14px] font-semibold hover:bg-black disabled:opacity-50 transition-colors"
-          >
-            {isOutOfStock ? "Sold Out" : "Add To Bag"}
-          </button>
-        </div>
-      </div>
+            <div className="flex items-center gap-2 h-12 pointer-events-auto shadow-[0_8px_30px_rgb(0,0,0,0.18)] rounded-full">
+              {/* Add to bag */}
+              <button
+                onClick={handleAddToCart}
+                disabled={isOutOfStock}
+                className="flex-1 bg-[#222222] text-white h-12 text-[14px] font-semibold hover:bg-black disabled:opacity-50 transition-colors"
+              >
+                {isOutOfStock ? "Sold Out" : "Add To Bag"}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Chat widget */}
       <ProductChat

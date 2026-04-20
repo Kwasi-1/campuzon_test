@@ -154,7 +154,7 @@ export function ProductInfo({
 
       {/* Buttons block */}
       {!hideActionButtons && (
-        <div className="flex gap-2 mb-4 h-[48px] md:h-[50px]">
+        <div id="main-product-actions" className="flex gap-2 mb-4 h-[48px] md:h-[50px]">
           <button
             onClick={onAddToCart}
             disabled={isOutOfStock}
