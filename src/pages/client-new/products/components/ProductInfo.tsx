@@ -98,7 +98,7 @@ export function ProductInfo({
   return (
     <div className="flex flex-col pr-1 md:pr-0 md:pt-4">
       {/* Brand line (Store Name equivalent) */}
-      <h1 className="text-xl md:text-[22px] font-medium text-gray-900 mb-1 lg:mb-2 leading-tight overflow-y-auto scrollbar-hide whitespace-nowrap">
+      <h1 className="text-xl md:text-[22px] font-medium text-gray-900 mb-1 lg:mb-2 leading-tight overflow-x-auto scrollbar-hide whitespace-nowrap overflow-y-hidden">
         {product.name}
       </h1>
 
@@ -134,7 +134,7 @@ export function ProductInfo({
               Quantity guide
             </span>
           </div>
-          <div className="relative border border-[#dddddd] bg-white hover:border-gray-900 transition-colors">
+          <div className="relative border border-[#dddddd] bg-white hover:border-gray-900 transition-colors rounded-full">
             <select
               value={quantity}
               onChange={(e) => onQuantityChange(Number(e.target.value))}
@@ -158,14 +158,14 @@ export function ProductInfo({
           <button
             onClick={onAddToCart}
             disabled={isOutOfStock}
-            className="flex-1 bg-[#222222] text-white text-[14px] font-semibold hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 bg-[#222222] text-white text-[14px] font-semibold hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-full"
           >
             {isOutOfStock ? "Sold Out" : "Add To Bag"}
           </button>
           <button
             onClick={onAddToWatchlist}
             className={cn(
-              "hidden w-[120px] md:w-[130px] md:flex items-center justify-center gap-2 border text-[14px] font-semibold transition-colors bg-white",
+              "hidden w-[120px] md:w-[130px] md:flex items-center justify-center gap-2 border text-[14px] font-semibold transition-colors bg-white rounded-full",
               isInWishlist
                 ? "border-gray-900 text-gray-900"
                 : "border-[#dddddd] text-gray-900 hover:border-gray-900",
@@ -198,7 +198,7 @@ export function ProductInfo({
       </div>
 
       {/* Extra info box */}
-      <div className="bg-[#f5f5f5] px-4 py-3.5 text-[13px] md:text-sm text-gray-600 leading-relaxed mb-6 flex flex-col md:flex-row md:items-center">
+      <div className="bg-[#f5f5f5] px-4 py-3.5 text-[13px] md:text-sm text-gray-600 leading-relaxed mb-6 flex flex-col md:flex-row md:items-center rounded-md">
         <span>Free campus returns within 12 hours | Verified Student Seller</span>
       </div>
     </div>

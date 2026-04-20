@@ -360,7 +360,7 @@ export function ProductDetailPage() {
               <button
                 onClick={handleAddToCart}
                 disabled={isOutOfStock}
-                className="flex-1 bg-[#222222] text-white h-12 text-[14px] font-semibold hover:bg-black disabled:opacity-50 transition-colors"
+                className="flex-1 bg-[#222222] text-white h-12 text-[14px] font-semibold hover:bg-black disabled:opacity-50 transition-colors rounded-full"
               >
                 {isOutOfStock ? "Sold Out" : "Add To Bag"}
               </button>
