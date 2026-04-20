@@ -4,7 +4,7 @@ export { ProductFilters, type FilterState } from './ProductFilters';
 export { ProductsToolbar } from './ProductsToolbar';
 export { ProductFilterTabs } from './ProductFilterTabs';
 export { ProductImageGallery } from './ProductImageGallery';
-export { ProductInfo } from './ProductInfo';
+export { ProductInfo, DetailedAccordionRow } from './ProductInfo';
 export * from './SimilarProducts';
 export * from './ProductReviews';
 export * from './ProductAdvancedFiltersModal';
