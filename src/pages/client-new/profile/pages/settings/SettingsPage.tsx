@@ -124,7 +124,7 @@ function Section({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.3 }}
     >
-      <p className="text-xs md:text-sm font-semibold uppercase tracking-wider text-gray-400 mb-1 px-1">
+      <p className="text-xs md:text-sm font-semibold uppercase tracking-wider text-gray-500 mb-1 px-1">
         {title}
       </p>
       <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden divide-y divide-gray-50">
@@ -160,7 +160,7 @@ function Row({
             {label}
           </p>
           {description && (
-            <p className="text-xs md:text-sm text-gray-400 mt-0.5 leading-tight truncate">
+            <p className="text-xs md:text-sm text-gray-500 mt-0.5 leading-tight truncate">
               {description}
             </p>
           )}
@@ -364,7 +364,7 @@ export function SettingsPage() {
         <h1 className="text-2xl md:text-3xl lg:text-[2rem] font-semibold text-gray-900 tracking-tight">
           Settings
         </h1>
-        <p className="text-sm md:text-base text-gray-400 mt-0.5">
+        <p className="text-sm md:text-base text-gray-500 mt-0.5">
           Manage your account & preferences
         </p>
       </motion.div>
@@ -440,7 +440,7 @@ export function SettingsPage() {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs md:text-sm text-gray-400 mt-0.5 leading-tight">
+                      <p className="text-xs md:text-sm text-gray-500 mt-0.5 leading-tight">
                         {isEnabled
                           ? `Active via ${currentMethod === "totp" ? "authenticator app" : "OTP"}`
                           : "Add an extra layer of security"}
@@ -480,7 +480,7 @@ export function SettingsPage() {
                       {/* ── Not yet set up ── */}
                       {!isEnabled && !totpSetup && !showBackupCodes && (
                         <div className="space-y-2">
-                          <p className="text-xs md:text-sm text-gray-400">
+                          <p className="text-xs md:text-sm text-gray-500">
                             Use an authenticator app (Google Authenticator,
                             Authy, etc.) to generate login codes.
                           </p>
@@ -507,7 +507,7 @@ export function SettingsPage() {
                               alt="QR code"
                               className="h-36 w-36 rounded-lg"
                             />
-                            <p className="text-xs md:text-sm text-gray-400 text-center">
+                            <p className="text-xs md:text-sm text-gray-500 text-center">
                               Scan with your authenticator app
                             </p>
                           </div>
@@ -518,7 +518,7 @@ export function SettingsPage() {
                             <button
                               onClick={copySecret}
                               type="button"
-                              className="flex-shrink-0 text-gray-400 hover:text-gray-600"
+                              className="flex-shrink-0 text-gray-500 hover:text-gray-600"
                               aria-label="Copy authenticator secret"
                             >
                               {copiedSecret ? (
@@ -565,7 +565,7 @@ export function SettingsPage() {
                           <button
                             onClick={() => setTotpSetup(null)}
                             type="button"
-                            className="text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2"
+                            className="text-xs text-gray-500 hover:text-gray-600 underline underline-offset-2"
                           >
                             Cancel setup
                           </button>

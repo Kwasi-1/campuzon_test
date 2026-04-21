@@ -272,7 +272,7 @@ export function OrderDetailPage() {
           The order you are looking for does not exist.
         </p>
         <Link to="/orders">
-          <Button className="rounded-full px-8 h-12">Back to Orders</Button>
+          <Button className="mt-4 rounded-full px-8 h-12">Back to Orders</Button>
         </Link>
       </div>
     );
