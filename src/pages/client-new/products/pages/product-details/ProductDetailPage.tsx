@@ -33,7 +33,7 @@ export function ProductDetailPage() {
   const { addItem, getItem } = useCartStore();
 
   const { data: product, isLoading, error } = useProduct(id!);
-  const { data: relatedProducts } = useStoreProducts(product?.storeID || "");
+  const { data: relatedProducts, isLoading: isRelatedLoading } = useStoreProducts(product?.storeID || "");
   const { data: isInWishlist } = useIsInWishlist(id!);
   const addToWishlist = useAddToWishlist();
   const removeFromWishlist = useRemoveFromWishlist();
@@ -356,13 +356,14 @@ export function ProductDetailPage() {
         </div>
 
         {/* Similar Products */}
-        {similarProducts.length > 0 && (
+        {(similarProducts.length > 0 || isRelatedLoading) && (
           <div className="mt-12 lg:mt-16">
             <SimilarProducts
               products={similarProducts}
               title="More from this seller"
               storeName={product.store?.name}
               storeSlug={product.store?.slug}
+              isLoading={isRelatedLoading}
             />
           </div>
         )}

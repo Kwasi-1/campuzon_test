@@ -9,12 +9,14 @@ import {
 } from "@/components/ui/carousel";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Skeleton } from "@/components/shared/Skeleton";
 
 interface SimilarProductsProps {
-  products: Product[];
+  products?: Product[];
   title?: string;
   storeName?: string;
   storeSlug?: string;
+  isLoading?: boolean;
 }
 
 export function SimilarProducts({
@@ -22,8 +24,9 @@ export function SimilarProducts({
   title = "More from this store",
   storeName,
   storeSlug,
+  isLoading = false,
 }: SimilarProductsProps) {
-  if (!products || products.length === 0) {
+  if (!isLoading && (!products || products.length === 0)) {
     return null;
   }
 
@@ -56,14 +59,27 @@ export function SimilarProducts({
       </div>
 
       <CarouselContent className="-ml-2 sm:-ml-3 md:-ml-4">
-        {products.map((product, index) => (
-          <CarouselItem
-            key={product.id}
-            className="pl-2 sm:pl-3 md:pl-4 basis-[calc(50%)] sm:basis-[calc(50%-6px)] md:basis-[calc(33.333%-8px)] lg:basis-[calc(25%-8px)] xl:basis-[calc(20%-8px)]"
-          >
-            <ProductCard product={product} index={index} variant="grid" />
-          </CarouselItem>
-        ))}
+        {isLoading
+          ? Array.from({ length: 5 }).map((_, i) => (
+              <CarouselItem
+                key={`skeleton-${i}`}
+                className="pl-2 sm:pl-3 md:pl-4 basis-[calc(50%)] sm:basis-[calc(50%-6px)] md:basis-[calc(33.333%-8px)] lg:basis-[calc(25%-8px)] xl:basis-[calc(20%-8px)]"
+              >
+                <div className="flex flex-col gap-2">
+                  <Skeleton className="w-full aspect-[4/5] rounded-xl" />
+                  <Skeleton className="h-4 w-3/4 mt-2 rounded" />
+                  <Skeleton className="h-4 w-1/2 rounded" />
+                </div>
+              </CarouselItem>
+            ))
+          : products?.map((product, index) => (
+              <CarouselItem
+                key={product.id}
+                className="pl-2 sm:pl-3 md:pl-4 basis-[calc(50%)] sm:basis-[calc(50%-6px)] md:basis-[calc(33.333%-8px)] lg:basis-[calc(25%-8px)] xl:basis-[calc(20%-8px)]"
+              >
+                <ProductCard product={product} index={index} variant="grid" />
+              </CarouselItem>
+            ))}
       </CarouselContent>
     </Carousel>
   );
