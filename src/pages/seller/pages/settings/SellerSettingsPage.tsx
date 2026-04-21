@@ -105,7 +105,7 @@ export function SellerSettingsPage() {
   const [saveInfo, setSaveInfo] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deactivateModalOpen, setDeactivateModalOpen] = useState(false);
-  const [autoAcceptOrders, setAutoAcceptOrders] = useState<boolean>(true);
+  const [autoAcceptOrders, setAutoAcceptOrders] = useState<boolean>(false);
   const [notificationPrefs, setNotificationPrefs] = useState({
     newOrder: true,
     newMessage: true,

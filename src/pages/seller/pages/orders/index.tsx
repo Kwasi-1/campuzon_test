@@ -14,6 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Modal } from "@/components/shared/Modal";
 import { useAuthStore } from "@/stores";
@@ -24,6 +26,7 @@ import {
   useSellerStoreOrders,
   useSellerUpdateOrderStatus,
   useSellerAcceptOrder,
+  useSellerUpdateAutoAccept,
 } from "@/hooks/useSellerPortal";
 import { Skeleton } from "@/components/shared/Skeleton";
 import {
@@ -108,6 +111,7 @@ export function SellerOrdersPage() {
   );
   const updateStatus = useSellerUpdateOrderStatus();
   const acceptOrder = useSellerAcceptOrder();
+  const updateAutoAccept = useSellerUpdateAutoAccept();
   const storeOrders = useMemo(() => apiOrders || [], [apiOrders]);
   const isLoading = ordersLoading;
 
@@ -280,24 +284,47 @@ export function SellerOrdersPage() {
   );
 
   const headerActions = (
-    <SellerPageSearchFilters
-      searchValue={searchQuery}
-      onSearchChange={setSearchQuery}
-      searchPlaceholder="Search orders..."
-      selectValue={extraFilter}
-      onSelectChange={(value) => setExtraFilter(value as ExtraFilterKey)}
-      selectPlaceholder="More filters"
-      selectOptions={[
-        { value: "all", label: "More Filters" },
-        { value: "offered", label: "New Offers" },
-        { value: "pending", label: "Pending" },
-        { value: "processing", label: "Processing" },
-        { value: "completed", label: "Completed" },
-        { value: "cancelled", label: "Cancelled" },
-        { value: "refunded", label: "Refunded" },
-        { value: "disputed", label: "Disputed" },
-      ]}
-    />
+    <div className="flex flex-col md:flex-row md:items-center gap-4">
+      {/* Auto-accept Quick Toggle */}
+      <div className="flex items-center space-x-2 border border-gray-200 bg-white rounded-full px-4 py-2 order-2 md:order-1">
+        <Switch
+          id="auto-accept-orders"
+          checked={store?.autoAcceptOrders ?? false}
+          onCheckedChange={(checked) => updateAutoAccept.mutate(checked)}
+          disabled={updateAutoAccept.isPending || !store}
+          className={`${
+            store?.autoAcceptOrders ? "bg-amber-500" : "bg-gray-200"
+          }`}
+        />
+        <Label
+          htmlFor="auto-accept-orders"
+          className="text-sm font-medium cursor-pointer"
+        >
+          Auto-accept offers {updateAutoAccept.isPending && "..."}
+        </Label>
+      </div>
+
+      <div className="order-1 md:order-2 w-full md:w-auto">
+        <SellerPageSearchFilters
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search orders..."
+          selectValue={extraFilter}
+          onSelectChange={(value) => setExtraFilter(value as ExtraFilterKey)}
+          selectPlaceholder="More filters"
+          selectOptions={[
+            { value: "all", label: "More Filters" },
+            { value: "offered", label: "New Offers" },
+            { value: "pending", label: "Pending" },
+            { value: "processing", label: "Processing" },
+            { value: "completed", label: "Completed" },
+            { value: "cancelled", label: "Cancelled" },
+            { value: "refunded", label: "Refunded" },
+            { value: "disputed", label: "Disputed" },
+          ]}
+        />
+      </div>
+    </div>
   );
 
   return (
