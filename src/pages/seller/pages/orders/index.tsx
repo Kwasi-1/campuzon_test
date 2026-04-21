@@ -10,6 +10,7 @@ import {
   Phone,
   Truck,
   XCircle,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -127,7 +128,11 @@ export function SellerOrdersPage() {
     } else if (mainFilter === "active") {
       orders = orders.filter((order) => {
         const status = getSellerWorkflowStatus(order.status);
-        return status === "offered" || status === "pending" || status === "processing";
+        return (
+          status === "offered" ||
+          status === "pending" ||
+          status === "processing"
+        );
       });
     } else if (mainFilter === "issues") {
       orders = orders.filter((order) => {
@@ -225,7 +230,11 @@ export function SellerOrdersPage() {
       ).length,
       active: orders.filter((o) => {
         const status = getSellerWorkflowStatus(o.status);
-        return status === "offered" || status === "pending" || status === "processing";
+        return (
+          status === "offered" ||
+          status === "pending" ||
+          status === "processing"
+        );
       }).length,
       pending: orders.filter(
         (o) => getSellerWorkflowStatus(o.status) === "pending",
@@ -334,7 +343,6 @@ export function SellerOrdersPage() {
       headerActions={headerActions}
       sidebar={sidebar}
     >
-
       {/* Pending Offers Alert Banner */}
       <AnimatePresence>
         {statusCounts.offered > 0 && (
@@ -354,7 +362,8 @@ export function SellerOrdersPage() {
             </span>
             <div className="flex-1">
               <p className="text-sm font-semibold">
-                {statusCounts.offered} new offer{statusCounts.offered !== 1 ? "s" : ""} awaiting your response
+                {statusCounts.offered} new offer
+                {statusCounts.offered !== 1 ? "s" : ""} awaiting your response
               </p>
               <p className="text-xs text-amber-700 dark:text-amber-400">
                 Accept to let the buyer proceed with payment.
@@ -405,7 +414,8 @@ export function SellerOrdersPage() {
             const statusConfig = getStatusConfig(order.status);
             const StatusIcon = statusConfig.icon;
             const availableActions = getAvailableSellerOrderActions(order);
-            const isOfferedOrder = getSellerWorkflowStatus(order.status) === "offered";
+            const isOfferedOrder =
+              getSellerWorkflowStatus(order.status) === "offered";
             const desktopPrimaryAction = isOfferedOrder
               ? "accept"
               : availableActions.includes("deliver")
@@ -528,7 +538,7 @@ export function SellerOrdersPage() {
                               desktopPrimaryAction === "accept"
                                 ? "default"
                                 : desktopPrimaryAction === "cancel" ||
-                                  desktopPrimaryAction === "process"
+                                    desktopPrimaryAction === "process"
                                   ? "outline"
                                   : "default"
                             }
@@ -697,8 +707,13 @@ export function SellerOrdersPage() {
                 areOrderActionsDisabled
               }
               title={storeActionBlockReason || "Confirm action"}
-              className={actionType === "accept" ? "bg-green-600 hover:bg-green-700" : ""}
+              className={
+                actionType === "accept" ? "bg-green-600 hover:bg-green-700" : ""
+              }
             >
+              {(updateStatus.isPending || acceptOrder.isPending) && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               {actionType ? getSellerActionLabel(actionType) : "Confirm"}
             </Button>
           </div>
