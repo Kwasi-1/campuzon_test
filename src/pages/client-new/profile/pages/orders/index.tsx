@@ -19,16 +19,25 @@ import {
 
 const getStatusBadge = (status: OrderStatus) => {
   const statusMeta = getBuyerStatusMeta(status);
+  const isOffered = status === "offered";
 
   return (
     <div
       className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${statusMeta.className}`}
     >
-      <div className="h-1.5 w-1.5 rounded-full bg-current" />
+      {isOffered ? (
+        <span className="relative flex h-1.5 w-1.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500 opacity-75" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-500" />
+        </span>
+      ) : (
+        <div className="h-1.5 w-1.5 rounded-full bg-current" />
+      )}
       {statusMeta.label}
     </div>
   );
 };
+
 
 export function OrdersPage() {
   const navigate = useNavigate();

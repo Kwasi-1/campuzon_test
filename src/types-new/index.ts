@@ -20,6 +20,7 @@ export type ProductStatus = 'draft' | 'active' | 'sold_out' | 'paused' | 'delete
 export type StoreStatus = 'pending' | 'active' | 'suspended' | 'closed';
 
 export type OrderStatus =
+  | 'offered'
   | 'pending'
   | 'paid'
   | 'processing'
@@ -120,6 +121,7 @@ export interface Store {
   institutionID: string | null;
   autoResponderEnabled: boolean;
   autoResponderName: string | null;
+  autoAcceptOrders?: boolean;
   dateCreated: string;
 }
 

@@ -241,3 +241,34 @@ export function useSellerDeactivateStore() {
     },
   });
 }
+
+export function useSellerAcceptOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (orderId: string) => sellerPortalService.acceptOrder(orderId),
+    onSuccess: (_, orderId) => {
+      queryClient.invalidateQueries({ queryKey: sellerPortalKeys.orders() });
+      queryClient.invalidateQueries({ queryKey: sellerPortalKeys.order(orderId) });
+      toast.success('Order accepted — buyer has been notified to complete payment');
+    },
+    onError: (error) => {
+      toast.error(extractError(error));
+    },
+  });
+}
+
+export function useSellerUpdateAutoAccept() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (value: boolean) => sellerPortalService.updateAutoAccept(value),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: sellerPortalKeys.store() });
+      toast.success('Auto-accept preference saved');
+    },
+    onError: (error) => {
+      toast.error(extractError(error));
+    },
+  });
+}

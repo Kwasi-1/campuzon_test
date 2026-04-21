@@ -31,6 +31,7 @@ import {
   useSellerAutoResponder,
   useSellerDeactivateStore,
   useSellerMyStore,
+  useSellerUpdateAutoAccept,
   useSellerUpdateAutoResponder,
   useSellerUpdateStoreContact,
   useSellerUpdateStoreLocation,
@@ -94,6 +95,7 @@ export function SellerSettingsPage() {
   const updateStoreContact = useSellerUpdateStoreContact();
   const updateStoreLocation = useSellerUpdateStoreLocation();
   const updateStorePreferences = useSellerUpdateStorePreferences();
+  const updateAutoAccept = useSellerUpdateAutoAccept();
   const deactivateStore = useSellerDeactivateStore();
 
   const [formData, setFormData] = useState(createEmptyStoreData);
@@ -103,6 +105,7 @@ export function SellerSettingsPage() {
   const [saveInfo, setSaveInfo] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deactivateModalOpen, setDeactivateModalOpen] = useState(false);
+  const [autoAcceptOrders, setAutoAcceptOrders] = useState<boolean>(true);
   const [notificationPrefs, setNotificationPrefs] = useState({
     newOrder: true,
     newMessage: true,
@@ -145,6 +148,8 @@ export function SellerSettingsPage() {
       email: store.email ?? "",
       phoneNumber: store.phoneNumber ?? "",
     }));
+    // Sync auto-accept from store
+    setAutoAcceptOrders(store.autoAcceptOrders ?? true);
   }, [store]);
 
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -585,6 +590,42 @@ export function SellerSettingsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 md:p-8">
+                {/* Auto-Accept Orders Toggle */}
+                <div className="mb-5 space-y-3">
+                  <p className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+                    Order Preferences
+                  </p>
+                  <div className="flex items-center justify-between rounded-2xl border border-amber-100 bg-amber-50 p-4">
+                    <div className="pr-4">
+                      <p className="font-medium text-gray-900">
+                        Auto-accept orders
+                      </p>
+                      <p className="mt-0.5 text-sm text-gray-500">
+                        {autoAcceptOrders
+                          ? "All incoming orders are auto-accepted. Buyers go straight to payment."
+                          : "You must manually accept each offer before the buyer can pay."}
+                      </p>
+                    </div>
+                    <label className="relative inline-flex shrink-0 cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        checked={autoAcceptOrders}
+                        onChange={() => {
+                          const next = !autoAcceptOrders;
+                          setAutoAcceptOrders(next);
+                          updateAutoAccept.mutate(next);
+                        }}
+                        className="peer sr-only"
+                        title="Toggle auto-accept orders"
+                      />
+                      <div className="h-6 w-11 rounded-full bg-muted transition peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300/40 peer-checked:bg-amber-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-['']"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
+                  Notification Alerts
+                </p>
                 <div className="space-y-3">
                   {[
                     {

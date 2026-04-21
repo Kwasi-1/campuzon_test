@@ -185,6 +185,9 @@ export interface SellerPortalService {
   updateStorePreferences(data: {
     notifyOnOrder: boolean;
   }): Promise<unknown>;
+  acceptOrder(orderId: string): Promise<unknown>;
+  rejectOrder(orderId: string): Promise<unknown>;
+  updateAutoAccept(value: boolean): Promise<unknown>;
   deactivateStore(reason: string): Promise<unknown>;
 }
 
@@ -204,9 +207,7 @@ export const sellerPortalService: SellerPortalService = {
   },
 
   async createProduct(data: FormData) {
-    const response = await api.post('/store/products', data, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.post('/store/products', data);
     return extractData(response);
   },
 
@@ -322,6 +323,25 @@ export const sellerPortalService: SellerPortalService = {
   async updateStorePreferences(data: { notifyOnOrder: boolean }) {
     const response = await api.patch('/store/settings/preferences', {
       notifyOnOrder: data.notifyOnOrder,
+    });
+    return extractData(response);
+  },
+
+  async acceptOrder(orderId: string) {
+    const response = await api.post(`/store/orders/${orderId}/accept`);
+    return extractData(response);
+  },
+
+  // NOTE: reject endpoint not yet implemented on backend — stub ready
+  async rejectOrder(orderId: string) {
+    const response = await api.post(`/store/orders/${orderId}/reject`);
+    return extractData(response);
+  },
+
+  // NOTE: autoAcceptOrders not yet in backend preferences route — stub ready
+  async updateAutoAccept(value: boolean) {
+    const response = await api.patch('/store/settings/preferences', {
+      autoAcceptOrders: value,
     });
     return extractData(response);
   },

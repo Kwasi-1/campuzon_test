@@ -14,6 +14,7 @@ export const USE_PREVIEW_MOCK_DATA = false;
 const PREVIEW_STORAGE_KEY = "seller-orders-preview-v1";
 
 export type SellerOrderAction =
+  | "accept"
   | "process"
   | "deliver"
   | "cancel";
@@ -47,6 +48,8 @@ export function getSellerWorkflowStatus(status: OrderStatus): OrderStatus {
     case "shipped":
     case "delivered":
       return "completed";
+    case "offered":
+      return "offered";
     default:
       return status;
   }
@@ -55,6 +58,7 @@ export function getSellerWorkflowStatus(status: OrderStatus): OrderStatus {
 export function getOrderStep(status: OrderStatus): number {
   const normalizedStatus = getSellerWorkflowStatus(status);
   const steps: Record<OrderStatus, number> = {
+    offered: 0,
     pending: 0,
     paid: 0,
     processing: 1,
@@ -75,6 +79,13 @@ export function getStatusConfig(status: OrderStatus): {
   icon: LucideIcon;
 } {
   switch (status) {
+    case "offered":
+      return {
+        label: "New Offer",
+        color:
+          "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+        icon: Clock,
+      };
     case "pending":
       return {
         label: "Pending",
@@ -149,6 +160,8 @@ export function getAvailableSellerOrderActions(
 ): SellerOrderAction[] {
   if (!USE_PREVIEW_MOCK_DATA) {
     switch (getSellerWorkflowStatus(order.status)) {
+      case "offered":
+        return ["accept"];
       case "pending":
         return ["process", "deliver"];
       case "processing":
@@ -159,6 +172,8 @@ export function getAvailableSellerOrderActions(
   }
 
   switch (getSellerWorkflowStatus(order.status)) {
+    case "offered":
+      return ["accept"];
     case "pending":
       return ["process", "deliver", "cancel"];
     case "processing":
@@ -170,6 +185,8 @@ export function getAvailableSellerOrderActions(
 
 export function getSellerActionLabel(action: SellerOrderAction): string {
   switch (action) {
+    case "accept":
+      return "Accept Order";
     case "process":
       return "Mark as Processing";
     case "deliver":
@@ -185,6 +202,8 @@ export function getSellerActionDescription(
   currentStatus?: OrderStatus,
 ): string {
   switch (action) {
+    case "accept":
+      return `Accept offer for order ${orderNumber || ""}? The buyer will be notified to complete payment.`;
     case "process":
       return `Mark order ${orderNumber || ""} as processing? Use this if you are preparing the item before handoff.`;
     case "deliver":
@@ -204,6 +223,8 @@ export function getNextStatusForAction(
   const normalizedStatus = getSellerWorkflowStatus(currentStatus || "pending");
 
   switch (action) {
+    case "accept":
+      return "pending";
     case "process":
       return "processing";
     case "deliver":

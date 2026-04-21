@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
+  CheckCircle,
   Eye,
   MessageCircle,
   MoreHorizontal,
@@ -22,6 +23,7 @@ import {
   useSellerMyStore,
   useSellerStoreOrders,
   useSellerUpdateOrderStatus,
+  useSellerAcceptOrder,
 } from "@/hooks/useSellerPortal";
 import { Skeleton } from "@/components/shared/Skeleton";
 import {
@@ -63,6 +65,7 @@ const MAIN_FILTER_KEYS = ["all", "active", "completed", "issues"] as const;
 type MainFilterKey = (typeof MAIN_FILTER_KEYS)[number];
 type ExtraFilterKey =
   | "all"
+  | "offered"
   | "pending"
   | "processing"
   | "completed"
@@ -104,6 +107,7 @@ export function SellerOrdersPage() {
     store?.id || "",
   );
   const updateStatus = useSellerUpdateOrderStatus();
+  const acceptOrder = useSellerAcceptOrder();
   const storeOrders = useMemo(() => apiOrders || [], [apiOrders]);
   const isLoading = ordersLoading;
 
@@ -119,7 +123,7 @@ export function SellerOrdersPage() {
     } else if (mainFilter === "active") {
       orders = orders.filter((order) => {
         const status = getSellerWorkflowStatus(order.status);
-        return status === "pending" || status === "processing";
+        return status === "offered" || status === "pending" || status === "processing";
       });
     } else if (mainFilter === "issues") {
       orders = orders.filter((order) => {
@@ -175,6 +179,13 @@ export function SellerOrdersPage() {
 
     if (!selectedOrder || !actionType) return;
 
+    // Accept uses a dedicated endpoint, not the generic status update
+    if (actionType === "accept") {
+      await acceptOrder.mutateAsync(selectedOrder.id);
+      closeActionModal();
+      return;
+    }
+
     const newStatus = getNextStatusForAction(actionType, selectedOrder.status);
     const shouldOpenReceipt = actionType === "deliver";
     let updatedForReceipt: Order | null = null;
@@ -205,9 +216,12 @@ export function SellerOrdersPage() {
     const orders = storeOrders;
     return {
       all: orders.length,
+      offered: orders.filter(
+        (o) => getSellerWorkflowStatus(o.status) === "offered",
+      ).length,
       active: orders.filter((o) => {
         const status = getSellerWorkflowStatus(o.status);
-        return status === "pending" || status === "processing";
+        return status === "offered" || status === "pending" || status === "processing";
       }).length,
       pending: orders.filter(
         (o) => getSellerWorkflowStatus(o.status) === "pending",
@@ -275,6 +289,7 @@ export function SellerOrdersPage() {
       selectPlaceholder="More filters"
       selectOptions={[
         { value: "all", label: "More Filters" },
+        { value: "offered", label: "New Offers" },
         { value: "pending", label: "Pending" },
         { value: "processing", label: "Processing" },
         { value: "completed", label: "Completed" },
@@ -293,6 +308,45 @@ export function SellerOrdersPage() {
       sidebar={sidebar}
     >
 
+      {/* Pending Offers Alert Banner */}
+      <AnimatePresence>
+        {statusCounts.offered > 0 && (
+          <motion.div
+            key="offer-banner"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25 }}
+            className="mb-4 flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3.5 text-amber-800 dark:border-amber-800/50 dark:bg-amber-900/20 dark:text-amber-300"
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-800/40">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500" />
+              </span>
+            </span>
+            <div className="flex-1">
+              <p className="text-sm font-semibold">
+                {statusCounts.offered} new offer{statusCounts.offered !== 1 ? "s" : ""} awaiting your response
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-400">
+                Accept to let the buyer proceed with payment.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="shrink-0 rounded-full border-amber-300 bg-white text-amber-800 hover:bg-amber-50 dark:border-amber-700 dark:bg-transparent dark:text-amber-300"
+              onClick={() => {
+                setMainFilter("active");
+                setExtraFilter("offered");
+              }}
+            >
+              View Offers
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {isLoading ? (
         <div className="space-y-6">
@@ -324,11 +378,14 @@ export function SellerOrdersPage() {
             const statusConfig = getStatusConfig(order.status);
             const StatusIcon = statusConfig.icon;
             const availableActions = getAvailableSellerOrderActions(order);
-            const desktopPrimaryAction = availableActions.includes("deliver")
-              ? "deliver"
-              : availableActions.includes("process")
-                ? "process"
-                : availableActions[0];
+            const isOfferedOrder = getSellerWorkflowStatus(order.status) === "offered";
+            const desktopPrimaryAction = isOfferedOrder
+              ? "accept"
+              : availableActions.includes("deliver")
+                ? "deliver"
+                : availableActions.includes("process")
+                  ? "process"
+                  : availableActions[0];
             const desktopSecondaryActions = availableActions.filter(
               (action) => action !== desktopPrimaryAction,
             );
@@ -394,9 +451,11 @@ export function SellerOrdersPage() {
                           <Button
                             key={action}
                             variant={
-                              action === "cancel" || action === "process"
-                                ? "outline"
-                                : "default"
+                              action === "accept"
+                                ? "default"
+                                : action === "cancel" || action === "process"
+                                  ? "outline"
+                                  : "default"
                             }
                             onClick={() => handleOrderAction(order, action)}
                             disabled={areOrderActionsDisabled}
@@ -404,11 +463,16 @@ export function SellerOrdersPage() {
                               storeActionBlockReason || "Perform order action"
                             }
                             className={`w-full rounded-full ${
-                              action === "cancel"
-                                ? "bg-transparent text-red-600"
-                                : ""
+                              action === "accept"
+                                ? "bg-green-600 text-white hover:bg-green-700"
+                                : action === "cancel"
+                                  ? "bg-transparent text-red-600"
+                                  : ""
                             }`}
                           >
+                            {action === "accept" ? (
+                              <CheckCircle className="mr-1 h-4 w-4" />
+                            ) : null}
                             {action === "process" ? (
                               <Package className="mr-1 h-4 w-4" />
                             ) : null}
@@ -418,11 +482,13 @@ export function SellerOrdersPage() {
                             {action === "cancel" ? (
                               <XCircle className="mr-1 h-4 w-4" />
                             ) : null}
-                            {action === "process"
-                              ? "Process"
-                              : action === "deliver"
-                                ? "Deliver"
-                                : "Cancel"}
+                            {action === "accept"
+                              ? "Accept Order"
+                              : action === "process"
+                                ? "Process"
+                                : action === "deliver"
+                                  ? "Deliver"
+                                  : "Cancel"}
                           </Button>
                         ))}
                       </div>
@@ -432,10 +498,12 @@ export function SellerOrdersPage() {
                           <Button
                             size="sm"
                             variant={
-                              desktopPrimaryAction === "cancel" ||
-                              desktopPrimaryAction === "process"
-                                ? "outline"
-                                : "default"
+                              desktopPrimaryAction === "accept"
+                                ? "default"
+                                : desktopPrimaryAction === "cancel" ||
+                                  desktopPrimaryAction === "process"
+                                  ? "outline"
+                                  : "default"
                             }
                             onClick={() =>
                               handleOrderAction(order, desktopPrimaryAction)
@@ -445,11 +513,16 @@ export function SellerOrdersPage() {
                               storeActionBlockReason || "Perform order action"
                             }
                             className={`rounded-full ${
-                              desktopPrimaryAction === "cancel"
-                                ? "bg-transparent text-red-600"
-                                : ""
+                              desktopPrimaryAction === "accept"
+                                ? "bg-green-600 text-white hover:bg-green-700"
+                                : desktopPrimaryAction === "cancel"
+                                  ? "bg-transparent text-red-600"
+                                  : ""
                             }`}
                           >
+                            {desktopPrimaryAction === "accept" ? (
+                              <CheckCircle className="mr-1 h-4 w-4" />
+                            ) : null}
                             {desktopPrimaryAction === "process" ? (
                               <Package className="mr-1 h-4 w-4" />
                             ) : null}
@@ -459,11 +532,13 @@ export function SellerOrdersPage() {
                             {desktopPrimaryAction === "cancel" ? (
                               <XCircle className="mr-1 h-4 w-4" />
                             ) : null}
-                            {desktopPrimaryAction === "process"
-                              ? "Process"
-                              : desktopPrimaryAction === "deliver"
-                                ? "Deliver"
-                                : "Cancel"}
+                            {desktopPrimaryAction === "accept"
+                              ? "Accept"
+                              : desktopPrimaryAction === "process"
+                                ? "Process"
+                                : desktopPrimaryAction === "deliver"
+                                  ? "Deliver"
+                                  : "Cancel"}
                           </Button>
                         ) : null}
 
@@ -589,8 +664,13 @@ export function SellerOrdersPage() {
             <Button
               variant={actionType === "cancel" ? "destructive" : "default"}
               onClick={confirmAction}
-              disabled={updateStatus.isPending || areOrderActionsDisabled}
+              disabled={
+                updateStatus.isPending ||
+                acceptOrder.isPending ||
+                areOrderActionsDisabled
+              }
               title={storeActionBlockReason || "Confirm action"}
+              className={actionType === "accept" ? "bg-green-600 hover:bg-green-700" : ""}
             >
               {actionType ? getSellerActionLabel(actionType) : "Confirm"}
             </Button>

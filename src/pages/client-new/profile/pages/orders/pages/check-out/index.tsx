@@ -30,6 +30,7 @@ import { useCreateOrder, usePayment } from "@/hooks";
 import { extractError } from "@/lib/api";
 import { formatPrice } from "@/lib/utils";
 import type { CartItem, DeliveryMethod, Order } from "@/types-new";
+import { OfferSubmittedScreen } from "./OfferSubmittedScreen";
 
 type CreateOrderResponse = {
   order?: Order;
@@ -109,6 +110,7 @@ export function CheckoutPage() {
   > | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [submittedOrder, setSubmittedOrder] = useState<Order | null>(null);
   const isResident = Boolean(user?.hallID);
 
   // Calculate totals
@@ -223,7 +225,17 @@ export function CheckoutPage() {
         totalAmount: order.totalAmount || 0,
       });
 
-      // 2. Initialize Payment (Paystack)
+      // 2. Branch on returned status
+      // 'offered' = seller must accept first — do NOT initialize payment
+      if (order.status === "offered") {
+        clearCart();
+        setSubmittedOrder(order);
+        setIsProcessing(false);
+        return;
+      }
+
+      // 'pending' = auto-accept was on — proceed straight to payment
+      // 3. Initialize Payment (Paystack)
       const paymentResponse = await initializePayment.mutateAsync({
         orderId: order.id,
         callbackUrl: `${window.location.origin}/orders/${order.id}`,
@@ -235,14 +247,14 @@ export function CheckoutPage() {
       const authorizationUrl =
         paymentResponse.authorizationUrl || paymentResponse.authorization_url;
 
-      // 3. Redirect to Paystack
+      // 4. Redirect to Paystack
       if (authorizationUrl) {
         // Clear local cart only after backend order + payment initialization succeeds.
         clearCart();
         window.location.href = authorizationUrl;
       } else {
         // Fallback or error if no URL
-        navigate(`/orders/${order.id}`); // Go to order details to retry?
+        navigate(`/orders/${order.id}`);
       }
     } catch (err: unknown) {
       console.error("Checkout error:", err);
@@ -254,6 +266,16 @@ export function CheckoutPage() {
 
     setIsProcessing(false);
   };
+
+  // Show offer-submitted screen when seller must accept first
+  if (submittedOrder) {
+    return (
+      <OfferSubmittedScreen
+        order={submittedOrder}
+        storeName={storeName ?? undefined}
+      />
+    );
+  }
 
   if (items.length === 0) {
     return null;

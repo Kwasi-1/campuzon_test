@@ -8,7 +8,7 @@ export type BuyerDisplayCategory = "active" | "completed" | "issues" | "all";
 
 export const BUYER_CATEGORY_MAP: Record<BuyerDisplayCategory, OrderStatus[]> = {
   all: [],
-  active: ["pending", "paid", "processing"],
+  active: ["offered", "pending", "paid", "processing"],
   completed: ["shipped", "delivered", "completed"],
   issues: ["cancelled", "refunded", "disputed"],
 };
@@ -32,6 +32,11 @@ export function getBuyerStatusMeta(status: OrderStatus): {
   const normalized = normalizeBuyerStatus(status);
 
   switch (normalized) {
+    case "offered":
+      return {
+        label: "Awaiting Seller",
+        className: "bg-amber-50 text-amber-700",
+      };
     case "pending":
       return {
         label: "Pending Payment",
@@ -113,6 +118,7 @@ export const BUYER_ORDER_TIMELINE: Array<{
 export function getBuyerStatusStep(status: OrderStatus): number {
   const normalized = normalizeBuyerStatus(status);
   const steps: Record<OrderStatus, number> = {
+    offered: 0,
     pending: 0,
     paid: 0,
     processing: 1,
