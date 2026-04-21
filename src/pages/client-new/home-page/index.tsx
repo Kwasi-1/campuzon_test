@@ -1,8 +1,5 @@
 import { Link } from "react-router-dom";
 import {
-  ShieldCheck,
-  Truck,
-  CreditCard,
   Store,
   GraduationCap,
 } from "lucide-react";
@@ -10,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { useProducts } from "@/hooks/useProducts";
 import { useAuthStore } from "@/stores";
 import HeroCarousel from "./components/HeroCarousel";
-import PromoBanner from "./components/PromoBanner";
 import SectionHeader from "./components/SectionHeader";
-import ProductScroller from "./components/ProductScroller";
+import ProductScroller, { ProductScrollerSkeleton } from "./components/ProductScroller";
 import CategoryScroller from "./components/CategoryScroller";
+import PromoBanner from "./components/PromoBanner";
 import DealsGrid from "./components/DealsGrid"; 
 
 // Category data with images for the scroller
@@ -155,7 +152,11 @@ export default function Home() {
             href="/products?sort=newest"
             linkText="See all"
           />
-          <ProductScroller products={recentProducts} />
+          {isLoading ? (
+            <ProductScrollerSkeleton />
+          ) : (
+            <ProductScroller products={recentProducts} />
+          )}
         </section>
 
         {/* Shop by Category */}
@@ -175,11 +176,15 @@ export default function Home() {
             href="/products?sort=popular"
             linkText="See all"
           />
-          <ProductScroller
-            products={
-              trendingProducts.length > 0 ? trendingProducts : recentProducts
-            }
-          />
+          {isLoading ? (
+            <ProductScrollerSkeleton />
+          ) : (
+            <ProductScroller
+              products={
+                trendingProducts.length > 0 ? trendingProducts : recentProducts
+              }
+            />
+          )}
         </section>
 
         {/* Deals Section */}
@@ -204,55 +209,14 @@ export default function Home() {
           <CategoryScroller categories={featuredCategories} />
         </section>
 
-        {/* Trust & Safety Banner */}
-        <section className="pb-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-4 p-6 bg-green-50 rounded-xl borde border-green-200 ">
-              <div className="w-12 h-12 rounded-full bg-green-100  flex items-center justify-center">
-                <ShieldCheck className="w-6 h-6 text-green-600 " />
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground">
-                  Escrow Protected
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Your money is safe until delivery
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 p-6 bg-blue-50 rounded-xl borde border-blue-200">
-              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                <Truck className="w-6 h-6 text-blue-600 " />
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground">Campus Pickup</h3>
-                <p className="text-sm text-muted-foreground">
-                  Meet safely on campus
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 p-6 bg-purple-50 rounded-xl borde border-purple-200 ">
-              <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
-                <CreditCard className="w-6 h-6 text-purple-600 " />
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground">
-                  Secure Payments
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Mobile money & bank transfers
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+
 
         {/* Seller CTA */}
         {!isAuthenticated && (
           <section className="pb-12">
-            <div className="relative overflow-hidden bg-gradient-to-r from-primary via-blue-600 to-secondary rounded-2xl p-8 md:p-12">
+            <div className="relative overflow-hidden bg-primary/90 rounded-2xl p-8 md:p-12">
               {/* Background Pattern */}
-              <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0 opacity-10 hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-1/2 translate-x-1/2" />
                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-1/2 -translate-x-1/2" />
               </div>

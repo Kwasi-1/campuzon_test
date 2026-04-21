@@ -2,7 +2,9 @@ import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn, formatPrice } from "@/lib/utils";
+import { Skeleton } from "@/components/shared/Skeleton";
 import type { Product } from "@/types-new";
+import { ProductCard } from "../../products/components";
 
 interface ProductScrollerProps {
   products: Product[];
@@ -34,7 +36,7 @@ export default function ProductScroller({
       {/* Left Arrow */}
       <button
         onClick={() => scroll("left")}
-        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white shadow-lg rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50"
+        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/80 backdrop-blur-sm shadow-lg rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50"
         aria-label="Scroll left"
       >
         <ChevronLeft className="w-5 h-5 text-gray-600" />
@@ -46,14 +48,15 @@ export default function ProductScroller({
         className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-1 py-2"
       >
         {products.map((product) => (
-          <ProductScrollerCard key={product.id} product={product} />
+          // <ProductScrollerCard key={product.id} product={product} />
+          <ProductCard product={product} />
         ))}
       </div>
 
       {/* Right Arrow */}
       <button
         onClick={() => scroll("right")}
-        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white shadow-lg rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50"
+        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/80 backdrop-blur-sm shadow-lg rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50"
         aria-label="Scroll right"
       >
         <ChevronRight className="w-5 h-5 text-gray-600" />
@@ -82,7 +85,7 @@ function ProductScrollerCard({ product }: { product: Product }) {
           className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-300"
         />
         {hasDiscount && (
-          <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+          <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
             {discountPercent}% OFF
           </div>
         )}
@@ -105,5 +108,24 @@ function ProductScrollerCard({ product }: { product: Product }) {
         </div>
       </div>
     </Link>
+  );
+}
+
+export function ProductScrollerSkeleton() {
+  return (
+    <div className="relative group">
+      <div className="flex gap-4 overflow-hidden px-1 py-2">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="flex-shrink-0 w-[220px] md:w-[250px]">
+            <Skeleton className="aspect-square rounded-lg w-full mb-3" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-5 w-1/3 mt-2" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
