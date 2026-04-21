@@ -58,11 +58,11 @@ export default function CategoryScroller({
             to={category.href}
             className="flex flex-col items-center gap-3 flex-shrink-0 group/item"
           >
-            <div className="w-[140px] h-[140px] md:w-[180px] md:h-[180px] rounded-full overflow-hidden bg-gray-100 border-2 border-transparent group-hover/item:border-primary transition-colors">
+            <div className="w-[140px] h-[140px] md:w-[180px] md:h-[180px] rounded-full overflow-hidden bg-gray-100 border-2 border-transparent transition-colors">
               <img
                 src={category.image}
                 alt={category.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition duration-500 opacity-90 group-hover/item:opacity-100 group-hover/item:scale-105"
               />
             </div>
             <span className="text-sm font-medium text-center text-foreground group-hover/item:text-primary transition-colors">
