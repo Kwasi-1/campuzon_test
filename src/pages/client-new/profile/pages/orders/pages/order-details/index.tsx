@@ -266,13 +266,13 @@ export function OrderDetailPage() {
 
   if (!displayOrder) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
+      <div className="container mx-auto px-4 py-8 text-center flex flex-col justify-center lg:min-h-[calc(100vh-400px)] min-h-[calc(100vh-200px)] h-full">
         <h1 className="text-2xl font-bold mb-4">Order Not Found</h1>
         <p className="text-muted-foreground mb-6">
           The order you are looking for does not exist.
         </p>
         <Link to="/orders">
-          <Button>Back to Orders</Button>
+          <Button className="rounded-full px-8 h-12">Back to Orders</Button>
         </Link>
       </div>
     );

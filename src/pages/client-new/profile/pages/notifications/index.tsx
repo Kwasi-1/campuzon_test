@@ -217,10 +217,10 @@ export function NotificationsPage() {
       </div>
 
       {/* Body: sidebar + content */}
-      <div className="flex flex-col xl:flex-row gap-8 pb-12">
+      <div className="flex flex-col lg:flex-row gap-8 pb-12">
         {/* Sidebar Filters */}
-        <div className="xl:w-64 shrink-0">
-          <div className="flex xl:flex-col gap-3 overflow-x-auto xl:overflow-visible pb-2 xl:pb-0 scrollbar-hide xl:sticky xl:top-24">
+        <div className="lg:w-64 xl:w-72 shrink-0">
+          <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-hide lg:sticky lg:top-36">
             {sidebarCategories.map((cat) => {
               const isActive = filter === cat.key;
               return (
