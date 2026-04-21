@@ -19,7 +19,7 @@ Owner: Frontend
 - Seller prefix: `/seller`
 - Full prefix pattern: `{API_BASE_URL}/api/v1/seller`
 
-## 3) Auth Requirements
+## 3) Auth Requirements  
 
 - Required for all seller endpoints: `Authorization: Bearer <access_token>`
 - Required role: Seller (store owner)
