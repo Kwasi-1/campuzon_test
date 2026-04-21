@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -92,6 +92,7 @@ export function CheckoutPage() {
   const { items, storeID, storeName, clearCart } = useCartStore();
   const createOrder = useCreateOrder();
   const { initializePayment } = usePayment();
+  const isSubmittedRef = useRef<boolean>(false);
 
   // Checkout state
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("delivery");
@@ -130,10 +131,10 @@ export function CheckoutPage() {
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login?redirect=/checkout");
-    } else if (items.length === 0) {
+    } else if (items.length === 0 && !isSubmittedRef.current && !submittedOrder) {
       navigate("/cart");
     }
-  }, [isAuthenticated, items.length, navigate]);
+  }, [isAuthenticated, items.length, navigate, submittedOrder]);
 
   const steps: { id: CheckoutStep; label: string; icon: React.ElementType }[] =
     [
@@ -228,8 +229,9 @@ export function CheckoutPage() {
       // 2. Branch on returned status
       // 'offered' = seller must accept first — do NOT initialize payment
       if (order.status === "offered") {
-        clearCart();
+        isSubmittedRef.current = true;
         setSubmittedOrder(order);
+        clearCart();
         setIsProcessing(false);
         return;
       }
@@ -277,7 +279,7 @@ export function CheckoutPage() {
     );
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && !submittedOrder) {
     return null;
   }
 
