@@ -57,6 +57,9 @@ function normalizeStore(rawStore: unknown): Store {
       raw.autoResponderName === null || raw.autoResponderName === undefined
         ? null
         : String(raw.autoResponderName),
+    autoAcceptOrders: Boolean(
+      raw.autoAcceptOrders ?? raw.auto_accept_orders ?? false,
+    ),
     dateCreated: String(raw.dateCreated ?? raw.date_created ?? ''),
   };
 }
