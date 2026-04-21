@@ -130,19 +130,13 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 md:px-6 lg:px-8 xl:px-6">
         {/* Hero Carousel */}
-        <section className="pt-6 pb-8">
+        <section className="pt-6 pb-6 lg:pb-8">
           <HeroCarousel />
         </section>
 
-        {/* Promo Banner */}
-        <section className="pb-8">
-          <PromoBanner
-            title="Shopping made easy"
-            subtitle="Buy and sell safely with escrow protection"
-            ctaText="Learn more"
-            ctaLink="/help/how-it-works"
-            variant="primary"
-          />
+        {/* Promo Banner Carousel */}
+        <section className="pb-8 lg:pb-12">
+          <PromoBanner />
         </section>
 
         {/* Recently Viewed / New Arrivals */}
@@ -213,7 +207,7 @@ export default function Home() {
 
         {/* Seller CTA */}
         {!isAuthenticated && (
-          <section className="pb-12">
+          <section className="hidden lg:block pb-12">
             <div className="relative overflow-hidden bg-primary/90 rounded-2xl p-8 md:p-12">
               {/* Background Pattern */}
               <div className="absolute inset-0 opacity-10 hidden">
