@@ -34,7 +34,7 @@ export function ProfileLayout() {
     { label: "Settings", icon: Settings, path: "/settings" },
   ];
 
-  const messagesPadding = location.pathname === "/messages";
+  const messagesPadding = location.pathname.startsWith("/messages");
 
   const handleLogout = () => {
     logout();
@@ -46,8 +46,8 @@ export function ProfileLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="container mx-auto px-0 lg:py-6 ">
+    <div className="min-h-[calc(100vh-3.5rem)] h-full md:min-h-[calc(100vh-11rem)] lg:min-h-screen bg-white">
+      <div className="container mx-auto px-0 pb-6 lg:py-6 ">
         {/* Header Section */}
         <div className="hidden lg:flex flex-col md:flex-row md:items-end md:gap-36 gap-20 lg:gap-40 justify-between mb-8 pb-8 border-b border-gray-100 px-4 lg:px-8">
           <div>

@@ -102,7 +102,7 @@ export function OrdersPage() {
     <div className="mx-auto flex flex-col lg:flex-row gap-4 md:gap-8 pb-12">
       {/* Sidebar Filters */}
       <div className="lg:w-64 shrink-0">
-        <div className="flex lg:flex-col  lg:sticky lg:top-36 gap-3 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-hide">
+        <div className="flex lg:flex-col  lg:sticky lg:top-[9.5rem] gap-3 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-hide">
           {categories.map((cat) => {
             const isActive = activeCategory === cat.key;
             return (

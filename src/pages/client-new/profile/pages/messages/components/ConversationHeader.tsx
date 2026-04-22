@@ -19,12 +19,12 @@ export function ConversationHeader({
       <Button
         variant="ghost"
         size="icon"
-        className="md:hidden mr-2"
+        className="md:hidden rounded-sm py-0 px-2 h-auto w-auto"
         onClick={onBack}
         aria-label="Back to conversation list"
         title="Back"
       >
-        <ChevronLeft className="h-5 w-5" />
+        <ChevronLeft className="h-7 w-7" />
       </Button>
 
       <Avatar className="h-10 w-10">

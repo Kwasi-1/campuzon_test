@@ -11,7 +11,7 @@ export function ProductContextBar({ conversation }: ProductContextBarProps) {
   if (!conversation.product) return null;
 
   return (
-    <div className="borderb bg-muted/30 md:m-2">
+    <div className="borderb bg-muted/30 rounded-sm m-2 md:-mb-2">
       <div className="p-2 px-4">
         <Link
           to={`/product/${conversation.product.id}`}
@@ -20,7 +20,7 @@ export function ProductContextBar({ conversation }: ProductContextBarProps) {
           <img
             src={conversation.product.thumbnail || "/placeholder-product.jpg"}
             alt={conversation.product.name}
-            className="w-12 h-12 rounded-sm object-cover"
+            className="w-12 h-12 rounded-[6px] object-cover"
           />
           <div className="flex-1 min-w-0">
             <p className="font-medium truncate">{conversation.product.name}</p>

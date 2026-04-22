@@ -61,7 +61,7 @@ export function MessagesThread({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={cn(
-                  "flex items-start gap-3",
+                  "flex items-start gap-3 pt-6",
                   isOwnMessage ? "flex-row-reverse" : "",
                 )}
               >
