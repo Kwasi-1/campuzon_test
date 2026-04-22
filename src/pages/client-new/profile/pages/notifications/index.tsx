@@ -58,14 +58,19 @@ const getNotificationColor = (type: NotificationType) => {
   }
 };
 
-const getNotificationLink = (notification: Notification): string | null => {
+const getNotificationLink = (notification: Notification, isSeller: boolean): string | null => {
+  if (notification.actionUrl) return notification.actionUrl;
   if (!notification.referenceType || !notification.referenceID) return null;
 
   switch (notification.referenceType) {
     case "order":
-      return `/orders/${notification.referenceID}`;
+      return isSeller 
+        ? `/seller/orders/${notification.referenceID}` 
+        : `/orders/${notification.referenceID}`;
     case "conversation":
-      return `/messages/${notification.referenceID}`;
+      return isSeller 
+        ? `/seller/messages` // seller messages doesn't support deep linking yet, but it will go to the messages page
+        : `/messages/${notification.referenceID}`;
     case "product":
       return `/products/${notification.referenceID}`;
     default:
@@ -75,7 +80,7 @@ const getNotificationLink = (notification: Notification): string | null => {
 
 export function NotificationsPage() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
   const [isLoading, setIsLoading] = useState(true);
@@ -220,7 +225,7 @@ export function NotificationsPage() {
       <div className="flex flex-col lg:flex-row gap-8 pb-12">
         {/* Sidebar Filters */}
         <div className="lg:w-64 xl:w-72 shrink-0">
-          <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-hide lg:sticky lg:top-36">
+          <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-hide lg:sticky lg:top-40">
             {sidebarCategories.map((cat) => {
               const isActive = filter === cat.key;
               return (
@@ -228,7 +233,7 @@ export function NotificationsPage() {
                   key={cat.key}
                   type="button"
                   onClick={() => setFilter(cat.key)}
-                  className={`flex items-center justify-between pl-5 pr-[2px] py-[3px] xl:py-1 xl:pr-1 rounded-full transition-all shrink-0 xl:shrink-auto whitespace-nowrap xl:whitespace-normal border shadow-sm ${
+                  className={`flex items-center justify-between pl-5 pr-[2px] py-[3px] lg:py-1 lg:pr-1 rounded-full transition-all shrink-0 xl:shrink-auto whitespace-nowrap lg:whitespace-normal border shadow-sm ${
                     isActive
                       ? "bg-[#1C1C1E] text-white border-[#1C1C1E]"
                       : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
@@ -236,7 +241,7 @@ export function NotificationsPage() {
                 >
                   <span className="font-medium text-[15px]">{cat.label}</span>
                   <span
-                    className={`h-10 w-10 xl:w-12 xl:h-12 ml-3 flex items-center justify-center rounded-full text-xs font-bold ${
+                    className={`h-10 w-10 lg:w-12 lg:h-12 ml-3 flex items-center justify-center rounded-full text-xs font-bold ${
                       isActive
                         ? "bg-white text-black"
                         : "bg-gray-100 text-gray-600"
@@ -263,7 +268,7 @@ export function NotificationsPage() {
               {Array.from({ length: 3 }).map((_, index) => (
                 <div
                   key={index}
-                  className="bg-white border border-gray-100 rounded-[24px] p-5 md:p-6 shadow-sm"
+                  className="bg-white border rounded-lg lg:rounded-[24px] p-5 md:p-6 shadow-sm"
                 >
                   <div className="flex items-start gap-4">
                     <Skeleton className="h-11 w-11 rounded-2xl" />
@@ -311,7 +316,7 @@ export function NotificationsPage() {
             <div className="space-y-4">
               {filteredNotifications.map((notification, index) => {
                 const Icon = getNotificationIcon(notification.type);
-                const link = getNotificationLink(notification);
+                const link = getNotificationLink(notification, user?.isOwner ?? false);
 
                 return (
                   <motion.div
@@ -321,10 +326,10 @@ export function NotificationsPage() {
                     transition={{ delay: index * 0.03 }}
                   >
                     <div
-                      className={`bg-white border rounded-[24px] overflow-hidden shadow-sm transition-all ${
+                      className={`bg-white border rounded-lg lg:rounded-[24px] overflow-hidden shadow-sm transition-all ${
                         !notification.isRead
                           ? "border-[#1C1C1E]/25 ring-1 ring-[#1C1C1E]/10"
-                          : "border-gray-100"
+                          : "border-border"
                       }`}
                     >
                       <div className="p-5 md:p-6">
