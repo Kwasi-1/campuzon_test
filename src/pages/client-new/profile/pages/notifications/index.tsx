@@ -69,7 +69,7 @@ const getNotificationLink = (notification: Notification, isSeller: boolean): str
         : `/orders/${notification.referenceID}`;
     case "conversation":
       return isSeller 
-        ? `/seller/messages` // seller messages doesn't support deep linking yet, but it will go to the messages page
+        ? `/seller/messages?conversation=${notification.referenceID}` 
         : `/messages/${notification.referenceID}`;
     case "product":
       return `/products/${notification.referenceID}`;
@@ -225,7 +225,7 @@ export function NotificationsPage() {
       <div className="flex flex-col lg:flex-row gap-8 pb-12">
         {/* Sidebar Filters */}
         <div className="lg:w-64 xl:w-72 shrink-0">
-          <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-hide lg:sticky lg:top-40">
+          <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-hide lg:sticky lg:top-[9.5rem]">
             {sidebarCategories.map((cat) => {
               const isActive = filter === cat.key;
               return (
