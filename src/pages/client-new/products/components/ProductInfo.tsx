@@ -1,10 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  ChevronDown,
-  ChevronUp,
-  Heart,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, Heart, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/hooks";
 import type { Product } from "@/types-new";
@@ -96,7 +92,9 @@ export function ProductInfo({
   const isOutOfStock = product.quantity === 0;
 
   const categoryLabel = product.category
-    ? product.category.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    ? product.category
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase())
     : null;
 
   return (
@@ -107,7 +105,10 @@ export function ProductInfo({
       </h1>
 
       {/* Product Name */}
-      <Link to={`/stores/${product.store?.slug}`} className="text-[14px] text-gray-600 mb-4 lg:mb-5">
+      <Link
+        to={`/stores/${product.store?.slug}`}
+        className="text-[14px] text-gray-600 mb-4 lg:mb-5"
+      >
         {product.store?.name || "Campus Store"}
       </Link>
 
@@ -134,25 +135,69 @@ export function ProductInfo({
       {(categoryLabel || product.condition) && (
         <div className="flex flex-wrap gap-2 mb-5">
           {categoryLabel && (
-            <span className="text-xs border border-gray-300 px-2.5 py-1 text-gray-600 uppercase tracking-wide">
+            <span className="text-xs border rounded border-gray-300 px-2.5 py-1 text-gray-600 uppercase tracking-wide">
               {categoryLabel}
             </span>
           )}
           {product.condition && product.condition !== "new" && (
-            <span className="text-xs border border-gray-300 px-2.5 py-1 text-gray-600 uppercase tracking-wide">
+            <span className="text-xs border rounded border-gray-300 px-2.5 py-1 text-gray-600 uppercase tracking-wide">
               {product.condition.replace(/-/g, " ")}
             </span>
           )}
         </div>
       )}
 
+      {/* Stock / demand signals */}
+      {product.soldCount || product.viewCount ? (
+        <div className="flex items-center gap-3 mb-5 text-xs text-gray-500">
+          {product.soldCount && product.soldCount > 0 ? (
+            <span className="flex items-center gap-1">
+              <TrendingUp className="h-3 w-3" />
+              {product.soldCount} sold
+            </span>
+          ) : null}
+          {product.viewCount && product.viewCount > 0 ? (
+            <span>{product.viewCount} people viewing</span>
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* Out of stock banner */}
+      {isOutOfStock && (
+        <div className="mb-5 border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+          This item is currently out of stock.
+        </div>
+      )}
+
+      {/* Low-stock warning */}
+      {!isOutOfStock && product.quantity && product.quantity < 10 ? (
+        <p className="md:hidden mb-4 text-xs text-orange-600 font-medium">
+          Only {product.quantity} left in stock
+        </p>
+      ) : null}
+
       {/* Size / Quantity selector */}
       {!hideActionButtons && !isOutOfStock && (
         <div className="mb-4">
-          <div className="flex justify-end mb-1">
-            <span className="text-xs text-gray-500 hover:text-gray-900 underline cursor-pointer transition-colors">
-              Quantity guide
-            </span>
+          <div
+            className={cn(
+              "md:flex justify-between",
+              !isOutOfStock && product.quantity && product.quantity < 10
+                ? "justify-between"
+                : "justify-end",
+            )}
+          >
+            {/* Low-stock warning */}
+            {!isOutOfStock && product.quantity && product.quantity < 10 ? (
+              <p className="hidden md:block mb-1 text-xs text-orange-600 font-medium">
+                Only {product.quantity} left in stock
+              </p>
+            ) : null}
+            <div className="flex justify-end mb-1">
+              <span className="text-xs text-gray-500 hover:text-gray-900 underline cursor-pointer transition-colors">
+                Quantity guide
+              </span>
+            </div>
           </div>
           <div className="relative border border-[#dddddd] bg-white hover:border-gray-900 transition-colors rounded-full">
             <select
@@ -160,7 +205,9 @@ export function ProductInfo({
               onChange={(e) => onQuantityChange(Number(e.target.value))}
               className="w-full appearance-none bg-transparent px-4 py-3.5 pr-10 text-[14px] text-gray-900 cursor-pointer focus:outline-none"
             >
-              <option value="" disabled className="text-gray-400">Select quantity</option>
+              <option value="" disabled className="text-gray-400">
+                Select quantity
+              </option>
               {Array.from({ length: maxQty }, (_, i) => i + 1).map((n) => (
                 <option key={n} value={n}>
                   {n}
@@ -174,7 +221,10 @@ export function ProductInfo({
 
       {/* Buttons block */}
       {!hideActionButtons && (
-        <div id="main-product-actions" className="flex flex-col lg:flex-row gap-3 mb-4">
+        <div
+          id="main-product-actions"
+          className="flex flex-col lg:flex-row gap-3 mb-4"
+        >
           <button
             onClick={onAddToCart}
             disabled={isOutOfStock}
@@ -203,23 +253,27 @@ export function ProductInfo({
       )}
 
       {/* Availability Warning */}
-      {isOutOfStock ? null : product.quantity && product.quantity <= 3 ? (
+      {/* {isOutOfStock ? null : product.quantity && product.quantity <= 3 ? (
         <p className="text-[13px] font-semibold mb-6 text-xs text-orange-600 fontmedium">
           Last {product.quantity} left — make it yours!
         </p>
       ) : (
         <div className="mb-6"></div>
-      )}
+      )} */}
 
       {/* Delivery Estimate */}
       <div className="mb-6">
-        <p className="text-[13px] font-semibold text-gray-900 mb-0.5">Estimated delivery</p>
+        <p className="text-[13px] font-semibold text-gray-900 mb-0.5">
+          Estimated delivery
+        </p>
         <p className="text-[14px] text-gray-700">Same day - Next day</p>
       </div>
 
       {/* Extra info box */}
       <div className="p-4 bg-gray-50 font-medium text-gray-900 text-[13px] md:text-sm lg:text-[14px] leading-relaxed mb-6 flex flex-col md:flex-row md:items-center rounded-md md:rounded-lg">
-        <span>Free campus returns within 12 hours | Verified Student Seller</span>
+        <span>
+          Free campus returns within 12 hours | Verified Student Seller
+        </span>
       </div>
     </div>
   );
