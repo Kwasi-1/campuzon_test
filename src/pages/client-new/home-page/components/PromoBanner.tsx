@@ -10,32 +10,32 @@ const PROMO_ITEMS = [
     subtitle: "Buy and sell safely with escrow protection",
     ctaText: "Learn more",
     ctaLink: "/help/how-it-works",
-    icon: <ShoppingBag className="w-6 h-6 text-blue-600" />,
-    iconBg: "bg-blue-100",
+    icon: <ShoppingBag className="w-6 h-6 text-gray-600" />,
+    iconBg: "bg-gray-100",
   },
   {
     title: "Escrow Protected",
     subtitle: "Your money is safe until delivery",
     ctaText: "Learn more",
     ctaLink: "/help/how-it-works",
-    icon: <ShieldCheck className="w-6 h-6 text-green-600" />,
-    iconBg: "bg-green-100",
+    icon: <ShieldCheck className="w-6 h-6 text-gray-600" />,
+    iconBg: "bg-gray-100",
   },
   {
     title: "Campus Pickup",
     subtitle: "Meet safely on campus",
     ctaText: "Learn more",
     ctaLink: "/help/how-it-works",
-    icon: <Truck className="w-6 h-6 text-teal-600" />,
-    iconBg: "bg-teal-100",
+    icon: <Truck className="w-6 h-6 text-gray-600" />,
+    iconBg: "bg-gray-100",
   },
   {
     title: "Secure Payments",
     subtitle: "Mobile money & bank transfers",
     ctaText: "Learn more",
     ctaLink: "/help/how-it-works",
-    icon: <CreditCard className="w-6 h-6 text-purple-600" />,
-    iconBg: "bg-purple-100",
+    icon: <CreditCard className="w-6 h-6 text-gray-600" />,
+    iconBg: "bg-gray-100",
   },
 ];
 
@@ -61,10 +61,10 @@ export default function PromoBanner({ className }: { className?: string }) {
       <AnimatePresence mode="wait">
         <motion.div
           key={currentIndex}
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -15 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0, x: 60 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -60 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
           className="flex items-center justify-between w-full"
         >
           <div className="flex items-center gap-4">
