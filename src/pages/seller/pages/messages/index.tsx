@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ChevronLeft,
@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuthStore } from "@/stores";
 import { formatRelativeTime } from "@/lib/utils";
+import { Skeleton } from "@/components/shared/Skeleton";
 import {
   useConversations,
   useMarkAsRead,
@@ -112,6 +113,7 @@ function getStoreActionBlockReason(storeStatus?: string): string | null {
 
 export function SellerMessagesPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, isAuthenticated } = useAuthStore();
   const { data: store } = useSellerMyStore();
 
@@ -119,7 +121,7 @@ export function SellerMessagesPage() {
   const [filter, setFilter] = useState<SellerConversationFilter>("all");
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | null
-  >(null);
+  >(searchParams.get("conversation") || null);
   const [newMessage, setNewMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState<SelectedImage | null>(
     null,
@@ -131,10 +133,10 @@ export function SellerMessagesPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: conversations = [] } = useConversations(
+  const { data: conversations = [], isLoading: isLoadingConversations } = useConversations(
     Boolean(isAuthenticated && user?.isOwner),
   );
-  const { data: activeMessages = [] } = useMessages(
+  const { data: activeMessages = [], isLoading: isLoadingMessages } = useMessages(
     selectedConversationId || "",
     Boolean(selectedConversationId),
   );
@@ -244,6 +246,7 @@ export function SellerMessagesPage() {
 
   const handleSelectConversation = (conversationId: string) => {
     setSelectedConversationId(conversationId);
+    setSearchParams(new URLSearchParams({ conversation: conversationId }));
     markAsRead.mutate(conversationId);
   };
 
@@ -375,7 +378,18 @@ export function SellerMessagesPage() {
 
           <ScrollArea className="flex-1 overflow-y-auto">
             <div className="p-2">
-              {filteredConversations.length === 0 ? (
+              {isLoadingConversations ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className="mb-[2px] w-full overflow-hidden rounded-md border border-transparent p-4 flex items-center space-x-3">
+                    <Skeleton className="h-12 w-12 rounded-full flex-shrink-0" />
+                    <div className="flex-1 space-y-2">
+                       <Skeleton className="h-4 w-2/3" />
+                       <Skeleton className="h-3 w-1/2" />
+                       <Skeleton className="h-3 w-5/6" />
+                    </div>
+                  </div>
+                ))
+              ) : filteredConversations.length === 0 ? (
                 <div className="py-12 text-center text-muted-foreground">
                   <MessageCircle className="mx-auto mb-3 h-12 w-12 opacity-50" />
                   <p>No conversations found</p>
@@ -549,7 +563,7 @@ export function SellerMessagesPage() {
               </div>
 
               {selectedConversation.product ? (
-                <div className="bg-muted/30 md:m-2">
+                <div className="bg-muted/30 rounded-sm md:m-2">
                   <div className="p-2 px-4">
                     <div className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-muted/50">
                       <img
@@ -571,7 +585,28 @@ export function SellerMessagesPage() {
               ) : null}
 
               <ScrollArea className="flex-1 overflow-y-auto p-4">
-                {activeMessages.length === 0 ? (
+                {isLoadingMessages ? (
+                  <div className="space-y-6">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className={`flex items-start gap-3 ${
+                          index % 2 === 0 ? "flex-row-reverse" : ""
+                        }`}
+                      >
+                        <Skeleton className="h-8 w-8 rounded-full flex-shrink-0" />
+                        <div
+                          className={`flex flex-col gap-2 max-w-[70%] ${
+                            index % 2 === 0 ? "items-end" : "items-start"
+                          }`}
+                        >
+                          <Skeleton className={`h-10 w-48 ${index % 2 === 0 ? "rounded-tr-sm rounded-l-2xl rounded-br-2xl" : "rounded-tl-sm rounded-r-2xl rounded-bl-2xl"}`} />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : activeMessages.length === 0 ? (
                   <div className="py-12 text-center text-muted-foreground">
                     <p>No messages yet. Start the conversation!</p>
                   </div>
