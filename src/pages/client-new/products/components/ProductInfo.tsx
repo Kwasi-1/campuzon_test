@@ -95,6 +95,10 @@ export function ProductInfo({
   const maxQty = Math.min(product.quantity || 10, 10);
   const isOutOfStock = product.quantity === 0;
 
+  const categoryLabel = product.category
+    ? product.category.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    : null;
+
   return (
     <div className="flex flex-col pr-1 md:pr-0 md:pt-4">
       {/* Brand line (Store Name equivalent) */}
@@ -125,6 +129,22 @@ export function ProductInfo({
           )}
         </div>
       </div>
+
+      {/* Category / condition tags */}
+      {(categoryLabel || product.condition) && (
+        <div className="flex flex-wrap gap-2 mb-5">
+          {categoryLabel && (
+            <span className="text-xs border border-gray-300 px-2.5 py-1 text-gray-600 uppercase tracking-wide">
+              {categoryLabel}
+            </span>
+          )}
+          {product.condition && product.condition !== "new" && (
+            <span className="text-xs border border-gray-300 px-2.5 py-1 text-gray-600 uppercase tracking-wide">
+              {product.condition.replace(/-/g, " ")}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Size / Quantity selector */}
       {!hideActionButtons && !isOutOfStock && (
