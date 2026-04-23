@@ -1,26 +1,12 @@
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { Header } from "./Header";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { Toaster } from "react-hot-toast";
 import { AuthRequiredModal } from "@/components/auth/AuthRequiredModal";
-
-const BOTTOM_NAV_PATHS = new Set([
-  "/",
-  "/products",
-  "/wishlist",
-  "/cart",
-  "/profile",
-]);
-
-function normalizePath(pathname: string): string {
-  if (pathname === "/") return pathname;
-  return pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
-}
+import { useNavigationContext } from "@/hooks/useNavigationContext";
 
 export function Layout() {
-  const location = useLocation();
-  const currentPath = normalizePath(location.pathname);
-  const showBottomNav = BOTTOM_NAV_PATHS.has(currentPath);
+  const { showBottomNav } = useNavigationContext();
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">

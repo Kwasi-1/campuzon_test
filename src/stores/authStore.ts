@@ -49,6 +49,19 @@ interface LoginSuccess {
 }
 
 type LoginResponse = LoginSuccess | TwoFactorRequired;
+type UserMode = 'buyer' | 'seller';
+
+function canAccessSellerMode(user: User | null): boolean {
+  if (!user) return false;
+  return Boolean(user.isOwner || user.store);
+}
+
+function resolveUserMode(currentMode: UserMode, user: User | null): UserMode {
+  if (currentMode === 'seller' && canAccessSellerMode(user)) {
+    return 'seller';
+  }
+  return 'buyer';
+}
 
 interface AuthState {
   user: User | null;
@@ -56,13 +69,16 @@ interface AuthState {
   refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  userMode: UserMode;
   
   // Computed
   isProfileComplete: () => boolean;
+  canAccessSellerPortal: () => boolean;
   
   // Actions
   setUser: (user: User | null) => void;
   setTokens: (accessToken: string, refreshToken: string) => void;
+  switchUserMode: (mode: UserMode) => void;
   login: (email: string, password: string) => Promise<TwoFactorRequired | null>;
   verify2FA: (tempToken: string, code: string) => Promise<void>;
   register: (data: RegisterData) => Promise<RegisterResult>;
@@ -98,8 +114,14 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: null,
       isAuthenticated: false,
       isLoading: false,
+      userMode: 'buyer',
 
-      setUser: (user) => set({ user, isAuthenticated: !!user }),
+      setUser: (user) =>
+        set((state) => ({
+          user,
+          isAuthenticated: !!user,
+          userMode: resolveUserMode(state.userMode, user),
+        })),
 
       // Check if user has completed their profile (has phone and institution)
       isProfileComplete: () => {
@@ -108,8 +130,24 @@ export const useAuthStore = create<AuthState>()(
         return !!(user.phoneNumber && user.institutionID);
       },
 
+      canAccessSellerPortal: () => canAccessSellerMode(get().user),
+
       setTokens: (accessToken, refreshToken) => 
         set({ accessToken, refreshToken, isAuthenticated: true }),
+
+      switchUserMode: (mode) => {
+        const user = get().user;
+        if (!user) {
+          set({ userMode: 'buyer' });
+          return;
+        }
+
+        if (mode === 'seller' && !canAccessSellerMode(user)) {
+          return;
+        }
+
+        set({ userMode: mode });
+      },
 
       login: async (email, password) => {
         set({ isLoading: true });
@@ -139,6 +177,7 @@ export const useAuthStore = create<AuthState>()(
             refreshToken: tokens.refreshToken,
             isAuthenticated: true,
             isLoading: false,
+            userMode: 'buyer',
           });
           return null;
         }
@@ -162,6 +201,7 @@ export const useAuthStore = create<AuthState>()(
             refreshToken: loginData.refreshToken,
             isAuthenticated: true,
             isLoading: false,
+            userMode: resolveUserMode(get().userMode, loginData.user),
           });
           return null;
         } catch (error) {
@@ -190,6 +230,7 @@ export const useAuthStore = create<AuthState>()(
             refreshToken: tokens.refreshToken,
             isAuthenticated: true,
             isLoading: false,
+            userMode: 'buyer',
           });
           return;
         }
@@ -207,6 +248,7 @@ export const useAuthStore = create<AuthState>()(
             refreshToken: data.refreshToken,
             isAuthenticated: true,
             isLoading: false,
+            userMode: resolveUserMode(get().userMode, data.user),
           });
         } catch (error) {
           set({ isLoading: false });
@@ -243,6 +285,7 @@ export const useAuthStore = create<AuthState>()(
             refreshToken: tokens.refreshToken,
             isAuthenticated: true,
             isLoading: false,
+            userMode: 'buyer',
           });
           return {
             verificationRequired: false,
@@ -273,6 +316,7 @@ export const useAuthStore = create<AuthState>()(
               refreshToken: null,
               isAuthenticated: false,
               isLoading: false,
+              userMode: 'buyer',
             });
 
             return {
@@ -289,6 +333,7 @@ export const useAuthStore = create<AuthState>()(
             refreshToken: result.refreshToken || null,
             isAuthenticated: true,
             isLoading: false,
+            userMode: resolveUserMode(get().userMode, result.user),
           });
 
           return {
@@ -323,7 +368,11 @@ export const useAuthStore = create<AuthState>()(
             institutionID: '', // Empty to trigger profile completion
           };
           
-          set({ user: googleUser, isLoading: false });
+          set({
+            user: googleUser,
+            isLoading: false,
+            userMode: resolveUserMode(get().userMode, googleUser),
+          });
           return false; // Profile is incomplete
         }
         
@@ -333,7 +382,11 @@ export const useAuthStore = create<AuthState>()(
           const { extractData } = await import('@/lib/api');
           const response = await api.get('/user/me');
           const data = extractData<{ user: User }>(response);
-          set({ user: data.user, isLoading: false });
+          set({
+            user: data.user,
+            isLoading: false,
+            userMode: resolveUserMode(get().userMode, data.user),
+          });
           
           const user = data.user;
           return !!(user.phoneNumber && user.institutionID);
@@ -349,6 +402,7 @@ export const useAuthStore = create<AuthState>()(
           accessToken: null,
           refreshToken: null,
           isAuthenticated: false,
+          userMode: 'buyer',
         });
       },
 
@@ -368,7 +422,11 @@ export const useAuthStore = create<AuthState>()(
           const { extractData } = await import('@/lib/api');
           const response = await api.get('/user/me');
           const data = extractData<{ user: User }>(response);
-          set({ user: data.user, isLoading: false });
+          set({
+            user: data.user,
+            isLoading: false,
+            userMode: resolveUserMode(get().userMode, data.user),
+          });
         } catch (error) {
           set({ isLoading: false });
           throw error;
@@ -400,6 +458,7 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         user: state.user,
         isAuthenticated: state.isAuthenticated,
+        userMode: state.userMode,
       }),
     }
   )

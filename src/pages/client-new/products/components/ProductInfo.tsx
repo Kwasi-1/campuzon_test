@@ -149,7 +149,7 @@ export function ProductInfo({
 
       {/* Stock / demand signals */}
       {product.soldCount || product.viewCount ? (
-        <div className="flex items-center gap-3 mb-5 text-xs text-gray-500">
+        <div className="flex items-center mdjustify-end gap-3 mb-5 text-xs text-gray-500 md:-mt10">
           {product.soldCount && product.soldCount > 0 ? (
             <span className="flex items-center gap-1">
               <TrendingUp className="h-3 w-3" />
