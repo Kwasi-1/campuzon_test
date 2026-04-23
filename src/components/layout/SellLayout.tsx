@@ -19,6 +19,7 @@ import { useAuthStore } from "@/stores";
 import { useMyStore } from "@/hooks";
 import logo from "@/assets/images/CAMPUZONV2LT.png";
 import { StoreStatusAlert } from "@/pages/seller/components/StoreStatusAlert";
+import { MobileBottomNav } from "./MobileBottomNav";
 
 const NAV_LINKS = [
   { to: "/seller/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -52,7 +53,13 @@ export function SellLayout() {
 
   // Auth guard — redirect unauthenticated users to login
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ returnTo: window.location.pathname }} />;
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ returnTo: window.location.pathname }}
+      />
+    );
   }
 
   const handleLogout = () => {
@@ -95,15 +102,16 @@ export function SellLayout() {
 
               <div className="h-5 w-px bg-gray-200" />
 
-              
-            <Link to="/seller/dashboard" className="shrink-0 hidden md:block">
-              <img src={logo} alt="Campuzon" className="h-12 w-auto" />
-            </Link>
+              <Link to="/seller/dashboard" className="shrink-0 hidden md:block">
+                <img src={logo} alt="Campuzon" className="h-12 w-auto" />
+              </Link>
 
               {store?.storeName && (
                 <div className="hidden md:flex lg:hidden items-center gap-1.5 rounded-full bg-gray100 px-3 py-2 text-xs font-medium text-gray-600 border">
                   <Store className="h-3.5 w-3.5 shrink-0" />
-                  <span className="max-w-[160px] truncate">{store.storeName}</span>
+                  <span className="max-w-[160px] truncate">
+                    {store.storeName}
+                  </span>
                 </div>
               )}
             </div>
@@ -308,10 +316,12 @@ export function SellLayout() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 lg:px-8">
+      <main className="flex-1 lg:px-8 pb-16 lg:pb-0">
         <StoreStatusAlert />
         <Outlet />
       </main>
+
+      <MobileBottomNav />
 
       <Toaster
         position="top-right"

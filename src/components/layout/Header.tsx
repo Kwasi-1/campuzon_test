@@ -19,6 +19,7 @@ import { Icon } from "@iconify/react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { RoleSwitchBottomSheet } from "./RoleSwitchBottomSheet";
 
 export function Header() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,6 +27,7 @@ export function Header() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [showRoleSwitchSheet, setShowRoleSwitchSheet] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -49,10 +51,11 @@ export function Header() {
   const cartItems = useCartStore((state) => state.items);
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, logout, userMode } = useAuthStore();
 
   const { data: wishlist } = useWishlist();
   const wishlistCount = wishlist?.length || 0;
+  const canAccessSeller = Boolean(user?.isOwner || user?.store);
 
   const categories = [
     { label: "Dorm Essentials", value: "dorm-essentials" },
@@ -194,9 +197,7 @@ export function Header() {
                     <SearchHeader
                       value={searchQuery}
                       onChange={setSearchQuery}
-                      onSearch={() =>
-                        handleSearch({ preventDefault: () => {} } as any)
-                      }
+                      onSearch={() => handleSearch()}
                       onBack={() => navigate("/")}
                       placeholder="Search campus..."
                     />
@@ -289,7 +290,19 @@ export function Header() {
 
                 {/* User — hidden on mobile */}
                 {isAuthenticated && user ? (
-                  <div className="hidden md:block">
+                  <div className="hidden md:flex items-center gap-2">
+                    {canAccessSeller && (
+                      <span
+                        className={cn(
+                          "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border",
+                          userMode === "seller"
+                            ? "bg-amber-50 text-amber-700 border-amber-200"
+                            : "bg-teal-50 text-teal-700 border-teal-200",
+                        )}
+                      >
+                        {userMode === "seller" ? "Seller" : "Buyer"}
+                      </span>
+                    )}
                     <UserMenu />
                   </div>
                 ) : (
@@ -303,6 +316,36 @@ export function Header() {
                 )}
               </div>
             </div>
+
+            {isAuthenticated && user && (
+              <button
+                onClick={() => setShowRoleSwitchSheet(true)}
+                className="md:hidden inline-flex items-center gap-2 rounded-full border border-border px-2 py-1"
+                aria-label="Open account mode switcher"
+              >
+                {user.profileImage ? (
+                  <img
+                    src={user.profileImage}
+                    alt={user.displayName || user.firstName}
+                    className="h-6 w-6 rounded-full object-cover"
+                  />
+                ) : (
+                  <User className="h-4 w-4" />
+                )}
+                {canAccessSeller && (
+                  <span
+                    className={cn(
+                      "text-[10px] font-semibold",
+                      userMode === "seller"
+                        ? "text-amber-700"
+                        : "text-teal-700",
+                    )}
+                  >
+                    {userMode === "seller" ? "Seller" : "Buyer"}
+                  </span>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -406,6 +449,10 @@ export function Header() {
       <MobileSearchOverlay
         isOpen={showMobileSearch}
         onClose={() => setShowMobileSearch(false)}
+      />
+      <RoleSwitchBottomSheet
+        isOpen={showRoleSwitchSheet}
+        onClose={() => setShowRoleSwitchSheet(false)}
       />
     </header>
   );

@@ -1,3 +1,4 @@
+import type { ComponentType, MouseEvent } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Home,
@@ -6,12 +7,25 @@ import {
   User,
   Heart,
   Flame,
+  Package,
+  MessageSquare,
+  Settings,
+  BarChart3,
 } from "lucide-react";
 import { useAuthStore } from "@/stores";
 import { useCartStore } from "@/stores";
 import { useAuthPromptStore } from "@/stores/authPromptStore";
+import { useNavigationContext } from "@/hooks/useNavigationContext";
 
-const baseNavStart = [
+type NavItem = {
+  path: string;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+  requiresAuth: boolean;
+  exactMatch?: boolean;
+};
+
+const publicTabs: NavItem[] = [
   {
     path: "/",
     label: "Shop",
@@ -24,76 +38,110 @@ const baseNavStart = [
     label: "Category",
     icon: LayoutGrid,
     requiresAuth: false,
-    exactMatch: false,
   },
-] as const;
-
-const baseNavEnd = [
   {
-    path: "/cart",
-    label: "Cart",
-    icon: ShoppingCart,
+    path: "/products?sort=hot",
+    label: "Deals",
+    icon: Flame,
     requiresAuth: false,
-    exactMatch: false,
   },
+  { path: "/cart", label: "Cart", icon: ShoppingCart, requiresAuth: false },
+  { path: "/profile", label: "Profile", icon: User, requiresAuth: true },
+];
+
+const clientTabs: NavItem[] = [
   {
     path: "/profile",
     label: "Profile",
     icon: User,
     requiresAuth: true,
-    exactMatch: false,
+    exactMatch: true,
   },
-] as const;
+  { path: "/orders", label: "Orders", icon: ShoppingCart, requiresAuth: true },
+  {
+    path: "/messages",
+    label: "Messages",
+    icon: MessageSquare,
+    requiresAuth: true,
+  },
+  { path: "/wishlist", label: "Wishlist", icon: Heart, requiresAuth: true },
+  { path: "/cart", label: "Cart", icon: ShoppingCart, requiresAuth: true },
+];
+
+const sellerTabs: NavItem[] = [
+  {
+    path: "/seller/dashboard",
+    label: "Dashboard",
+    icon: BarChart3,
+    requiresAuth: true,
+  },
+  {
+    path: "/seller/products",
+    label: "Products",
+    icon: Package,
+    requiresAuth: true,
+  },
+  {
+    path: "/seller/orders",
+    label: "Orders",
+    icon: ShoppingCart,
+    requiresAuth: true,
+  },
+  {
+    path: "/seller/messages",
+    label: "Messages",
+    icon: MessageSquare,
+    requiresAuth: true,
+  },
+  {
+    path: "/seller/settings",
+    label: "Settings",
+    icon: Settings,
+    requiresAuth: true,
+  },
+];
 
 export function MobileBottomNav() {
   const location = useLocation();
+  const { context, showBottomNav } = useNavigationContext();
   const { isAuthenticated, user } = useAuthStore();
   const { openAuthPrompt } = useAuthPromptStore();
   const cartItems = useCartStore((state) => state.items);
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
-  // Dynamic middle tab — built inside the component where hooks are available
-  const middleTab = isAuthenticated
-    ? {
-        path: "/wishlist",
-        label: "Wishlist",
-        icon: Heart,
-        requiresAuth: true,
-        exactMatch: false,
-      }
-    : {
-        path: "/products?sort=hot",
-        label: "Hot Deals",
-        icon: Flame,
-        requiresAuth: false,
-        exactMatch: false,
-      };
+  if (!showBottomNav) {
+    return null;
+  }
 
-  const navItems = [...baseNavStart, middleTab, ...baseNavEnd];
+  const navItems =
+    context === "seller"
+      ? sellerTabs
+      : context === "client"
+        ? clientTabs
+        : publicTabs;
 
-  const handleNavClick = (
-    e: React.MouseEvent,
-    path: string,
-    requiresAuth: boolean,
-  ) => {
-    if (requiresAuth && !isAuthenticated) {
+  const handleNavClick = (e: MouseEvent, item: NavItem) => {
+    if (item.requiresAuth && !isAuthenticated) {
       e.preventDefault();
-      openAuthPrompt(path, "Sign in to access this feature.");
+      openAuthPrompt(item.path, "Sign in to access this feature.");
     }
   };
 
-  const isTabActive = (item: (typeof navItems)[number]) => {
+  const isTabActive = (item: NavItem) => {
     if (item.exactMatch) {
-      return location.pathname === item.path;
+      return location.pathname === item.path.split("?")[0];
     }
-    if (item.path === "/products") {
-      const isTrends =
-        location.pathname === "/products" &&
-        location.search.includes("sort=popular");
-      return location.pathname.startsWith("/products") && !isTrends;
+    if (item.path.startsWith("/products?")) {
+      const query = item.path.split("?")[1] || "";
+      return (
+        location.pathname === "/products" && location.search.includes(query)
+      );
     }
     const pathSegment = item.path.split("?")[0];
-    return location.pathname.startsWith(pathSegment);
+    return (
+      location.pathname === pathSegment ||
+      location.pathname.startsWith(`${pathSegment}/`)
+    );
   };
 
   return (
@@ -109,7 +157,7 @@ export function MobileBottomNav() {
             <NavLink
               key={item.label}
               to={item.path}
-              onClick={(e) => handleNavClick(e, item.path, item.requiresAuth)}
+              onClick={(e) => handleNavClick(e, item)}
               className="relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors"
             >
               <div className="relative">
