@@ -77,11 +77,22 @@ function detectContext(pathname: string): NavigationContext {
 
 function isDetailPath(pathname: string): boolean {
   const isProductDetail = pathname.startsWith("/product/");
+  const isStoreDetail = pathname.startsWith("/stores/");
+  const isStores = pathname === "/stores";
   const isOrderDetail = pathname.startsWith("/orders/");
   const isMessageDetail = pathname.startsWith("/messages/");
   const isSellerOrderDetail = pathname.startsWith("/seller/orders/");
+  const isTrackingDetail = pathname.startsWith("/track/");
 
-  return isProductDetail || isOrderDetail || isMessageDetail || isSellerOrderDetail;
+  return (
+    isProductDetail ||
+    isStoreDetail ||
+    isStores ||
+    isOrderDetail ||
+    isMessageDetail ||
+    isSellerOrderDetail ||
+    isTrackingDetail
+  );
 }
 
 export function useNavigationContext(): NavigationContextState {

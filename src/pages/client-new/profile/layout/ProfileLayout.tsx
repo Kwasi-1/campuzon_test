@@ -19,7 +19,8 @@ import {
 } from "lucide-react";
 
 export function ProfileLayout() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, canAccessSellerPortal, userMode, switchUserMode } =
+    useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -35,6 +36,7 @@ export function ProfileLayout() {
   ];
 
   const messagesPadding = location.pathname.startsWith("/messages");
+  const isProfileHome = location.pathname === "/profile";
 
   const handleLogout = () => {
     logout();
@@ -48,6 +50,32 @@ export function ProfileLayout() {
   return (
     <div className="min-h-[calc(100vh-3.5rem)] h-full md:min-h-[calc(100vh-11rem)] lg:min-h-screen bg-white">
       <div className="container mx-auto px-0 pb-6 lg:py-6 ">
+        { isProfileHome && (
+        <div className="lg:hidden px-4 pt-4 pb-2 border-b border-gray-100 bg-white">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs text-gray-500">Client Portal</p>
+              <h1 className="text-lg font-semibold text-gray-900 truncate capitalize">
+                {user.firstName} {user.lastName}
+              </h1>
+            </div>
+            {canAccessSellerPortal() && (
+              <button
+                onClick={() => {
+                  switchUserMode(userMode === "seller" ? "buyer" : "seller");
+                  navigate(
+                    userMode === "seller" ? "/profile" : "/seller/dashboard",
+                  );
+                }}
+                className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+              >
+                {userMode === "seller" ? "Switch to Buyer" : "Switch to Seller"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
         {/* Header Section */}
         <div className="hidden lg:flex flex-col md:flex-row md:items-end md:gap-36 gap-20 lg:gap-40 justify-between mb-8 pb-8 border-b border-gray-100 px-4 lg:px-8">
           <div>
@@ -97,7 +125,7 @@ export function ProfileLayout() {
 
         {/* Page Content */}
         <div
-          className={`mt-8 lg:px-8 ${messagesPadding ? "px-0 md:px-4" : "px-4"}`}
+          className={`mt-4 md:mt-6 lg:mt-8 lg:px-8 ${messagesPadding ? "px-0 md:px-4" : "px-4"}`}
         >
           <Outlet />
         </div>

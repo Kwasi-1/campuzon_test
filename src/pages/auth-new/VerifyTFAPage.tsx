@@ -2,18 +2,19 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Shield, Loader2, ArrowLeft, Smartphone, Mail } from "lucide-react";
-import {  
-  Alert,
-} from "@/components/ui/alert";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card,
+import {
+  Card,
   CardHeader,
   CardTitle,
   CardDescription,
-  CardContent } from "@/components/ui/card";
+  CardContent,
+} from "@/components/ui/card";
 import { useAuthStore } from "@/stores";
 import api, { extractError } from "@/lib/api";
 import type { TwoFactorMethod } from "@/types-new";
+import { parseRedirectTarget } from "@/lib/deepLinkHandler";
 
 interface VerifyTFAPageState {
   tempToken: string;
@@ -101,7 +102,7 @@ export function VerifyTFAPage() {
 
     try {
       await verify2FA(state.tempToken, verificationCode);
-      navigate(state.redirect || "/", { replace: true });
+      navigate(parseRedirectTarget(state.redirect, "/"), { replace: true });
     } catch (err: unknown) {
       setError(extractError(err));
       setCode(["", "", "", "", "", ""]);
@@ -177,6 +178,7 @@ export function VerifyTFAPage() {
                     inputRefs.current[index] = el;
                   }}
                   type="text"
+                  aria-label={`Verification code digit ${index + 1}`}
                   inputMode="numeric"
                   maxLength={1}
                   value={digit}

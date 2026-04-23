@@ -88,13 +88,13 @@ export function OrderCard({
           </div>
         </div>
 
-        <div className="mt-2 grid grid-cols-1 gap-4">
+        <div className="mt-2 grid grid-cols-1 gap-4 -mx-2 md:mx-0">
           {order.items?.map((item, index) => (
             <div
               key={item.id || index}
-              className="flex items-center gap-4 rounded-2xl border border-gray-100/60 bg-gray-50/50 p-3"
+              className="flex items-center gap-4 rounded-lg md:rounded-2xl border border-gray-100/60 bg-gray-50/50 p-2 md:p-3"
             >
-              <div className="h-20 w-20 shrink-0 overflow-hidden rounded-md md:rounded-lg border border-gray-100 bg-gray-100 shadow-sm">
+              <div className="h-16 w-16 md:h-18 md:w-18 lg:h-20 lg:w-20 shrink-0 overflow-hidden rounded-md md:rounded-md lg:rounded-lg border border-gray-100 bg-gray-100 shadow-sm">
                 <img
                   src={item.productImage || "/placeholder-product.jpg"}
                   alt={item.productName}
