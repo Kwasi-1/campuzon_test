@@ -8,6 +8,8 @@ import {
   Search,
   LogOut,
   Settings,
+  Store,
+  Heart,
 } from "lucide-react";
 import { useCartStore, useAuthStore } from "@/stores";
 import { useWishlist } from "@/hooks";
@@ -225,26 +227,6 @@ export function Header() {
               )}
             >
               <div className="flex items-center justify-end gap-1 sm:gap-3">
-                {/* Desktop Nav Links */}
-                <nav className="hidden md:flex items-center gap-6">
-                  <Link
-                    to="/become-seller"
-                    className="text-[14px] font-medium text-gray-800 hover:text-primary transition-colors"
-                  >
-                    Sell
-                  </Link>
-                  <Link
-                    to="/wishlist"
-                    className="text-[14px] font-medium text-gray-800 hover:text-primary transition-colors flex items-center gap-1"
-                  >
-                    Watchlist
-                    {wishlistCount > 0 && (
-                      <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full flex items-center justify-center font-bold">
-                        {wishlistCount}
-                      </span>
-                    )}
-                  </Link>
-                </nav>
 
                 {/* Mobile Search Icon - non-products pages only */}
                 <button
@@ -254,6 +236,17 @@ export function Header() {
                 >
                   <Search className="h-5 w-5" />
                 </button>
+
+                <Link
+                  to="/watchlist"
+                  className={cn(
+                    "relative h-10 w-10 inline-flex items-center justify-center rounded-full hover:bg-muted transition-colors",
+                    !isAuthenticated && "hidden md:inline-flex",
+                  )}
+                  aria-label="Notifications"
+                >
+                  <Heart className="h-5 w-5" />
+                </Link>
 
                 {/* Notifications: mobile only when logged in, desktop always */}
                 <Link
@@ -265,6 +258,17 @@ export function Header() {
                   aria-label="Notifications"
                 >
                   <Bell className="h-5 w-5" />
+                </Link>
+                {/* Show store navigation if the user is logged in */}
+                <Link
+                  to="/become-seller"
+                  className={cn(
+                    "relative h-10 w-10 inline-flex items-center justify-center rounded-full hover:bg-muted transition-colors",
+                    !isAuthenticated && "hidden md:inline-flex",
+                  )}
+                  aria-label="Store"
+                >
+                  <Store className="h-5 w-5" />
                 </Link>
 
                 {/* Cart — hidden on mobile */}
