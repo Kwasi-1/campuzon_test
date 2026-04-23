@@ -209,7 +209,7 @@ export function SellerDashboardPage() {
 
   return (
     <SellerPageTemplate
-      title={`Welcome back, ${user.store?.storeName}!`}
+      title={`Welcome back, ${user.firstName}!`}
       description="Here's what's happening with your store today."
       headerActions={
         <div className="flex gap-2">
