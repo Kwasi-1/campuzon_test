@@ -8,6 +8,9 @@ import {
   Search,
   LogOut,
   Settings,
+  Store,
+  Eye,
+  PackageOpen,
 } from "lucide-react";
 import { useCartStore, useAuthStore } from "@/stores";
 import { useWishlist } from "@/hooks";
@@ -127,7 +130,7 @@ export function Header() {
               onClick={() => setShowUserMenu(false)}
               className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors"
             >
-              <ShoppingCart className="h-4 w-4" />
+              <PackageOpen className="h-4 w-4" />
               My Orders
             </Link>
             <Link
@@ -235,22 +238,25 @@ export function Header() {
                 {/* Desktop Nav Links */}
                 <nav className="hidden md:flex items-center gap-6">
                   <Link
-                    to="/become-seller"
-                    className="text-[14px] font-medium text-gray-800 hover:text-primary transition-colors"
-                  >
-                    Sell
-                  </Link>
-                  <Link
-                    to="/wishlist"
-                    className="text-[14px] font-medium text-gray-800 hover:text-primary transition-colors flex items-center gap-1"
-                  >
-                    Watchlist
-                    {wishlistCount > 0 && (
-                      <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full flex items-center justify-center font-bold">
-                        {wishlistCount}
-                      </span>
-                    )}
-                  </Link>
+                  to="/become-seller"
+                  className={cn(
+                    "relative h-10 w-10 inline-flex items-center justify-center rounded-full hover:bg-muted transition-colors",
+                    !isAuthenticated && "hidden md:inline-flex",
+                  )}
+                  aria-label="Store"
+                >
+                  <Store className="h-5 w-5" />
+                </Link>
+                <Link
+                  to="/wishlist"
+                  className={cn(
+                    "relative h-10 w-10 inline-flex items-center justify-center rounded-full hover:bg-muted transition-colors",
+                    !isAuthenticated && "hidden md:inline-flex",
+                  )}
+                  aria-label="Watchlist"
+                >
+                  <Eye className="h-5 w-5" />
+                </Link>
                 </nav>
 
                 {/* Mobile Search Icon - non-products pages only */}

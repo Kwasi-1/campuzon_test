@@ -11,11 +11,15 @@ import {
   MessageCircle,
   Settings,
   BarChart3,
+  PackageOpen,
 } from "lucide-react";
 import { useAuthStore } from "@/stores";
 import { useCartStore } from "@/stores";
 import { useAuthPromptStore } from "@/stores/authPromptStore";
 import { useNavigationContext } from "@/hooks/useNavigationContext";
+
+// would place the unread messages here
+const unreadMessagesCount = 0; 
 
 type NavItem = {
   path: string;
@@ -51,21 +55,26 @@ const publicTabs: NavItem[] = [
 
 const clientTabs: NavItem[] = [
   {
-    path: "/profile",
-    label: "Profile",
-    icon: User,
+    path: "/",
+    label: "Shop",
+    icon: Home,
     requiresAuth: true,
     exactMatch: true,
   },
-  { path: "/orders", label: "Orders", icon: ShoppingCart, requiresAuth: true },
+  { 
+    path: "/orders", 
+    label: "Orders", 
+    icon: Package, 
+    requiresAuth: true 
+  },
   {
     path: "/messages",
     label: "Messages",
     icon: MessageCircle,
     requiresAuth: true,
   },
-  { path: "/wishlist", label: "Wishlist", icon: Heart, requiresAuth: true },
   { path: "/cart", label: "Cart", icon: ShoppingCart, requiresAuth: true },
+  { path: "/profile", label: "Profile", icon: User, requiresAuth: true },
 ];
 
 const sellerTabs: NavItem[] = [
@@ -82,15 +91,15 @@ const sellerTabs: NavItem[] = [
     requiresAuth: true,
   },
   {
-    path: "/seller/orders",
-    label: "Orders",
-    icon: ShoppingCart,
-    requiresAuth: true,
-  },
-  {
     path: "/seller/messages",
     label: "Messages",
     icon: MessageCircle,
+    requiresAuth: true,
+  },
+  {
+    path: "/seller/orders",
+    label: "Orders",
+    icon: PackageOpen,
     requiresAuth: true,
   },
   {
@@ -152,6 +161,8 @@ export function MobileBottomNav() {
           const Icon = item.icon;
           const isCart = item.path === "/cart";
           const isProfile = item.path === "/profile";
+          const isMessage = item.path === "/messages" || item.path === "/seller/messages";
+          const msgCount = isMessage ? unreadMessagesCount : 0;
 
           return (
             <NavLink
@@ -161,7 +172,12 @@ export function MobileBottomNav() {
               className="relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors"
             >
               <div className="relative">
-                {isProfile && isAuthenticated && user?.profileImage ? (
+                {isMessage? (
+                  <div className="h-10 w-10 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-secondary text-white shadow-lg ring-2 ring-background">
+                    <Icon className="h-8 w-8" />
+                    {msgCount > 0 && <Badge count={msgCount} />}
+                  </div>
+                ) : isProfile && isAuthenticated && user?.profileImage ? (
                   <img
                     src={user.profileImage}
                     alt={user.displayName || user.firstName}
@@ -204,5 +220,13 @@ export function MobileBottomNav() {
         })}
       </div>
     </nav>
+  );
+}
+// to display message count
+function Badge({ count }: { count: number }) {
+  return (
+    <span className="absolute -top-1 -right-1 h-4 min-w-[16px] px-1 flex items-center justify-center rounded-full bg-destructive text-[9px] font-black text-destructive-foreground ring-2 ring-background animate-in zoom-in duration-200">
+      {count > 99 ? "99+" : count}
+    </span>
   );
 }
