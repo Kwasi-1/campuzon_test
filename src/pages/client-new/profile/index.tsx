@@ -68,8 +68,6 @@ export function ProfilePage() {
 
   if (!user) return null;
 
-  const institution = mockInstitutions.find((i) => i.id === user.institutionID);
-
   const stats = {
     totalOrders: orders?.length || 0,
     wishlistItems: 0,
@@ -386,7 +384,15 @@ export function ProfilePage() {
                     <p className="text-sm font-medium text-gray-900">
                       {user.institutionName ||
                         user.institution?.name ||
-                        institution?.name ||
+                        "Not specified"}
+                    </p>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-0.5">
+                      Residence
+                    </p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {user.residence?.name ||
                         "Not specified"}
                     </p>
                   </div>
@@ -425,7 +431,7 @@ export function ProfilePage() {
       {/* Recent Activity Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Recent Orders */}
-        <Card className="rounded-2xl border-gray-100 overflow-hidden shadow-sm">
+        <Card className="rounded-2xl border-gray-100 overflow-scroll shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between p-6 border-b border-gray-100 space-y-0">
             <CardTitle className="text-lg font-semibold text-gray-900">
               Recent Orders

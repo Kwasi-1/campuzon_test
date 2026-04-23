@@ -127,7 +127,7 @@ export const useAuthStore = create<AuthState>()(
       isProfileComplete: () => {
         const user = get().user;
         if (!user) return false;
-        return !!(user.phoneNumber && user.institutionID);
+        return !!(user.phoneNumber && user.institution?.name);
       },
 
       canAccessSellerPortal: () => canAccessSellerMode(get().user),
