@@ -22,7 +22,7 @@ Owner: Frontend
 ## 3) Auth Requirements  
 
 - Required for all seller endpoints: `Authorization: Bearer <access_token>`
-- Required role: Seller (store owner)
+- Required role: Seller (store owner) 
 - Optional headers:
   - `X-Request-Id: <uuid>` for tracing
   - `Accept-Language: en` for future localization
