@@ -13,8 +13,8 @@ export default function SectionHeader({
   linkText = "See all",
 }: SectionHeaderProps) {
   return (
-    <div className="flex items-center justify-between mb-6">
-      <h2 className="text-[22px] font-bold text-foreground">{title}</h2>
+    <div className="flex items-center justify-between mb-4 md:mb-6">
+      <h2 className="text-xl md:text-[22px] font-bold text-foreground">{title}</h2>
       {href && (
         <Link
           to={href}
