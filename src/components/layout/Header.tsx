@@ -153,6 +153,9 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full bg-background">
+      {/* <div className="bg-[#dda15e] text-sm text-primary-foreground text-center py-2">
+        <p>Free delivery on orders over 500 GHS</p>
+      </div> */}
       {/* Top Navigation Bar */}
       <div className="md:border-b border-border relative">
         <div
@@ -215,6 +218,9 @@ export function Header() {
                 alt="Campuzon"
                 className="h-8 md:h-12 object-contain"
               />
+              {/* <p className="text-4xl font-[700] text-center py-2">
+                Campuzon
+              </p> */}
             </Link>
 
             {/* Right Column: Actions */}
@@ -321,7 +327,7 @@ export function Header() {
                     className="fixed inset-0 z-40"
                     onClick={() => setShowCategoryDropdown(false)}
                   />
-                  <div className="absolute left-0 top-12 z-50 w-56 rounded-lg border border-border bg-background shadow-lg py-2">
+                  <div className="absolute left-0 top-12 z-50 w-56 rounded-lg borde border-border bg-background shadow-lg py-2">
                     {categories.map((cat) => (
                       <Link
                         key={cat.value}
@@ -341,31 +347,31 @@ export function Header() {
             <div className="hidden sm:flex items-center gap-2 shrink-0">
               <Link
                 to="/products?filter=trending"
-                className="h-10 px-4 inline-flex items-center justify-center rounded-full border border-border text-sm font-medium hover:bg-muted transition-colors"
+                className="h-10 px-4 inline-flex items-center justify-center rounded-full borde border-border text-sm font-medium hover:bg-muted transition-colors"
               >
                 Trending
               </Link>
               <Link
                 to="/products?category=services"
-                className="h-10 px-4 inline-flex items-center justify-center rounded-full border border-border text-sm font-medium hover:bg-muted transition-colors"
+                className="h-10 px-4 inline-flex items-center justify-center rounded-full borde border-border text-sm font-medium hover:bg-muted transition-colors"
               >
                 Gigs & Services
               </Link>
             </div>
 
             {/* Search */}
-            <form onSubmit={handleSearch} className="flex-1 min-w-0">
+            <form onSubmit={handleSearch} className="flex-1 min-w-80">
               <div className="relative">
                 <input
                   type="search"
                   placeholder="Search..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-10 pl-4 pr-10 rounded-full border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                  className="w-full h-10 pl-4 pr-10 rounded-full border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring/70 focus:border-transparent transition-all"
                 />
                 <button
                   type="submit"
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 border border-gray-300/40 p-2 rounded-full"
                   aria-label="Search"
                 >
                   <Search className="h-4 w-4 text-muted-foreground" />
@@ -379,7 +385,7 @@ export function Header() {
                 <Link
                   key={tab.value}
                   to={`/products?filter=${tab.value}`}
-                  className="h-10 px-4 inline-flex items-center justify-center rounded-full border border-border text-sm font-medium hover:bg-muted transition-colors whitespace-nowrap"
+                  className="h-10 px-4 inline-flex items-center justify-center rounded-full borde border-border text-sm font-medium hover:bg-muted transition-colors whitespace-nowrap"
                 >
                   {tab.label}
                 </Link>
