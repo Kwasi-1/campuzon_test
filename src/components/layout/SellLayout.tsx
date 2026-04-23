@@ -17,7 +17,7 @@ import {
 import { Toaster } from "react-hot-toast";
 import { useAuthStore } from "@/stores";
 import { useMyStore } from "@/hooks";
-import logo from "@/assets/images/CAMPUZONV2LT.png";
+import logo from "@/assets/images/CAMPUZONV2R.png";
 import { StoreStatusAlert } from "@/pages/seller/components/StoreStatusAlert";
 import { MobileBottomNav } from "./MobileBottomNav";
 
@@ -31,7 +31,14 @@ const NAV_LINKS = [
 
 export function SellLayout() {
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const {
+    user,
+    isAuthenticated,
+    logout,
+    userMode,
+    switchUserMode,
+    canAccessSellerPortal,
+  } = useAuthStore();
   // useMyStore() doubles as a passive session probe:
   // if the token is expired the backend returns 401 → the api.ts interceptor
   // catches it, calls logout(), and shows the "Session expired" toast.
@@ -62,6 +69,42 @@ export function SellLayout() {
     );
   }
 
+  if (!canAccessSellerPortal()) {
+    return <Navigate to="/become-seller" replace />;
+  }
+
+  // if (userMode !== "seller") {
+  //   return (
+  //     <div className="min-h-[70vh] flex items-center justify-center px-4">
+  //       <div className="w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+  //         <h2 className="text-xl font-semibold text-gray-900">
+  //           Switch to Seller Mode
+  //         </h2>
+  //         <p className="mt-2 text-sm text-gray-600">
+  //           Seller portal pages are available when you browse in seller mode.
+  //         </p>
+  //         <div className="mt-5 flex flex-wrap gap-3">
+  //           <button
+  //             onClick={() => {
+  //               switchUserMode("seller");
+  //               navigate("/seller/dashboard", { replace: true });
+  //             }}
+  //             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+  //           >
+  //             Switch to Seller
+  //           </button>
+  //           <button
+  //             onClick={() => navigate("/profile", { replace: true })}
+  //             className="inline-flex items-center justify-center rounded-md border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-muted"
+  //           >
+  //             Go to Buyer Portal
+  //           </button>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+
   const handleLogout = () => {
     logout();
     navigate("/");
@@ -77,10 +120,10 @@ export function SellLayout() {
     : "?";
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-foreground px10">
+    <div className="min-h-screen flex flex-col bg-white text-foreground">
       {/* Seller Header */}
       <header className="sticky top-0 z-40 w-full bg-white border-b border-gray-100 shadowsm">
-        <div className="container mx-auto px-4 md:px-6 py-2">
+        <div className="container mx-auto px-3 md:px-6 py-2">
           <div className="flex h-16 items-center justify-between gap-4">
             {/* Left: Back link + Logo + Store pill */}
             <div className="flex items-center gap-3">
@@ -97,7 +140,7 @@ export function SellLayout() {
                 className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors"
               >
                 <ArrowLeft className="h-4 w-4" />
-                <span className="hidden sm:inline text-sm">Store</span>
+                <span className="hidden sm:inline text-sm">Buyer Home</span>
               </Link>
 
               <div className="h-5 w-px bg-gray-200" />
@@ -265,11 +308,11 @@ export function SellLayout() {
             className="fixed inset-0 z-40 bg-black/30 lg:hidden"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <aside className="fixed left-0 top-0 z-50 h-full w-[80%] border-r border-gray-200 bg-white shadow-xl lg:hidden">
-            <div className="flex h-16 items-center justify-between border-b border-gray-100 px-4">
+          <aside className="fixed left-0 top-0 z-50 h-full w-[85%] border-r border-gray-200 bg-white shadow-xl lg:hidden">
+            <div className="flex h16 items-center justify-between border-b border-gray-100 px-4 py-2 pt-4">
               <div className="flex items-center gap-2">
-                <img src={logo} alt="Campuzon" className="h-6 w-auto" />
-                <span className="text-sm font-semibold text-gray-900">
+                <img src={logo} alt="Campuzon" className="h-12 w-auto" />
+                <span className="text-sm font-medium text-gray-900">
                   Seller Menu
                 </span>
               </div>
@@ -295,7 +338,7 @@ export function SellLayout() {
                     `flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium transition-all ${
                       isActive
                         ? "bg-gray-900 text-white"
-                        : "bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                        : "bg-white text-gray-700 border border-transparent hover:border-gray-300 hover:bg-gray-50"
                     }`
                   }
                 >

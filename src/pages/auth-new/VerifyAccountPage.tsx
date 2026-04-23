@@ -8,6 +8,7 @@ import { CustomInputTextField } from "@/components/shared/text-field";
 import { useAuthStore } from "@/stores";
 import api, { extractData, extractError } from "@/lib/api";
 import type { User } from "@/types-new";
+import { parseRedirectTarget } from "@/lib/deepLinkHandler";
 
 type VerifyAccountLocationState = {
   userId: string;
@@ -71,7 +72,7 @@ export function VerifyAccountPage() {
       setUser(data.user);
       setTokens(data.accessToken, data.refreshToken);
 
-      navigate(state.redirect || "/", { replace: true });
+      navigate(parseRedirectTarget(state.redirect, "/"), { replace: true });
     } catch (err: unknown) {
       setError(extractError(err));
     } finally {

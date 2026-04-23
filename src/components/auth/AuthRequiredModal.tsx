@@ -2,6 +2,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/shared/Modal";
 import { useAuthPromptStore } from "@/stores/authPromptStore";
+import {
+  buildLoginRedirectPath,
+  parseRedirectTarget,
+} from "@/lib/deepLinkHandler";
 
 export function AuthRequiredModal() {
   const navigate = useNavigate();
@@ -10,9 +14,9 @@ export function AuthRequiredModal() {
 
   const handleSignIn = () => {
     const fallbackPath = `${location.pathname}${location.search}${location.hash}`;
-    const redirectPath = encodeURIComponent(targetPath || fallbackPath || "/");
+    const redirectPath = parseRedirectTarget(targetPath, fallbackPath || "/");
     closeAuthPrompt();
-    navigate(`/login?redirect=${redirectPath}`);
+    navigate(buildLoginRedirectPath(redirectPath));
   };
 
   return (

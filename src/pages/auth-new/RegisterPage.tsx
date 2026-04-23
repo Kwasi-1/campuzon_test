@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -23,6 +23,7 @@ import {
 import { useAuthStore } from "@/stores";
 import { mockInstitutions } from "@/lib/mockData";
 import { extractError } from "@/lib/api";
+import { parseRedirectTarget } from "@/lib/deepLinkHandler";
 
 const registerSchema = z
   .object({
@@ -51,6 +52,8 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export function RegisterPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = parseRedirectTarget(searchParams.get("redirect"), "/");
   const { register: registerUser, isLoading } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -91,13 +94,13 @@ export function RegisterPage() {
             userId: registerResult.userId,
             email: registerResult.email || data.email,
             phoneNumber: registerResult.phoneNumber || data.phoneNumber,
-            redirect: "/",
+            redirect,
           },
         });
         return;
       }
 
-      navigate("/");
+      navigate(redirect);
     } catch (err: unknown) {
       setError(extractError(err));
     }

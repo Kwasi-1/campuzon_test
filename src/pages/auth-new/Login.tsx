@@ -11,6 +11,7 @@ import { AuthPage } from "@/components/auth-page";
 import { CustomInputTextField } from "@/components/shared/text-field";
 import { useAuthStore } from "@/stores";
 import { extractError } from "@/lib/api";
+import { parseRedirectTarget } from "@/lib/deepLinkHandler";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -22,7 +23,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 const Login = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/";
+  const redirect = parseRedirectTarget(searchParams.get("redirect"), "/");
   const { login, isLoading } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
