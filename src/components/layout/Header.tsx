@@ -110,7 +110,7 @@ export function Header() {
             className="fixed inset-0 z-40"
             onClick={() => setShowUserMenu(false)}
           />
-          <div className="absolute right-0 top-12 z-50 w-48 rounded-lg border border-border bg-background shadow-lg py-1">
+          <div className="absolute right-0 top-12 z-50 w-52 rounded-lg border border-border bg-background shadow-lg py-1">
             <div className="px-3 py-2 border-b border-border">
               <p className="font-medium text-sm">{user?.displayName}</p>
               <p className="text-xs text-muted-foreground truncate">
@@ -235,8 +235,27 @@ export function Header() {
               )}
             >
               <div className="flex items-center justify-end gap-1 sm:gap-3">
+                <nav className="hidden xl:flex items-center gap-6">
+                  <Link
+                    to="/become-seller"
+                    className="text-[14px] font-medium text-gray-800 hover:text-primary transition-colors"
+                  >
+                    Sell
+                  </Link>
+                  <Link
+                    to="/wishlist"
+                    className="text-[14px] font-medium text-gray-800 hover:text-primary transition-colors flex items-center gap-1"
+                  >
+                    Watchlist
+                    {wishlistCount > 0 && (
+                      <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full flex items-center justify-center font-bold">
+                        {wishlistCount}
+                      </span>
+                    )}
+                  </Link>
+                </nav>
                 {/* Desktop Nav Links */}
-                <nav className="hidden md:flex items-center gap-6">
+                <nav className="hidden md:flex xl:hidden items-center gap-6">
                   <Link
                   to="/become-seller"
                   className={cn(
@@ -300,7 +319,7 @@ export function Header() {
                     {canAccessSeller && (
                       <span
                         className={cn(
-                          "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border",
+                          "hidden nline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border",
                           userMode === "seller"
                             ? "bg-amber-50 text-amber-700 border-amber-200"
                             : "bg-teal-50 text-teal-700 border-teal-200",
