@@ -6,6 +6,9 @@ import { useCartStore } from "@/stores";
 import { useAuthPromptStore } from "@/stores/authPromptStore";
 import { useNavigationContext } from "@/hooks/useNavigationContext";
 
+// would place the unread messages here
+const unreadMessagesCount = 0; 
+
 type NavItem = {
   path: string;
   label: string;
@@ -140,6 +143,8 @@ export function MobileBottomNav() {
           const isActive = isTabActive(item);
           const isCart = item.path === "/cart";
           const isProfile = item.path === "/profile";
+          const isMessage = item.path === "/messages" || item.path === "/seller/messages";
+          const msgCount = isMessage ? unreadMessagesCount : 0;
 
           return (
             <NavLink
@@ -191,5 +196,13 @@ export function MobileBottomNav() {
         })}
       </div>
     </nav>
+  );
+}
+// to display message count
+function Badge({ count }: { count: number }) {
+  return (
+    <span className="absolute -top-1 -right-1 h-4 min-w-[16px] px-1 flex items-center justify-center rounded-full bg-destructive text-[9px] font-black text-destructive-foreground ring-2 ring-background animate-in zoom-in duration-200">
+      {count > 99 ? "99+" : count}
+    </span>
   );
 }

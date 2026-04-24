@@ -78,6 +78,16 @@ export interface Hall {
   isActive: boolean;
 }
 
+export interface Address {
+  id: string;
+  userID: string;
+  name: string;
+  gpsLocation: string;
+  type: 'off-campus' | 'home';
+  isActive: boolean;
+}
+
+
 export type TwoFactorMethod = 'none' | 'otp' | 'totp';
 
 export interface User {
@@ -99,7 +109,7 @@ export interface User {
   twoFactorMethod: TwoFactorMethod;
   dateCreated: string;
   institution?: Institution;
-  hall?: Hall;
+  residence?: Hall | Address;
   store?: Store;
   institutionName?: string;
 }
@@ -424,8 +434,8 @@ export interface CreateOrderRequest {
   deliveryAddress?: string;
   deliveryNotes?: string;
   buyerNote?: string;
-  institutionID?: string;
-  hallID?: string;
+  institutionName?: string;
+  residence?: Hall | Address;
 }
 
 export interface CreateProductRequest {

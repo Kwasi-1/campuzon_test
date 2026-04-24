@@ -205,7 +205,7 @@ export function SellerDashboardPage() {
     },
   ];
 
-  const cardClassName = "rounded-3xl border border-gray-100 bg-white shadow-sm";
+  const cardClassName = "rounded-3xl border border-gray-100 bg-white shadow-sm overflow-x-scroll";
 
   return (
     <SellerPageTemplate
