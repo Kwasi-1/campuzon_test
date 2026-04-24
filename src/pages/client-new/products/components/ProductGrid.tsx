@@ -14,6 +14,7 @@ interface ProductGridProps {
   emptyMessage?: string;
   viewMode?: ViewMode;
   className?: string;
+  masonryMobile?: boolean;
 }
 
 export function ProductGrid({
@@ -22,6 +23,7 @@ export function ProductGrid({
   emptyMessage = "No products found",
   viewMode = "grid",
   className,
+  masonryMobile = false,
 }: ProductGridProps) {
   const location = useLocation();
   const isStorePage = location.pathname.startsWith("/stores/");
@@ -44,7 +46,9 @@ export function ProductGrid({
     <div
       className={cn(
         viewMode === "grid"
-          ? `columns-2 gap-2 md:columns-1 md:grid md:grid-cols-3 ${isStorePage ? "lg:grid-cols-5" : "lg:grid-cols-4"} md:gap-x-4 md:gap-y-6`
+          ? masonryMobile
+            ? `columns-2 gap-2 md:columns-1 md:grid md:grid-cols-3 ${isStorePage ? "lg:grid-cols-5" : "lg:grid-cols-4"} md:gap-x-4 md:gap-y-6`
+            : `grid grid-cols-2 gap-3 md:grid-cols-3 ${isStorePage ? "lg:grid-cols-5" : "lg:grid-cols-4"} md:gap-x-4 md:gap-y-6`
           : "flex flex-col",
         className,
       )}
@@ -53,12 +57,17 @@ export function ProductGrid({
         <div
           key={product.id}
           className={cn(
-            viewMode === "grid"
+            viewMode === "grid" && masonryMobile
               ? "inline-block w-full mb-2 align-top break-inside-avoid md:mb-0"
               : "",
           )}
         >
-          <ProductCard product={product} index={index} variant={viewMode} />
+          <ProductCard
+            product={product}
+            index={index}
+            variant={viewMode}
+            masonryMobile={masonryMobile}
+          />
         </div>
       ))}
     </div>

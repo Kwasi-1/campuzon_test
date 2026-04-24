@@ -264,6 +264,7 @@ export default function Products() {
               products={data?.items || []}
               isLoading={isLoading}
               viewMode={viewMode}
+              masonryMobile
               emptyMessage={
                 currentSearch
                   ? `No products found for "${currentSearch}"`

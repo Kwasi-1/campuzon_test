@@ -18,6 +18,7 @@ interface ProductCardProps {
   product: Product;
   index?: number;
   variant?: CardVariant;
+  masonryMobile?: boolean;
 }
 
 function getMasonryAspectClass(productId: string, index: number): string {
@@ -84,6 +85,7 @@ export function ProductCard({
   product,
   index = 0,
   variant = "grid",
+  masonryMobile = false,
 }: ProductCardProps) {
   const { formatGHS } = useCurrency();
   const { isAuthenticated } = useAuthStore();
@@ -125,7 +127,9 @@ export function ProductCard({
   const rating = typeof product.rating === "number" ? product.rating : 0;
   const reviewCount = product.reviewCount || 0;
   const showRating = reviewCount > 0 && rating > 0;
-  const mobileImageRatio = getMasonryAspectClass(product.id, index);
+  const mobileImageRatio = masonryMobile
+    ? getMasonryAspectClass(product.id, index)
+    : "aspect-square";
 
   return (
     <motion.div
