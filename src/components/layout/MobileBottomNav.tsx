@@ -1,17 +1,6 @@
-import type { ComponentType, MouseEvent } from "react";
+import type { MouseEvent } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import {
-  Home,
-  LayoutGrid,
-  ShoppingCart,
-  User,
-  Heart,
-  Flame,
-  Package,
-  MessageSquare,
-  Settings,
-  BarChart3,
-} from "lucide-react";
+import { Icon } from "@iconify/react";
 import { useAuthStore } from "@/stores";
 import { useCartStore } from "@/stores";
 import { useAuthPromptStore } from "@/stores/authPromptStore";
@@ -20,7 +9,7 @@ import { useNavigationContext } from "@/hooks/useNavigationContext";
 type NavItem = {
   path: string;
   label: string;
-  icon: ComponentType<{ className?: string }>;
+  icon: string;
   requiresAuth: boolean;
   exactMatch?: boolean;
 };
@@ -29,74 +18,74 @@ const publicTabs: NavItem[] = [
   {
     path: "/",
     label: "Shop",
-    icon: Home,
+    icon: "solar:home-angle-linear",
     requiresAuth: false,
     exactMatch: true,
   },
   {
     path: "/products",
     label: "Category",
-    icon: LayoutGrid,
+    icon: "solar:widget-4-linear",
     requiresAuth: false,
   },
   {
     path: "/products?sort=hot",
     label: "Deals",
-    icon: Flame,
+    icon: "solar:fire-linear",
     requiresAuth: false,
   },
-  { path: "/cart", label: "Cart", icon: ShoppingCart, requiresAuth: false },
-  { path: "/profile", label: "Profile", icon: User, requiresAuth: true },
+  { path: "/cart", label: "Cart", icon: "solar:cart-3-linear", requiresAuth: false },
+  { path: "/profile", label: "Profile", icon: "solar:user-linear", requiresAuth: true },
 ];
 
 const clientTabs: NavItem[] = [
   {
     path: "/profile",
     label: "Profile",
-    icon: User,
+    icon: "solar:user-linear",
     requiresAuth: true,
     exactMatch: true,
   },
-  { path: "/orders", label: "Orders", icon: ShoppingCart, requiresAuth: true },
+  { path: "/orders", label: "Orders", icon: "solar:clipboard-list-linear", requiresAuth: true },
   {
     path: "/messages",
     label: "Messages",
-    icon: MessageSquare,
+    icon: "solar:chat-round-dots-linear",
     requiresAuth: true,
   },
-  { path: "/wishlist", label: "Wishlist", icon: Heart, requiresAuth: true },
-  { path: "/cart", label: "Cart", icon: ShoppingCart, requiresAuth: true },
+  { path: "/wishlist", label: "Wishlist", icon: "solar:heart-linear", requiresAuth: true },
+  { path: "/cart", label: "Cart", icon: "solar:cart-3-linear", requiresAuth: true },
 ];
 
 const sellerTabs: NavItem[] = [
   {
     path: "/seller/dashboard",
     label: "Dashboard",
-    icon: BarChart3,
+    icon: "solar:chart-square-linear",
     requiresAuth: true,
   },
   {
     path: "/seller/products",
     label: "Products",
-    icon: Package,
+    icon: "solar:box-linear",
     requiresAuth: true,
   },
   {
     path: "/seller/orders",
     label: "Orders",
-    icon: ShoppingCart,
+    icon: "solar:clipboard-list-linear",
     requiresAuth: true,
   },
   {
     path: "/seller/messages",
     label: "Messages",
-    icon: MessageSquare,
+    icon: "solar:chat-round-dots-linear",
     requiresAuth: true,
   },
   {
     path: "/seller/settings",
     label: "Settings",
-    icon: Settings,
+    icon: "solar:settings-linear",
     requiresAuth: true,
   },
 ];
@@ -145,11 +134,10 @@ export function MobileBottomNav() {
   };
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-background backdrop-blur-sm border-t border-border safe-area-pb">
-      <div className="flex items-stretch h-[58px]">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 px-4 pb-3 safe-area-pb pointer-events-none">
+      <div className="pointer-events-auto mx-auto flex h-14 w-full max-w-md items-center justify-between gap-1 rounded-full border border-primary/80 bg-primary p-1.5 shadow-lg backdrop-blur-md">
         {navItems.map((item) => {
           const isActive = isTabActive(item);
-          const Icon = item.icon;
           const isCart = item.path === "/cart";
           const isProfile = item.path === "/profile";
 
@@ -158,9 +146,13 @@ export function MobileBottomNav() {
               key={item.label}
               to={item.path}
               onClick={(e) => handleNavClick(e, item)}
-              className="relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors"
+              className={`relative flex h-11 items-center justify-center rounded-full px-3 transition-all duration-200 ${
+                isActive
+                  ? "min-w-[92px] bg-background text-foreground shadow-sm"
+                  : "min-w-[44px] text-primary-foreground/70 hover:bg-primary/80"
+              }`}
             >
-              <div className="relative">
+              <div className="relative flex items-center justify-center">
                 {isProfile && isAuthenticated && user?.profileImage ? (
                   <img
                     src={user.profileImage}
@@ -173,10 +165,11 @@ export function MobileBottomNav() {
                   />
                 ) : (
                   <Icon
+                    icon={item.icon}
                     className={`h-5 w-5 transition-all ${
                       isActive
-                        ? "text-foreground stroke-[2.5px]"
-                        : "text-muted-foreground/70"
+                        ? "text-foreground"
+                        : "text-primary-foreground/70"
                     }`}
                   />
                 )}
@@ -188,17 +181,11 @@ export function MobileBottomNav() {
                 )}
               </div>
 
-              {/* <span
-                className={`text-[10px] leading-tight font-medium transition-colors ${
-                  isActive ? 'text-foreground font-semibold' : 'text-muted-foreground'
-                }`}
-              >
-                {item.label}
-              </span> */}
-
-              {/* {isActive && (
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-foreground" />
-              )} */}
+              {isActive && (
+                <span className="ml-2 truncate text-xs font-semibold leading-none text-foreground">
+                  {item.label}
+                </span>
+              )}
             </NavLink>
           );
         })}
