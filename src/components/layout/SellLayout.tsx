@@ -17,7 +17,8 @@ import {
 import { Toaster } from "react-hot-toast";
 import { useAuthStore } from "@/stores";
 import { useMyStore } from "@/hooks";
-import logo from "@/assets/images/CAMPUZONV2R.png";
+import logo from "@/assets/images/CAMPUZONV2LT.png";
+import logoSM from "@/assets/images/CAMPUZONV2R.png";
 import { StoreStatusAlert } from "@/pages/seller/components/StoreStatusAlert";
 import { MobileBottomNav } from "./MobileBottomNav";
 
@@ -311,7 +312,7 @@ export function SellLayout() {
           <aside className="fixed left-0 top-0 z-50 h-full w-[85%] border-r border-gray-200 bg-white shadow-xl lg:hidden">
             <div className="flex h16 items-center justify-between border-b border-gray-100 px-4 py-2 pt-4">
               <div className="flex items-center gap-2">
-                <img src={logo} alt="Campuzon" className="h-12 w-auto" />
+                <img src={logoSM} alt="Campuzon" className="h-12 w-auto" />
                 <span className="text-sm font-medium text-gray-900">
                   Seller Menu
                 </span>
