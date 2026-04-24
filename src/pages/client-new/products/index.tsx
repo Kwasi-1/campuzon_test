@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { Heart } from "lucide-react";
+import { ArrowUpDown, ChevronRight, SlidersHorizontal } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Pagination } from "@/components/shared/Pagination";
 import {
   ProductGrid,
@@ -15,6 +16,7 @@ import type {
   ProductFilters as ProductFiltersType,
 } from "@/types-new";
 import { useUIStore } from "@/stores";
+import { Icon } from "@iconify/react";
 
 type ViewMode = "grid" | "list";
 
@@ -87,69 +89,137 @@ export default function Products() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-3 md:px-6  py-4">
+      <div className="container mx-auto px-2 md:px-6 py-0 md:py-4">
         {/* Top Header Row: Breadcrumbs + Sort */}
-        <div className="hidden md:flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-4 border-b border-gray-200">
-          {/* Breadcrumb matching Oraimo style */}
-          <div className="text-xs md:text-sm font-medium text-gray-800 flex items-center gap-2 flex-wrap">
-            <Link to="/" className="hover:underline text-gray-900 font-bold">Home</Link>
-            <span className="text-gray-400">»</span> 
-            <Link to="/products" className="hover:underline text-gray-900 font-bold">Product</Link>
+        <div className="hidden md:flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-4 borderb border-gray-200">
+          <nav className="flex items-center gap-1.5 text-xs md:text-sm text-gray-500 ">
+            <Link
+              to="/"
+              className="hover:text-gray-900 hover:underline transition-colors"
+            >
+              Home
+            </Link>
+            <ChevronRight className="h-3 w-3" />
+            <Link
+              to="/products"
+              className="hover:text-gray-900 hover:underline transition-colors hidden md:block"
+            >
+              Products
+            </Link>
             {currentCategory && (
               <>
-                <span className="text-gray-400">»</span>
-                <Link to={`/products?category=${currentCategory}`} className="capitalize hover:underline">{currentCategory.replace(/_/g, " ")}</Link>
+                <ChevronRight className="h-3 w-3 hidden md:block" />
+                <Link
+                  to={`/products?category=${currentCategory}`}
+                  className="hover:text-gray-900 transition-colors hover:underline capitalize"
+                >
+                  {currentCategory.replace(/_/g, " ")}
+                </Link>
               </>
             )}
-            {currentSearch && (
-              <>
-                <span className="text-gray-400">»</span> Search: "{currentSearch}"
-              </>
-            )}
-          </div>
+            <ChevronRight className="h-3 w-3" />
+            <span className="text-gray-900 truncate max-w-[240px]">
+              {currentSearch}
+            </span>
+          </nav>
 
           <div className="flex items-center gap-3">
-             <span className="text-[13px] text-gray-800 font-medium">Sort by</span>
-             <ProductsToolbar
-                totalResults={data?.total || 0}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                sortBy={`${filters.sortBy || "date_created"}:${filters.sortOrder || "desc"}`}
-                onSortChange={handleSortChange}
-              />
+            <span className="text-[13px] text-gray-800 font-medium">
+              Sort by
+            </span>
+            <ProductsToolbar
+              totalResults={data?.total || 0}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              sortBy={`${filters.sortBy || "date_created"}:${filters.sortOrder || "desc"}`}
+              onSortChange={handleSortChange}
+              onFilterClick={() => setAdvancedFiltersOpen(true)}
+            />
           </div>
         </div>
 
         {/* Main Layout: Sidebar + Content */}
         <div className="flex gap-8">
           {/* Left Sidebar - Filters */}
-          <div className="hidden lg:block w-60 shrink-0 sticky top-24 self-start max-h-[calc(100vh-[100px])] overflow-y-auto scrollbar-hide pb-10">
-             <h3 className="text-[14px] font-bold text-gray-900 mb-6 pb-3 border-b border-gray-200 uppercase tracking-wide">
-                Shopping Options {data?.total ? `(${data.total} Results)` : ""}
-             </h3>
-             <ProductFilters
+          <div className="hidden xl:block w-[265px] 2xl:w-72 shrink-0 sticky top-24 self-start max-h-[calc(100vh-[100px])] overflow-y-auto scrollbar-hide pb-10">
+            <h3 className="text-[14px] font-bold text-gray-900 mb-3 py-2.5 px-3 rounded[6px] border-b border-gray-200 uppercase tracking-wide">
+              Shopping Options {data?.total ? `(${data.total} Results)` : ""}
+            </h3>
+            <ProductFilters
               onFilterChange={handleFilterChange}
               isOpen={filtersOpen}
               onClose={() => setFiltersOpen(false)}
               onAdvancedFilterClick={() => setAdvancedFiltersOpen(true)}
-             />
+            />
           </div>
 
           {/* Main Content Area */}
           <div className="flex-1 min-w-0">
-            {/* Mobile Header (Hidden on Desktop) */}
-            <div className="md:hidden sticky top-[60px] z-30 bg-white/[99%] backdrop-blur-sm -mx-4 px-4 pt-3 flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
-              <h1 className="text-sm text-gray-900 font-semibold">
-                {data?.total?.toLocaleString() || "0"} results
-              </h1>
-              <ProductsToolbar
-                totalResults={data?.total || 0}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                sortBy={`${filters.sortBy || "date_created"}:${filters.sortOrder || "desc"}`}
-                onSortChange={handleSortChange}
-                onFilterClick={() => setAdvancedFiltersOpen(true)}
-              />
+            {/* Mobile Header Tabs (Hidden on Desktop) */}
+            <div className="md:hidden sticky top-[66px] z-30 bg-white px2 flex items-center justify-between border-b border-gray-100 h-10 mb-2">
+              <button
+                onClick={() => handleSortChange("best_match")}
+                className={cn(
+                  "text-[14px] font-medium h-full px-2 relative transition-colors",
+                  filters.sortBy === "best_match" || !filters.sortBy
+                    ? "text-gray-900"
+                    : "text-gray-500",
+                )}
+              >
+                Recommend
+                {(filters.sortBy === "best_match" || !filters.sortBy) && (
+                  <div className="absolute bottom-0 left-0 w-full h-[2.5px] bg-primary rounded-t-full" />
+                )}
+              </button>
+
+              <button
+                onClick={() => handleSortChange("date_created:desc")}
+                className={cn(
+                  "text-[14px] font-medium h-full px-2 relative transition-colors",
+                  filters.sortBy === "date_created"
+                    ? "text-gray-900"
+                    : "text-gray-500",
+                )}
+              >
+                Newest
+                {filters.sortBy === "date_created" && (
+                  <div className="absolute bottom-0 left-0 w-full h-[2.5px] bg-primary rounded-t-full" />
+                )}
+              </button>
+
+              <button
+                onClick={() => {
+                  const isCurrentPrice = filters.sortBy === "price";
+                  const nextOrder =
+                    isCurrentPrice && filters.sortOrder === "asc"
+                      ? "desc"
+                      : "asc";
+                  handleSortChange(`price:${nextOrder}`);
+                }}
+                className={cn(
+                  "text-[14px] font-medium h-full px-2 relative flex items-center gap-1 transition-colors",
+                  filters.sortBy === "price"
+                    ? "text-gray-900"
+                    : "text-gray-500",
+                )}
+              >
+                Price
+                <ArrowUpDown className="h-3 w-3" />
+                {filters.sortBy === "price" && (
+                  <div className="absolute bottom-0 left-0 w-full h-[2.5px] bg-primary rounded-t-full" />
+                )}
+              </button>
+
+              <div className="h-4 border -mr-4"></div>
+
+              <button
+                onClick={() => setAdvancedFiltersOpen(true)}
+                className="text-[14px] font-medium h-full px-2 relative flex items-center gap-1 text-gray-700"
+                aria-label="Open product filters"
+              >
+                Filter
+                <Icon icon="lets-icons:filter" className="h-3.5 w-3.5" />
+              </button>
             </div>
 
             {/* Product Grid */}

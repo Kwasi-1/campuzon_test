@@ -342,7 +342,7 @@ export function Header() {
               </div>
             </div>
 
-            {isAuthenticated && user && (
+            {isAuthenticated && user && !isProductsPage && (
               <button
                 onClick={() => setShowRoleSwitchSheet(true)}
                 className="md:hidden inline-flex items-center gap-2 rounded-full border border-border px-2 py-2 h-9 w-9 justify-center"

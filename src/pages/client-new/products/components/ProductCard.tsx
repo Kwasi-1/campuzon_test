@@ -99,6 +99,10 @@ export function ProductCard({
       <ListCard product={product} index={index} specString={specsString} />
     );
   }
+  
+  const hasDiscount = product.comparePrice > product.price;
+  const discountPercent = Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100);
+  
 
   return (
     <motion.div
@@ -116,7 +120,7 @@ export function ProductCard({
       >
         <article className="flex flex-col h-full bg-transparent group">
           {/* Image Container */}
-          <div className="relative aspect-square overflow-hidden bg-[#f8f9fa] rounded-[7px] sm:rounded-sm md:rounded-md mb-3 transition-all duration-300 ">
+          <div className="relative aspect-[2/2.15] md:aspect-square overflow-hidden bg-[#f8f9fa] rounded-[7px] sm:rounded-sm md:rounded-md mb-3 transition-all duration-300 ">
             <img
               src={
                 product.images?.[0] ||
@@ -147,6 +151,11 @@ export function ProductCard({
                 )}
               />
             </button>
+            {hasDiscount && (
+              <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-medium px-2.5 py-0.5 rounded-[4px]">
+                {discountPercent}% OFF
+              </div>
+            )}
 
             {isOutOfStock && (
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -158,25 +167,25 @@ export function ProductCard({
           </div>
 
           {/* Content */}
-          <div className="flex flex-col px-1">
+          <div className="flex flex-col px-0.5">
             {/* Title */}
             <h3 className="text-[14px] leading-snug text-gray-800 font-medium whitespace-nowrap truncat group-hover:text-primary transition-colors overflow-x-auto scrollbar-hide">
               {product.name}
             </h3>
 
             {/* Condition/Specs */}
-            <p className="text-[11px] text-gray-500 font-medium uppercase tracking-wide mt-1">
-              {specsString || "Brand New"}
-            </p>
+            {/* <p className="text-[11px] text-gray-500 font-medium uppercase tracking-wide mt-1">
+              {product.store?.name || "Brand New"}
+            </p> */}
 
             {/* Price Row */}
-            <div className="mt-1.5 flex items-baseline gap-2 overflow-x-auto scrollbar-hide">
-              <span className="lg:text-[17px] font-bold text-gray-900">
+            <div className="mt-2.5 md:mt-1.5 flex items-baseline gap-2 overflow-x-auto scrollbar-hide">
+              <span className="lg:text-[17px] font-bold text-foreground">
                 {formatGHS(product.price)}
               </span>
-              {(product.comparePrice || product.price * 1.5) > product.price && (
-                <span className="text-[12px] text-gray-400 line-through decoration-gray-300">
-                  {formatGHS(product.comparePrice || product.price * 1.5)}
+              {product.comparePrice > product.price && (
+                <span className="text-sm text-muted-foreground line-through decoration-muted-foreground">
+                  {formatGHS(product.comparePrice)}
                 </span>
               )}
             </div>
