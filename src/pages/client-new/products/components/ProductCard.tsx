@@ -99,10 +99,13 @@ export function ProductCard({
       <ListCard product={product} index={index} specString={specsString} />
     );
   }
-  
+
   const hasDiscount = product.comparePrice > product.price;
-  const discountPercent = Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100);
-  
+  const discountPercent = Math.round(
+    ((product.comparePrice - product.price) / product.comparePrice) * 100,
+  );
+  const mobileImageRatios = ["aspect-[3/4]", "aspect-square", "aspect-[4/5]"];
+  const mobileImageRatio = mobileImageRatios[index % mobileImageRatios.length];
 
   return (
     <motion.div
@@ -112,15 +115,21 @@ export function ProductCard({
         duration: 0.2,
         delay: index * 0.02,
       }}
-      className="h-full"
+      className="h-auto"
     >
       <Link
         to={`/product/${product.id}`}
-        className="group block h-full focus:outline-none"
+        className="group block focus:outline-none"
       >
-        <article className="flex flex-col h-full bg-transparent group">
+        <article className="flex flex-col bg-transparent group">
           {/* Image Container */}
-          <div className="relative aspect-[2/2.15] md:aspect-square overflow-hidden bg-[#f8f9fa] rounded-[7px] sm:rounded-sm md:rounded-md mb-3 transition-all duration-300 ">
+          <div
+            className={cn(
+              "relative overflow-hidden bg-[#f8f9fa] rounded-[6px] sm:rounded-sm md:rounded-md mb-2 md:mb-3 transition-all duration-300",
+              mobileImageRatio,
+              "md:aspect-square",
+            )}
+          >
             <img
               src={
                 product.images?.[0] ||
@@ -141,7 +150,7 @@ export function ProductCard({
               title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
               className={cn(
                 "absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-sm sm:opacity-0 sm:group-hover:opacity-100",
-                isInWishlist ? "sm:opacity-100" : ""
+                isInWishlist ? "sm:opacity-100" : "",
               )}
             >
               <Heart
@@ -167,9 +176,9 @@ export function ProductCard({
           </div>
 
           {/* Content */}
-          <div className="flex flex-col px-0.5">
+          <div className="flex flex-col px-0.5 pb-1">
             {/* Title */}
-            <h3 className="text-[14px] leading-snug text-gray-800 font-medium whitespace-nowrap truncat group-hover:text-primary transition-colors overflow-x-auto scrollbar-hide">
+            <h3 className="text-[13px] md:text-[14px] leading-snug text-gray-800 font-medium line-clamp-2 group-hover:text-primary transition-colors">
               {product.name}
             </h3>
 
@@ -179,16 +188,20 @@ export function ProductCard({
             </p> */}
 
             {/* Price Row */}
-            <div className="mt-2.5 md:mt-1.5 flex items-baseline gap-2 overflow-x-auto scrollbar-hide">
-              <span className="lg:text-[17px] font-bold text-foreground">
+            <div className="mt-1.5 md:mt-1.5 flex items-baseline gap-1.5">
+              <span className="text-[15px] lg:text-[17px] font-bold text-foreground">
                 {formatGHS(product.price)}
               </span>
               {product.comparePrice > product.price && (
-                <span className="text-sm text-muted-foreground line-through decoration-muted-foreground">
+                <span className="text-xs text-muted-foreground line-through decoration-muted-foreground">
                   {formatGHS(product.comparePrice)}
                 </span>
               )}
             </div>
+
+            <p className="mt-0.5 text-[12px] text-gray-500">
+              {(product.soldCount || 0).toLocaleString()} sold
+            </p>
 
             {/* Meta tags */}
             <div className="hidden items-center justify-between mt-2 pt-2 border-t border-gray-100">
@@ -197,9 +210,13 @@ export function ProductCard({
                 {product.store?.location || "UG Campus"}
               </span>
               {isOutOfStock ? (
-                 <span className="text-[11px] text-red-500 font-medium">Out of stock</span>
+                <span className="text-[11px] text-red-500 font-medium">
+                  Out of stock
+                </span>
               ) : (
-                 <span className="text-[11px] text-green-600 font-medium">Available</span>
+                <span className="text-[11px] text-green-600 font-medium">
+                  Available
+                </span>
               )}
             </div>
           </div>
@@ -273,7 +290,7 @@ function ListCard({
               title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
               className={cn(
                 "absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-sm sm:opacity-0 sm:group-hover:opacity-100",
-                isInWishlist ? "sm:opacity-100" : ""
+                isInWishlist ? "sm:opacity-100" : "",
               )}
             >
               <Heart
@@ -310,7 +327,8 @@ function ListCard({
                 <span className="text-[18px] font-bold text-gray-900">
                   {formatGHS(product.price)}
                 </span>
-                {(product.comparePrice || product.price * 1.5) > product.price && (
+                {(product.comparePrice || product.price * 1.5) >
+                  product.price && (
                   <span className="text-[13px] text-gray-400 line-through decoration-gray-300">
                     {formatGHS(product.comparePrice || product.price * 1.5)}
                   </span>
@@ -339,7 +357,9 @@ function ListCard({
             <div className="hidden sm:block w-[140px] pl-4 border-l border-gray-100">
               <div className="flex flex-col h-full justify-between">
                 <div>
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Seller</span>
+                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">
+                    Seller
+                  </span>
                   <span className="text-[13px] text-gray-800 font-medium truncate block">
                     {product.store?.name || "Campus Seller"}
                   </span>
@@ -350,7 +370,10 @@ function ListCard({
                   )}
                   {product.store?.totalSales && (
                     <span className="text-[11px] text-gray-400 mt-1 bg-gray-50 inline-block px-1.5 rounded">
-                      {product.store.totalSales > 1000 ? (product.store.totalSales / 1000).toFixed(1) + "K" : product.store.totalSales} Sales
+                      {product.store.totalSales > 1000
+                        ? (product.store.totalSales / 1000).toFixed(1) + "K"
+                        : product.store.totalSales}{" "}
+                      Sales
                     </span>
                   )}
                 </div>

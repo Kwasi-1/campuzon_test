@@ -44,18 +44,20 @@ export function ProductGrid({
     <div
       className={cn(
         viewMode === "grid"
-          ? `grid grid-cols-2 sm:grid-cols-3 ${isStorePage ? "lg:grid-cols-5" : "lg:grid-cols-4"} gap-x-3 md:gap-x-4 gap-y-6`
+          ? `columns-2 gap-2 md:columns-1 md:grid md:grid-cols-3 ${isStorePage ? "lg:grid-cols-5" : "lg:grid-cols-4"} md:gap-x-4 md:gap-y-6`
           : "flex flex-col",
         className,
       )}
     >
       {products.map((product, index) => (
-        <ProductCard
+        <div
           key={product.id}
-          product={product}
-          index={index}
-          variant={viewMode}
-        />
+          className={cn(
+            viewMode === "grid" ? "mb-2 break-inside-avoid md:mb-0" : "",
+          )}
+        >
+          <ProductCard product={product} index={index} variant={viewMode} />
+        </div>
       ))}
     </div>
   );
