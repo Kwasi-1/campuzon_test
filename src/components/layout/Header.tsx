@@ -320,30 +320,18 @@ export function Header() {
             {isAuthenticated && user && (
               <button
                 onClick={() => setShowRoleSwitchSheet(true)}
-                className="md:hidden inline-flex items-center gap-2 rounded-full border border-border px-2 py-1"
+                className="md:hidden inline-flex items-center gap-2 rounded-full border border-border px-2 py-2 h-9 w-9 justify-center"
                 aria-label="Open account mode switcher"
               >
                 {user.profileImage ? (
                   <img
                     src={user.profileImage}
                     alt={user.displayName || user.firstName}
-                    className="h-6 w-6 rounded-full object-cover"
+                    className="h-full w-full rounded-full object-cover"
                   />
                 ) : (
                   <User className="h-4 w-4" />
-                )}
-                {canAccessSeller && (
-                  <span
-                    className={cn(
-                      "text-[10px] font-semibold",
-                      userMode === "seller"
-                        ? "text-amber-700"
-                        : "text-teal-700",
-                    )}
-                  >
-                    {userMode === "seller" ? "Seller" : "Buyer"}
-                  </span>
-                )}
+                )}            
               </button>
             )}
           </div>
