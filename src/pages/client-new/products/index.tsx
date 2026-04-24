@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { ArrowUpDown, ChevronRight, SlidersHorizontal } from "lucide-react";
+import {
+  ArrowUpDown,
+  ChevronDown,
+  ChevronRight,
+  SlidersHorizontal,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Pagination } from "@/components/shared/Pagination";
 import {
@@ -17,8 +22,22 @@ import type {
 } from "@/types-new";
 import { useUIStore } from "@/stores";
 import { Icon } from "@iconify/react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type ViewMode = "grid" | "list";
+
+const MOBILE_SORT_OPTIONS: Array<{ label: string; value: string }> = [
+  { label: "Recommended", value: "best_match" },
+  { label: "Newest", value: "date_created:desc" },
+  { label: "Price: Low to High", value: "price:asc" },
+  { label: "Price: High to Low", value: "price:desc" },
+  { label: "Top Rated", value: "rating:desc" },
+];
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -86,12 +105,18 @@ export default function Products() {
 
   const currentSearch = searchParams.get("search");
   const currentCategory = searchParams.get("category");
+  const currentSortValue = filters.sortBy
+    ? `${filters.sortBy}:${filters.sortOrder || "desc"}`
+    : "best_match";
+  const currentSortLabel =
+    MOBILE_SORT_OPTIONS.find((option) => option.value === currentSortValue)
+      ?.label || "Recommended";
 
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-2 md:px-6 py-0 md:py-4">
         {/* Top Header Row: Breadcrumbs + Sort */}
-        <div className="hidden md:flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-4 borderb border-gray-200">
+        <div className="hidden md:flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-4 border-b border-gray-200">
           <nav className="flex items-center gap-1.5 text-xs md:text-sm text-gray-500 ">
             <Link
               to="/"
@@ -142,7 +167,7 @@ export default function Products() {
         <div className="flex gap-8">
           {/* Left Sidebar - Filters */}
           <div className="hidden xl:block w-[265px] 2xl:w-72 shrink-0 sticky top-24 self-start max-h-[calc(100vh-[100px])] overflow-y-auto scrollbar-hide pb-10">
-            <h3 className="text-[14px] font-bold text-gray-900 mb-3 py-2.5 px-3 rounded[6px] border-b border-gray-200 uppercase tracking-wide">
+            <h3 className="text-[14px] font-bold text-gray-900 mb-3 py-2.5 px-3 rounded-[6px] border-b border-gray-200 uppercase tracking-wide">
               Shopping Options {data?.total ? `(${data.total} Results)` : ""}
             </h3>
             <ProductFilters
@@ -156,35 +181,47 @@ export default function Products() {
           {/* Main Content Area */}
           <div className="flex-1 min-w-0">
             {/* Mobile Header Tabs (Hidden on Desktop) */}
-            <div className="md:hidden sticky top-[66px] z-30 bg-white px2 flex items-center justify-between border-b border-gray-100 h-10 mb-2">
-              <button
-                onClick={() => handleSortChange("best_match")}
-                className={cn(
-                  "text-[14px] font-medium h-full px-2 relative transition-colors",
-                  filters.sortBy === "best_match" || !filters.sortBy
-                    ? "text-gray-900"
-                    : "text-gray-500",
-                )}
-              >
-                Recommend
-                {(filters.sortBy === "best_match" || !filters.sortBy) && (
-                  <div className="absolute bottom-0 left-0 w-full h-[2.5px] bg-primary rounded-t-full" />
-                )}
-              </button>
+            <div className="md:hidden sticky top-[66px] z-30 bg-white px2 flex items-center justify-between sm:justify-evenly border-b border-gray-100 h-10 mb-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="text-[14px] font-medium h-full px-2 relative transition-colors flex items-center gap-1 text-gray-900"
+                    aria-label="Open sort options"
+                  >
+                    {currentSortLabel}
+                    <ChevronDown className="h-3.5 w-3.5" />
+                    {/* <div className="absolute bottom-0 left-0 w-full h-[2.5px] bg-primary rounded-t-full" /> */}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-44">
+                  {MOBILE_SORT_OPTIONS.map((option) => (
+                    <DropdownMenuItem
+                      key={option.value}
+                      onClick={() => handleSortChange(option.value)}
+                      className={cn(
+                        "text-sm",
+                        currentSortValue === option.value && "font-semibold",
+                      )}
+                    >
+                      {option.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               <button
-                onClick={() => handleSortChange("date_created:desc")}
+                onClick={() => handleSortChange("sold_count:desc")}
                 className={cn(
                   "text-[14px] font-medium h-full px-2 relative transition-colors",
-                  filters.sortBy === "date_created"
+                  filters.sortBy === "sold_count"
                     ? "text-gray-900"
                     : "text-gray-500",
                 )}
               >
-                Newest
-                {filters.sortBy === "date_created" && (
+                Most Popular
+                {/* {filters.sortBy === "sold_count" && (
                   <div className="absolute bottom-0 left-0 w-full h-[2.5px] bg-primary rounded-t-full" />
-                )}
+                )} */}
               </button>
 
               <button
@@ -205,12 +242,12 @@ export default function Products() {
               >
                 Price
                 <ArrowUpDown className="h-3 w-3" />
-                {filters.sortBy === "price" && (
+                {/* {filters.sortBy === "price" && (
                   <div className="absolute bottom-0 left-0 w-full h-[2.5px] bg-primary rounded-t-full" />
-                )}
+                )} */}
               </button>
 
-              <div className="h-4 border -mr-4"></div>
+              <div className="h-4 border-r border-gray-200 -mr-2"></div>
 
               <button
                 onClick={() => setAdvancedFiltersOpen(true)}
@@ -218,7 +255,7 @@ export default function Products() {
                 aria-label="Open product filters"
               >
                 Filter
-                <Icon icon="lets-icons:filter" className="h-3.5 w-3.5" />
+                <Icon icon="flowbite:filter-outline" className="h-3.5 w-3.5" />
               </button>
             </div>
 

@@ -53,7 +53,9 @@ export function ProductGrid({
         <div
           key={product.id}
           className={cn(
-            viewMode === "grid" ? "mb-2 break-inside-avoid md:mb-0" : "",
+            viewMode === "grid"
+              ? "inline-block w-full mb-2 align-top break-inside-avoid md:mb-0"
+              : "",
           )}
         >
           <ProductCard product={product} index={index} variant={viewMode} />

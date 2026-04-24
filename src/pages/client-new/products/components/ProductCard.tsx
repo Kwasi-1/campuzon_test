@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Heart } from "lucide-react";
+import { Heart, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import type { Product, ProductCondition } from "@/types-new";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,24 @@ interface ProductCardProps {
   product: Product;
   index?: number;
   variant?: CardVariant;
+}
+
+function getMasonryAspectClass(productId: string, index: number): string {
+  const aspectClasses = [
+    "aspect-[3/4]",
+    "aspect-square",
+    "aspect-[4/5]",
+    "aspect-[5/6]",
+    "aspect-[7/9]",
+  ] as const;
+
+  let hash = index;
+  for (let i = 0; i < productId.length; i += 1) {
+    hash = (hash * 31 + productId.charCodeAt(i)) | 0;
+  }
+
+  const normalized = Math.abs(hash) % aspectClasses.length;
+  return aspectClasses[normalized];
 }
 
 /**
@@ -104,8 +122,10 @@ export function ProductCard({
   const discountPercent = Math.round(
     ((product.comparePrice - product.price) / product.comparePrice) * 100,
   );
-  const mobileImageRatios = ["aspect-[3/4]", "aspect-square", "aspect-[4/5]"];
-  const mobileImageRatio = mobileImageRatios[index % mobileImageRatios.length];
+  const rating = typeof product.rating === "number" ? product.rating : 0;
+  const reviewCount = product.reviewCount || 0;
+  const showRating = reviewCount > 0 && rating > 0;
+  const mobileImageRatio = getMasonryAspectClass(product.id, index);
 
   return (
     <motion.div
@@ -161,7 +181,7 @@ export function ProductCard({
               />
             </button>
             {hasDiscount && (
-              <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-medium px-2.5 py-0.5 rounded-[4px]">
+              <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-medium px-2 py-0.5 rounded-[4px]">
                 {discountPercent}% OFF
               </div>
             )}
@@ -181,6 +201,28 @@ export function ProductCard({
             <h3 className="text-[13px] md:text-[14px] leading-snug text-gray-800 font-medium line-clamp-2 group-hover:text-primary transition-colors">
               {product.name}
             </h3>
+
+            {showRating && (
+              <div className="mt-1 flex items-center gap-1.5 text-[12px] text-gray-500">
+                <div className="flex items-center gap-0.5">
+                  {Array.from({ length: 5 }).map((_, starIndex) => {
+                    const isFilled = starIndex < Math.round(rating);
+                    return (
+                      <Star
+                        key={starIndex}
+                        className={cn(
+                          "h-3.5 w-3.5",
+                          isFilled
+                            ? "fill-gray-900 text-gray-900"
+                            : "fill-transparent text-gray-300",
+                        )}
+                      />
+                    );
+                  })}
+                </div>
+                <span>({reviewCount.toLocaleString()}+)</span>
+              </div>
+            )}
 
             {/* Condition/Specs */}
             {/* <p className="text-[11px] text-gray-500 font-medium uppercase tracking-wide mt-1">
