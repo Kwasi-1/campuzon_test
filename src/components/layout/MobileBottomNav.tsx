@@ -26,7 +26,7 @@ const publicTabs: NavItem[] = [
     exactMatch: true,
   },
   {
-    path: "/products",
+    path: "/categories",
     label: "Category",
     icon: "solar:widget-4-linear",
     requiresAuth: false,
@@ -162,9 +162,9 @@ export function MobileBottomNav() {
                   <img
                     src={user.profileImage}
                     alt={user.displayName || user.firstName}
-                    className={`h-5 w-5 rounded-full object-cover ${
+                    className={`h-6 w-6 rounded-full object-cover ${
                       isActive
-                        ? "ring-2 ring-primary-foreground ring-offset-1 ring-offset-primary-background"
+                        ? "ring-1 ring-primary-foreground ring-offset-1 ring-offset-primary-background"
                         : ""
                     }`}
                   />

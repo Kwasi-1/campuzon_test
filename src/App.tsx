@@ -11,6 +11,7 @@ import { WishlistProvider } from "./contexts/WishlistContext";
 import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/client-new/home-page";
 import Products from "./pages/client-new/products";
+import { CategoriesPage } from "./pages/client-new/categories";
 import NotFound from "./pages/NotFound";
 import ContactUs from "./pages/client/contact/ContactUs";
 import FAQs from "./pages/client/contact/FAQs";
@@ -263,7 +264,7 @@ const App = () => (
                           <Route path="/" element={<Home />} />
                         </Route>
                         <Route path="/products" element={<Products />} />
-                        <Route path="/categories" element={<Products />} />
+                        <Route path="/categories" element={<CategoriesPage />} />
                         <Route
                           path="/categories/:categoryName"
                           element={<Products />}
