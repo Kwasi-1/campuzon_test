@@ -57,7 +57,7 @@ const clientTabs: NavItem[] = [
     requiresAuth: true,
   },
   { path: "/wishlist", label: "Wishlist", icon: "solar:heart-linear", requiresAuth: true },
-  { path: "/cart", label: "Cart", icon: "solar:cart-3-linear", requiresAuth: true },
+  { path: "/", label: "Shop", icon: "solar:home-angle-linear", requiresAuth: false },
 ];
 
 const sellerTabs: NavItem[] = [
