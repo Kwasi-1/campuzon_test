@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api, { extractData, extractError } from '@/lib/api';
 import type { User, UserActivity } from '@/types-new'; 
 import { profileAddressesService } from '@/services/profileAddressesService';
-import { normalizeUser } from '@/lib/normalizeUser';
 import toast from 'react-hot-toast';
 
 
@@ -32,8 +31,9 @@ export function useProfile() {
     queryKey: profileKeys.me(),
     queryFn: async () => {
       const response = await api.get('/user/me');
+      // Fix: Correctly type and unwrap the nested user object
       const data = extractData<{ user: User }>(response);
-      return normalizeUser(data.user);
+      return data.user; 
     },
   });
 }
@@ -55,9 +55,7 @@ export function useUserLocation(providedUser?: User | null) {
   const user = providedUser || fetchedUser;
 
   const isResident = !!user?.hallID;
-  const residencyData = isResident
-    ? user?.residenceName || user?.residence?.name || null
-    : null;
+  const residencyData = isResident ? user?.residence?.name : null;
 
   return {
     isLoading: (!providedUser && profileLoading) || (!isResident && addressLoading),
@@ -69,7 +67,7 @@ export function useUserLocation(providedUser?: User | null) {
     } : null,
     savedAddresses: !isResident ? addresses : [],
     displayLocation: isResident 
-      ? residencyData || "Campus Resident"
+      ? residencyData || (user as any)?.residenceName || "Campus Resident"
       : addresses?.find(a => a.isDefault)?.name || addresses?.[0]?.name || "No address saved"
   };
 }
@@ -80,8 +78,9 @@ export function useUpdateProfile() {
   return useMutation({
     mutationFn: async (data: Partial<User>) => {
       const response = await api.patch('/user/me', data);
+      // Fix: Unwrap the nested user object here too
       const responseData = extractData<{ user: User }>(response);
-      return normalizeUser(responseData.user);
+      return responseData.user;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profileKeys.me() });

@@ -1,5 +1,7 @@
 // ==================== ENUMS ====================
 
+import { UserActivity } from '@/types';
+
 export type UserRole = 'student' | 'seller' | 'admin';
 
 export type Category =
@@ -118,7 +120,7 @@ export interface User {
   dateCreated: string;
   institution?: Institution;
   residence?: Hall | Address;
-  residenceName?: string;
+  residenceName: string;
   store?: Store;
   institutionName?: string;
 }
@@ -428,10 +430,7 @@ export interface RegisterRequest {
   password: string;
   institutionID: string;
   institutionName: string;
-  hallName?: string;
-  primaryAddressName?: string;
-  gpsLocation?: string;
-  residenceType?: 'hall' | 'offCampus';
+  hallID?: string;
   displayName?: string;
 }
 

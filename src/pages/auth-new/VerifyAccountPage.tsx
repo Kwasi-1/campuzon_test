@@ -9,19 +9,12 @@ import { useAuthStore } from "@/stores";
 import api, { extractData, extractError } from "@/lib/api";
 import type { User } from "@/types-new";
 import { parseRedirectTarget } from "@/lib/deepLinkHandler";
-import toast from "react-hot-toast";
-
-type PendingAddress = {
-  name: string;
-  gpsLocation: string;
-};
 
 type VerifyAccountLocationState = {
   userId: string;
   email?: string;
   phoneNumber?: string;
   redirect?: string;
-  pendingAddress?: PendingAddress | null;
 };
 
 export function VerifyAccountPage() {
@@ -78,25 +71,6 @@ export function VerifyAccountPage() {
 
       setUser(data.user);
       setTokens(data.accessToken, data.refreshToken);
-
-      if (
-        state.pendingAddress?.name &&
-        state.pendingAddress?.gpsLocation &&
-        !data.user.hallID
-      ) {
-        try {
-          await api.post("/user/me/addresses", {
-            name: state.pendingAddress.name,
-            gpsLocation: state.pendingAddress.gpsLocation,
-            type: "off_campus_hostel",
-          });
-          toast.success("Primary address saved successfully.");
-        } catch (addressError) {
-          toast.error(
-            `Account verified, but we couldn't save your primary address: ${extractError(addressError)}`,
-          );
-        }
-      }
 
       navigate(parseRedirectTarget(state.redirect, "/"), { replace: true });
     } catch (err: unknown) {
