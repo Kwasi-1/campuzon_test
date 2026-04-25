@@ -42,31 +42,143 @@ function toTwoFactorMethod(value: unknown): TwoFactorMethod {
   return "none";
 }
 
+function normalizeInstitution(value: unknown): User["institution"] | undefined {
+  const raw = toRecord(value);
+  const id = toString(raw.id);
+  const name = toString(raw.name);
+
+  if (!id || !name) return undefined;
+
+  return {
+    id,
+    name,
+    shortName: toNullableString(raw.shortName ?? raw.short_name),
+    region: toString(raw.region),
+    city: toNullableString(raw.city),
+    isActive: toBoolean(raw.isActive, true),
+  };
+}
+
+function normalizeResidence(value: unknown): User["residence"] | undefined {
+  const raw = toRecord(value);
+  const id = toString(raw.id);
+
+  if (!id) return undefined;
+
+  const hasAddressShape =
+    raw.gpsLocation !== undefined ||
+    raw.hostelName !== undefined ||
+    raw.userID !== undefined ||
+    raw.userId !== undefined;
+
+  if (hasAddressShape) {
+    const rawType = toString(raw.type ?? raw.hostel).toLowerCase();
+    const addressType: "off-campus" | "home" = rawType === "home" ? "home" : "off-campus";
+
+    return {
+      id,
+      userID: toString(raw.userID ?? raw.userId),
+      name: toString(raw.name ?? raw.hostelName),
+      gpsLocation: toString(raw.gpsLocation),
+      type: addressType,
+      isActive: toBoolean(raw.isActive, true),
+    };
+  }
+
+  return {
+    id,
+    name: toString(raw.name),
+    institutionID: toString(raw.institutionID ?? raw.institutionId),
+    isActive: toBoolean(raw.isActive, true),
+  };
+}
+
+function normalizeStore(value: unknown): User["store"] | undefined {
+  const raw = toRecord(value);
+  const id = toString(raw.id);
+  if (!id) return undefined;
+
+  return {
+    id,
+    storeName: toString(raw.storeName ?? raw.name),
+    storeSlug: toString(raw.storeSlug ?? raw.slug),
+    description: toNullableString(raw.description),
+    logo: toNullableString(raw.logo),
+    banner: toNullableString(raw.banner),
+    email: toString(raw.email),
+    phoneNumber: toString(raw.phoneNumber),
+    status: toString(raw.status, "pending") as User["store"]["status"],
+    isVerified: toBoolean(raw.isVerified, false),
+    rating:
+      raw.rating === null || raw.rating === undefined
+        ? null
+        : Number(toString(raw.rating, "0")),
+    totalSales:
+      raw.totalSales === undefined ? undefined : Number(toString(raw.totalSales, "0")),
+    totalOrders:
+      raw.totalOrders === undefined ? undefined : Number(toString(raw.totalOrders, "0")),
+    institutionID: toNullableString(raw.institutionID ?? raw.institutionId),
+    autoResponderEnabled: toBoolean(raw.autoResponderEnabled, false),
+    autoResponderName: toNullableString(raw.autoResponderName),
+    autoAcceptOrders: toBoolean(raw.autoAcceptOrders, false),
+    dateCreated: toString(raw.dateCreated),
+  };
+}
+
 export function normalizeUser(rawValue: unknown): User {
   const raw = toRecord(rawValue);
-  const institution = toRecord(raw.institution);
-  const residence = toRecord(raw.residence);
+  const institution = normalizeInstitution(raw.institution);
+  const residence = normalizeResidence(raw.residence);
 
+  // Handle case where ID fields contain full objects instead of strings
+  const institutionIDRaw = raw.institutionID;
   const institutionID =
-    toNullableString(raw.institutionID) ??
+    toNullableString(
+      typeof institutionIDRaw === "object"
+        ? (institutionIDRaw as UnknownRecord)?.id
+        : institutionIDRaw,
+    ) ??
     toNullableString(raw.institutionId) ??
     toNullableString(raw.institution_id);
 
+  const hallIDRaw = raw.hallID;
   const hallID =
-    toNullableString(raw.hallID) ??
+    toNullableString(
+      typeof hallIDRaw === "object" ? (hallIDRaw as UnknownRecord)?.id : hallIDRaw,
+    ) ??
     toNullableString(raw.hallId) ??
     toNullableString(raw.hall_id);
 
+  // Handle case where institution field is an object with name
+  const institutionNameRaw = raw.institutionName;
   const institutionName =
-    toNullableString(raw.institutionName) ??
+    toNullableString(
+      typeof institutionNameRaw === "object"
+        ? (institutionNameRaw as UnknownRecord)?.name
+        : institutionNameRaw,
+    ) ??
     toNullableString(raw.institution_name) ??
-    toNullableString(institution.name) ??
+    toNullableString(
+      typeof raw.institutionID === "object"
+        ? (raw.institutionID as UnknownRecord)?.name
+        : undefined,
+    ) ??
+    toNullableString(institution?.name) ??
     undefined;
 
+  // Handle case where residence/hallID field is an object with name
+  const residenceNameRaw = raw.residenceName;
   const residenceName =
-    toNullableString(raw.residenceName) ??
+    toNullableString(
+      typeof residenceNameRaw === "object"
+        ? (residenceNameRaw as UnknownRecord)?.name
+        : residenceNameRaw,
+    ) ??
     toNullableString(raw.hallName) ??
-    toNullableString(residence.name) ??
+    toNullableString(
+      typeof raw.hallID === "object" ? (raw.hallID as UnknownRecord)?.name : undefined,
+    ) ??
+    toNullableString(residence?.name) ??
     undefined;
 
   return {
@@ -87,16 +199,10 @@ export function normalizeUser(rawValue: unknown): User {
     twoFactorEnabled: toBoolean(raw.twoFactorEnabled, false),
     twoFactorMethod: toTwoFactorMethod(raw.twoFactorMethod),
     dateCreated: toString(raw.dateCreated),
-    institution: Object.keys(institution).length
-      ? (institution as User["institution"])
-      : undefined,
-    residence: Object.keys(residence).length
-      ? (residence as User["residence"])
-      : undefined,
+    institution,
+    residence,
     residenceName,
-    store: toRecord(raw.store).id
-      ? (raw.store as User["store"])
-      : undefined,
+    store: normalizeStore(raw.store),
     institutionName,
   };
 }
