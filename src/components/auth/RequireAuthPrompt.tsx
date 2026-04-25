@@ -81,8 +81,8 @@ export function RequireAuthPrompt() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-10">
-      <div className="mx-auto max-w-lg rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm">
+    <div className="container mx-auto px-4 py-10 min-h-[500px] flex items-center justify-center">
+      <div className="mx-auto max-w-lg rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm">
         <h2 className="text-xl font-semibold text-gray-900">
           Sign In Required
         </h2>
@@ -98,6 +98,7 @@ export function RequireAuthPrompt() {
                 "Sign in to access this feature.",
               )
             }
+            className="px-7 h-12 mt-2"
           >
             Sign In to Continue
           </Button>

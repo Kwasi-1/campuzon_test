@@ -24,7 +24,7 @@ interface ProductCardProps {
 function getMasonryAspectClass(productId: string, index: number): string {
   const aspectClasses = [
     "aspect-[3/4]",
-    "aspect-square",
+    "aspect-[2/2.15]",
     "aspect-[4/5]",
     "aspect-[5/6]",
     "aspect-[7/9]",
@@ -129,7 +129,7 @@ export function ProductCard({
   const showRating = reviewCount > 0 && rating > 0;
   const mobileImageRatio = masonryMobile
     ? getMasonryAspectClass(product.id, index)
-    : "aspect-square";
+    : "aspect-[2/2.25]";
 
   return (
     <motion.div
@@ -149,7 +149,7 @@ export function ProductCard({
           {/* Image Container */}
           <div
             className={cn(
-              "relative overflow-hidden bg-[#f8f9fa] rounded-[6px] sm:rounded-sm md:rounded-md mb-2 md:mb-3 transition-all duration-300",
+              "relative overflow-hidden bg-[#f8f9fa] rounded-[5px] sm:rounded-sm md:rounded-sm mb-2 md:mb-3 transition-all duration-300",
               mobileImageRatio,
               "md:aspect-square",
             )}
@@ -161,7 +161,7 @@ export function ProductCard({
                 "/placeholder-product.jpg"
               }
               alt={product.name}
-              className="h-full w-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
+              className="h-full w-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-105 text-[10px]"
               loading="lazy"
             />
 

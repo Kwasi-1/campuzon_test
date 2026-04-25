@@ -61,14 +61,18 @@ export function WishlistPage() {
             ))}
           </div>
         ) : displayItems.length === 0 ? (
-          <div className="bg-white rounded-sm md:rounded-lg border border-gray-200 py-16">
+          <div className="bg-white rounded-sm md:rounded-lg md:border border-gray-100 py-16">
             <EmptyState
               icon={<Heart className="h-16 w-16" />}
               title="Your watchlist is empty"
               description="Save items you like by clicking the heart icon on products"
               action={
                 <Link to="/products">
-                  <Button className="rounded-full px-8">Start Shopping</Button>
+                  <Button
+                  className="mt-2 rounded-full px-8 h-12"
+                >
+                  Start Shopping
+                </Button>
                 </Link>
               }
             />

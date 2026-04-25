@@ -92,7 +92,7 @@ export function OrderCard({
           {order.items?.map((item, index) => (
             <div
               key={item.id || index}
-              className="flex items-center gap-4 rounded-lg md:rounded-2xl border border-gray-100/60 bg-gray-50/50 p-2 md:p-3"
+              className="flex items-center gap-4 rounded-lg md:rounded-2xl borde border-gray-100/60 bg-gray-50/50 p-2 md:p-3"
             >
               <div className="h-16 w-16 md:h-18 md:w-18 lg:h-20 lg:w-20 shrink-0 overflow-hidden rounded-md md:rounded-md lg:rounded-lg border border-gray-100 bg-gray-100 shadow-sm">
                 <img

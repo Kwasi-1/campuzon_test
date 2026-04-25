@@ -120,13 +120,14 @@ export function AuthPage({
               <div className="space-y-2">
                 <Button
                   className="w-full"
+                  variant="outline"
                   type="button"
                   onClick={() => {
                     window.location.href = "/api/v1/auth/google";
                   }}
                 >
                   <GoogleIcon
-                    className="mr-2 h-4 w-4"
+                    className="mr-2 h-3 w-3"
                     data-icon="inline-start"
                   />
                   Continue with Google

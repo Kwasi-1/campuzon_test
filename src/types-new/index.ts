@@ -1,6 +1,5 @@
 // ==================== ENUMS ====================
 
-import { UserActivity } from '@/types';
 
 export type UserRole = 'student' | 'seller' | 'admin';
 

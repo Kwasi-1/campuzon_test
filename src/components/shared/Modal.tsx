@@ -112,7 +112,7 @@ export function Modal({
               transition={{ duration: 0.2, ease: "easeOut" }}
               className={cn(
                 "relative bg-background shadow-2xl overflow-hidden flex flex-col",
-                placement === "center" && "w-full max-h-[90vh] rounded-[20px]",
+                placement === "center" && "w-full max-h-[90vh] rounded-md md:rounded-lg",
                 placement === "center" && sizeClasses[size],
                 placement === "right" &&
                   "h-screen w-full rounded-none border-l border-border",

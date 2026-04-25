@@ -48,7 +48,7 @@ export function ProfileLayout() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] h-full md:min-h-[calc(100vh-11rem)] lg:min-h-screen bg-white">
+    <div className="min-h-[calc(100vh-3.5rem)] h-full md:min-h-[calc(100vh-11rem)] lg:min-h-screen bg-background">
       <div className="container mx-auto px-0 pb-6 lg:py-6 ">
         { isProfileHome && (
         <div className="lg:hidden px-4 pt-4 pb-2 border-b border-gray-100 bg-white">
