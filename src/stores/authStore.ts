@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { User, TwoFactorMethod } from '@/types-new';
+import { normalizeUser } from '@/lib/normalizeUser';
 
 // ========== MOCK MODE FOR TESTING ==========
 const USE_MOCK_AUTH = false; // Set to false to use real APIbackend is ready
@@ -96,7 +97,9 @@ interface RegisterData {
   password: string;
   institutionID: string;
   institutionName: string;
-  hallID?: string;
+  hallName?: string;
+  primaryAddressName?: string;
+  gpsLocation?: string;
 }
 
 interface RegisterResult {
@@ -117,17 +120,20 @@ export const useAuthStore = create<AuthState>()(
       userMode: 'buyer',
 
       setUser: (user) =>
-        set((state) => ({
-          user,
-          isAuthenticated: !!user,
-          userMode: resolveUserMode(state.userMode, user),
-        })),
+        set((state) => {
+          const normalizedUser = user ? normalizeUser(user) : null;
+          return {
+            user: normalizedUser,
+            isAuthenticated: !!normalizedUser,
+            userMode: resolveUserMode(state.userMode, normalizedUser),
+          };
+        }),
 
       // Check if user has completed their profile (has phone and institution)
       isProfileComplete: () => {
         const user = get().user;
         if (!user) return false;
-        return !!(user.phoneNumber && user.institution?.name);
+        return !!(user.phoneNumber && (user.institutionName || user.institution?.name || user.institutionID));
       },
 
       canAccessSellerPortal: () => canAccessSellerMode(get().user),
@@ -195,13 +201,14 @@ export const useAuthStore = create<AuthState>()(
           }
           
           const loginData = data as LoginSuccess;
+          const normalizedUser = normalizeUser(loginData.user);
           set({
-            user: loginData.user,
+            user: normalizedUser,
             accessToken: loginData.accessToken,
             refreshToken: loginData.refreshToken,
             isAuthenticated: true,
             isLoading: false,
-            userMode: resolveUserMode(get().userMode, loginData.user),
+            userMode: resolveUserMode(get().userMode, normalizedUser),
           });
           return null;
         } catch (error) {
@@ -241,14 +248,15 @@ export const useAuthStore = create<AuthState>()(
           const { extractData } = await import('@/lib/api');
           const response = await api.post('/auth/verify-2fa', { tempToken: _tempToken, code });
           const data = extractData<{ user: User; accessToken: string; refreshToken: string }>(response);
+          const normalizedUser = normalizeUser(data.user);
           
           set({
-            user: data.user,
+            user: normalizedUser,
             accessToken: data.accessToken,
             refreshToken: data.refreshToken,
             isAuthenticated: true,
             isLoading: false,
-            userMode: resolveUserMode(get().userMode, data.user),
+            userMode: resolveUserMode(get().userMode, normalizedUser),
           });
         } catch (error) {
           set({ isLoading: false });
@@ -273,7 +281,7 @@ export const useAuthStore = create<AuthState>()(
             email: data.email,
             phoneNumber: data.phoneNumber,
             institutionID: data.institutionID,
-            hallID: data.hallID || '',
+            hallID: null,
             isOwner: false,
             dateCreated: new Date().toISOString(),
           };
@@ -306,6 +314,7 @@ export const useAuthStore = create<AuthState>()(
             refreshToken?: string;
             verificationRequired?: boolean;
           }>(response);
+          const normalizedUser = normalizeUser(result.user);
 
           const verificationRequired = Boolean(result.verificationRequired);
 
@@ -321,26 +330,26 @@ export const useAuthStore = create<AuthState>()(
 
             return {
               verificationRequired: true,
-              userId: result.user?.id,
-              email: result.user?.email,
-              phoneNumber: result.user?.phoneNumber,
+              userId: normalizedUser?.id,
+              email: normalizedUser?.email,
+              phoneNumber: normalizedUser?.phoneNumber,
             };
           }
 
           set({
-            user: result.user,
+            user: normalizedUser,
             accessToken: result.accessToken || null,
             refreshToken: result.refreshToken || null,
             isAuthenticated: true,
             isLoading: false,
-            userMode: resolveUserMode(get().userMode, result.user),
+            userMode: resolveUserMode(get().userMode, normalizedUser),
           });
 
           return {
             verificationRequired: false,
-            userId: result.user?.id,
-            email: result.user?.email,
-            phoneNumber: result.user?.phoneNumber,
+            userId: normalizedUser?.id,
+            email: normalizedUser?.email,
+            phoneNumber: normalizedUser?.phoneNumber,
           };
         } catch (error) {
           set({ isLoading: false });
@@ -382,13 +391,14 @@ export const useAuthStore = create<AuthState>()(
           const { extractData } = await import('@/lib/api');
           const response = await api.get('/user/me');
           const data = extractData<{ user: User }>(response);
+          const normalizedUser = normalizeUser(data.user);
           set({
-            user: data.user,
+            user: normalizedUser,
             isLoading: false,
-            userMode: resolveUserMode(get().userMode, data.user),
+            userMode: resolveUserMode(get().userMode, normalizedUser),
           });
           
-          const user = data.user;
+          const user = normalizedUser;
           return !!(user.phoneNumber && user.institutionID);
         } catch (error) {
           set({ isLoading: false });
@@ -422,10 +432,11 @@ export const useAuthStore = create<AuthState>()(
           const { extractData } = await import('@/lib/api');
           const response = await api.get('/user/me');
           const data = extractData<{ user: User }>(response);
+          const normalizedUser = normalizeUser(data.user);
           set({
-            user: data.user,
+            user: normalizedUser,
             isLoading: false,
-            userMode: resolveUserMode(get().userMode, data.user),
+            userMode: resolveUserMode(get().userMode, normalizedUser),
           });
         } catch (error) {
           set({ isLoading: false });
@@ -447,7 +458,7 @@ export const useAuthStore = create<AuthState>()(
         const { extractData } = await import('@/lib/api');
         const response = await api.patch('/user/me', data);
         const result = extractData<{ user: User }>(response);
-        set({ user: result.user });
+        set({ user: normalizeUser(result.user) });
       },
     }),
     {
