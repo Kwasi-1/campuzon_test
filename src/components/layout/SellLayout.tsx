@@ -127,7 +127,7 @@ export function SellLayout() {
       {/* Seller Header */}
       <header className="sticky top-0 z-40 w-full bg-white border-b border-gray-100 shadowsm">
         <div className="container mx-auto px-3 md:px-6 py-2">
-          <div className="flex h-16 items-center justify-between gap-4">
+          <div className="flex md:h-16 items-center justify-between gap-4">
             {/* Left: Back link + Logo + Store pill */}
             <div className="flex items-center gap-3">
               <button
