@@ -1,5 +1,7 @@
 // ==================== ENUMS ====================
 
+import { UserActivity } from '@/types';
+
 export type UserRole = 'student' | 'seller' | 'admin';
 
 export type Category =
@@ -87,8 +89,16 @@ export interface Address {
   isActive: boolean;
 }
 
-
 export type TwoFactorMethod = 'none' | 'otp' | 'totp';
+
+export interface UserActivity {
+  id: string;
+  action: string;
+  description: string;
+  dateCreated: string;
+  ipAddress: string;
+  userAgent: string;
+}
 
 export interface User {
   id: string;
@@ -110,6 +120,7 @@ export interface User {
   dateCreated: string;
   institution?: Institution;
   residence?: Hall | Address;
+  residenceName: string;
   store?: Store;
   institutionName?: string;
 }

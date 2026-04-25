@@ -36,18 +36,50 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetHeader, 
+  SheetTitle, 
+  SheetDescription 
+} from "@/components/ui/sheet";
+
+import { Laptop, Globe, Info } from "lucide-react";
 import { useAuthStore } from "@/stores";
 import { useMyOrders } from "@/hooks";
+import { useUserLocation, useMyActivities } from "@/hooks/useProfile";
 import { api, extractData } from "@/lib/api";
-import { mockInstitutions } from "@/lib/mockData";
 import { formatPrice, formatDate, getOrderStatusColor } from "@/lib/utils";
-import type { User } from "@/types-new";
+import type { User, UserActivity } from "@/types-new";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-// Mock data for stats and activity
-const mockRecentActivity = [
-  { type: "order", text: "Welcome to Campuzon!", time: "Recently" },
-];
+
+const getActivityDetails = (activity: UserActivity) => {
+  switch (activity.action) {
+    case "LOGIN":
+      return {
+        text: "Logged into your account",
+        icon: Shield,
+        color: "text-blue-600",
+        bg: "bg-blue-50",
+      };
+    case "OREDER_CREATED":
+      return {
+        text: activity.description || "Placed a new order",
+        icon: ShoppingBag,
+        color: "text-green-600",
+        bg: "bg-green-50",
+      };
+    default:
+      return {
+        text: activity.description || activity.action,
+        icon: Clock,
+        color: "text-gray-600",
+        bg: "bg-gray-50",
+      };
+  }
+};
+
 
 export function ProfilePage() {
   const navigate = useNavigate();
@@ -58,6 +90,9 @@ export function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const { isResident, savedAddresses, displayLocation } = useUserLocation();
+  const { data: activities, isLoading: activitiesLoading } = useMyActivities();
+  const [selectedActivity, setSelectedActivity] = useState<UserActivity | null>(null);
 
   // Edit form state
   const [editForm, setEditForm] = useState({
@@ -71,7 +106,7 @@ export function ProfilePage() {
   const stats = {
     totalOrders: orders?.length || 0,
     wishlistItems: 0,
-    savedAddresses: 0,
+    savedAddresses: isResident ? 1 : (savedAddresses?.length || 0),
     totalSpent:
       orders?.reduce((sum, order) => sum + (order.totalAmount || 0), 0) || 0,
   };
@@ -372,7 +407,8 @@ export function ProfilePage() {
                 </div>
               </div>
 
-              <div className="group rounded-xl border border-gray-100 p-4 hover:border-blue-200 hover:bg-blue-50/30 transition-colors">
+              <div className="group rounded-xl border border-gray-100 p-4 hover:border-blue-200 hover:bg-blue-50/30 transition-colors flex flex-col gap-4">
+                {/* Institution Row */}
                 <div className="flex items-center gap-4">
                   <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
                     <Building2 className="h-5 w-5 text-blue-600" />
@@ -381,20 +417,31 @@ export function ProfilePage() {
                     <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-0.5">
                       Institution
                     </p>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-gray-900 truncate">
                       {user.institutionName ||
                         user.institution?.name ||
                         "Not specified"}
                     </p>
                   </div>
+                </div>
+
+                {/* Divider Line */}
+                <div className="h-px w-full bg-gray-100" />
+
+                {/* Residence Row */}
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-full bg-green-50 flex items-center justify-center shrink-0 group-hover:bg-green-100 transition-colors">
+                    <MapPin className="h-5 w-5 text-green-600" />
+                  </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-0.5">
                       Residence
                     </p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {user.residence?.name ||
-                        "Not specified"}
-                    </p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {displayLocation || "Not specified"}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -507,29 +554,136 @@ export function ProfilePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="space-y-6">
-              {mockRecentActivity.map((activity, index) => (
-                <div key={index} className="flex gap-4">
-                  <div className="relative flex flex-col items-center">
-                    <div className="h-3 w-3 rounded-full bg-primary mt-1.5 shadow-sm" />
-                    {index !== mockRecentActivity.length - 1 && (
-                      <div className="w-px h-full bg-gray-100 absolute top-4 bottom-[-1.5rem]" />
-                    )}
+            {activitiesLoading ? (
+              <div className="space-y-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex gap-4">
+                    <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/4" />
+                    </div>
                   </div>
-                  <div className="flex-1 pb-1">
-                    <p className="text-sm font-medium text-gray-900">
-                      {activity.text}
-                    </p>
-                    <p className="text-xs text-gray-500 flex items-center gap-1.5 mt-1 font-medium">
-                      <Clock className="h-3.5 w-3.5" />
-                      {activity.time}
-                    </p>
+                ))}
+              </div>
+            ) : !activities || activities.length === 0 ? (
+              <div className="text-center py-6">
+                <p className="text-sm text-gray-500 font-medium">No recent activity found.</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {activities.slice(0, 5).map((activity, index) => {
+                  const details = getActivityDetails(activity);
+                  return (
+                      <div 
+                        key={activity.id} 
+                        onClick={() => setSelectedActivity(activity)}
+                        className="flex gap-4 group cursor-pointer hover:bg-gray-50 p-2 -m-2 rounded-xl transition-colors"
+                      >
+                        <div className="relative flex flex-col items-center">
+                          <div className={`h-10 w-10 rounded-full ${details.bg} flex items-center justify-center shrink-0 z-10 border-2 border-white shadow-sm`}>
+                            <details.icon className={`h-5 w-5 ${details.color}`} />
+                          </div>
+                          {index !== Math.min(activities.length, 5) - 1 && (
+                            <div className="w-px h-full bg-gray-100 absolute top-10 bottom-[-1.5rem]" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start">
+                            <p className="text-sm font-semibold text-gray-900">{details.text}</p>
+                            <ChevronRight className="h-4 w-4 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                              <p>
+                                <Clock className="h-3.5 w-3.5" />
+                                {formatDate(activity.dateCreated)}
+                              </p>
+                            {activity.ipAddress && (
+                              <span className="text-[10px] text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">
+                                {activity.ipAddress}
+                              </span>
+                          )}
+                        </div>
+                      </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+          {/* The Detail Side Panel */}
+          <Sheet open={!!selectedActivity} onOpenChange={() => setSelectedActivity(null)}>
+            <SheetContent className="sm:max-w-md">
+              <SheetHeader className="space-y-1">
+                <SheetTitle className="text-xl">Activity Details</SheetTitle>
+                <SheetDescription>
+                  Technical logs for this specific action.
+                </SheetDescription>
+              </SheetHeader>
+
+              {selectedActivity && (
+                <div className="mt-8 space-y-6">
+                  {/* Header Visual */}
+                  <div className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                    <div className={`h-12 w-12 rounded-full ${getActivityDetails(selectedActivity).bg} flex items-center justify-center`}>
+                      {(() => {
+                        const Icon = getActivityDetails(selectedActivity).icon;
+                        return <Icon className={`h-6 w-6 ${getActivityDetails(selectedActivity).color}`} />;
+                      })()}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-900">{selectedActivity.action.replace('_', ' ')}</h4>
+                      <p className="text-sm text-gray-500">{formatDate(selectedActivity.dateCreated)}</p>
+                    </div>
+                  </div>
+
+                  {/* Data Grid */}
+                  <div className="space-y-4">
+                    <DetailRow 
+                      icon={Globe} 
+                      label="IP Address" 
+                      value={selectedActivity.ipAddress || "Unknown"} 
+                    />
+                    <DetailRow 
+                      icon={Laptop} 
+                      label="Device/User Agent" 
+                      value={selectedActivity.userAgent || "Unknown"} 
+                      isLong
+                    />
+                    <DetailRow 
+                      icon={Info} 
+                      label="Description" 
+                      value={selectedActivity.description || "No additional description provided."} 
+                      isLong
+                    />
+                  </div>
+
+                  <div className="pt-6">
+                    <Button 
+                      variant="outline" 
+                      className="w-full rounded-xl" 
+                      onClick={() => setSelectedActivity(null)}
+                    >
+                      Close Details
+                    </Button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
+              )}
+            </SheetContent>
+          </Sheet>
         </Card>
+      </div>
+    </div>
+  );
+}
+
+function DetailRow({ icon: Icon, label, value, isLong }: { icon: any, label: string, value: string, isLong?: boolean }) {
+  return (
+    <div className="flex gap-3 py-3 border-b border-gray-50 last:border-0">
+      <Icon className="h-4 w-4 text-gray-400 mt-1 shrink-0" />
+      <div className="space-y-1 overflow-hidden">
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">{label}</p>
+        <p className={`text-sm text-gray-700 leading-relaxed ${isLong ? 'break-words' : 'font-mono'}`}>
+          {value}
+        </p>
       </div>
     </div>
   );
