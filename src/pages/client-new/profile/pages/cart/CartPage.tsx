@@ -53,7 +53,11 @@ export function CartPage() {
             description="Looks like you haven't added any products yet. Start shopping to fill your cart!"
             action={
               <Link to="/products">
-                <Button className="rounded-full px-8">Start Shopping</Button>
+                <Button
+                  className="mt-2 rounded-full px-8 h-12"
+                >
+                  Start Shopping
+                </Button>
               </Link>
             }
           />

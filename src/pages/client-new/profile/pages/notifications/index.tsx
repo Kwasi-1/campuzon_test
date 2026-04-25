@@ -329,7 +329,7 @@ export function NotificationsPage() {
                       className={`bg-white border rounded-lg lg:rounded-[24px] overflow-hidden shadow-sm transition-all ${
                         !notification.isRead
                           ? "border-[#1C1C1E]/25 ring-1 ring-[#1C1C1E]/10"
-                          : "border-border"
+                          : "border-gray-100"
                       }`}
                     >
                       <div className="p-5 md:p-6">
