@@ -126,10 +126,10 @@ export function CategoriesPage() {
   const currentCategoryData = CATEGORIES_DATA.find((c) => c.id === activeCategory);
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] md:h-[calc(100vh-12.5rem)] lg:h-[calc(100vh-10rem)] w-full overflow-hidden bg-background md:rounded-xl md:border md:shadow-sm -mb-10 -mt-10 md:mb-auto md:mt-auto pb-14 md:pb-0">
+    <div className="flex h-[calc(100vh-5.5rem)] md:h-[calc(100vh-12.5rem)] lg:h-[calc(100vh-10rem)] w-full overflow-hidden bg-background md:rounded-xl md:border md:shadow-sm -mb-10 -mt10 md:mb-auto md:mt-auto pb-14 md:pb-0">
       
       {/* Left Sidebar - Categories List */}
-      <div className="w-[85px] sm:w-[100px] md:w-[120px] flex-shrink-0 bg-muted/20 border-r border-border overflow-y-auto scrollbar-hide py-2">
+      <div className="w-[85px] sm:w-[100px] md:w-[120px] flex-shrink-0 bg-muted/30 border-r border-border overflow-y-auto scrollbar-hide py-2">
         {CATEGORIES_DATA.map((category) => {
           const isActive = activeCategory === category.id;
           return (
@@ -191,7 +191,7 @@ export function CategoriesPage() {
                     to={`/products?category=${currentCategoryData.id}&search=${sub.searchQuery}`}
                     className="flex flex-col items-center gap-2 group"
                   >
-                    <div className="w-full aspect-square rounded-[24px] overflow-hidden bg-muted/30 shadow-sm border border-black/5 transition-all duration-300 group-hover:shadow-md group-hover:-translate-y-1">
+                    <div className="w-full aspect-square rounded-3xl overflow-hidden bg-muted/30 shadow-sm border border-black/5 transition-all duration-300 group-hover:shadow-md group-hover:-translate-y-1">
                       <img
                         src={sub.image}
                         alt={sub.name}

@@ -255,7 +255,7 @@ export default function Products() {
                 aria-label="Open product filters"
               >
                 Filter
-                <Icon icon="pixel:filter" className="h-3.5 w-3.5" />
+                <Icon icon="circum:filter" className="h-3 w-3" />
               </button>
             </div>
 
