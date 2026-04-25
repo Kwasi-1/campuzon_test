@@ -137,8 +137,8 @@ export function MobileBottomNav() {
   };
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 px-4 pb-3 safe-area-pb pointer-events-none">
-      <div className="pointer-events-auto mx-auto flex h-14 w-full max-w-md items-center justify-between gap-1 rounded-full border border-primary/80 bg-primary p-1.5 shadow-lg backdrop-blur-md">
+    <nav className="md:hidden bgwhite fixed bottom-0 left-0 right-0 z-30 px-4 pb-3 safe-area-pb pointer-events-none">
+      <div className="pointer-events-auto mx-auto flex h-14 w-full max-w-md items-center justify-between gap-2 rounded-full border borderprimary/90 bg-background/95 p-1 shadowlg backdrop-blur-md">
         {navItems.map((item) => {
           const isActive = isTabActive(item);
           const isCart = item.path === "/cart";
@@ -153,8 +153,8 @@ export function MobileBottomNav() {
               onClick={(e) => handleNavClick(e, item)}
               className={`relative flex h-11 items-center justify-center rounded-full px-3 transition-all duration-200 ${
                 isActive
-                  ? "min-w-[92px] bg-background text-foreground shadow-sm"
-                  : "min-w-[44px] text-primary-foreground/70 hover:bg-primary/80"
+                  ? "min-w-[92px] bg-primary text-primary-foreground/70 shadow-sm"
+                  : "min-w-[44px] text-foreground/70 hover:bg-primary-foreground/80"
               }`}
             >
               <div className="relative flex items-center justify-center">
@@ -164,7 +164,7 @@ export function MobileBottomNav() {
                     alt={user.displayName || user.firstName}
                     className={`h-5 w-5 rounded-full object-cover ${
                       isActive
-                        ? "ring-2 ring-foreground ring-offset-1 ring-offset-background"
+                        ? "ring-2 ring-primary-foreground ring-offset-1 ring-offset-primary-background"
                         : ""
                     }`}
                   />
@@ -173,8 +173,8 @@ export function MobileBottomNav() {
                     icon={item.icon}
                     className={`h-5 w-5 transition-all ${
                       isActive
-                        ? "text-foreground"
-                        : "text-primary-foreground/70"
+                        ? "text-primary-foreground"
+                        : "text-foreground/70"
                     }`}
                   />
                 )}
@@ -187,7 +187,7 @@ export function MobileBottomNav() {
               </div>
 
               {isActive && (
-                <span className="ml-2 truncate text-xs font-semibold leading-none text-foreground">
+                <span className="ml-2 truncate text-xs font-semibold leading-none text-primary-foreground">
                   {item.label}
                 </span>
               )}
