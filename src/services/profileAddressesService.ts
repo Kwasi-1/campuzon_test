@@ -17,27 +17,6 @@ interface AddressPayload {
   type: AddressType;
 }
 
-const STORAGE_KEY = "campuzon_profile_addresses";
-const ENABLE_REMOTE_ADDRESSES =
-  import.meta.env.VITE_ENABLE_PROFILE_ADDRESSES_API === "true";
-
-const defaultAddresses: ProfileAddress[] = [
-  {
-    id: "addr-1",
-    name: "Home",
-    gpsLocation: "GA-123-4567",
-    isDefault: true,
-    type: "home",
-  },
-  {
-    id: "addr-2",
-    name: "Off-campus Hostel",
-    gpsLocation: "GA-456-1234",
-    isDefault: false,
-    type: "off_campus_hostel",
-  },
-];
-
 const normalizeAddressType = (value: unknown): AddressType => {
   const raw = String(value ?? "").trim().toLowerCase();
 
@@ -109,103 +88,39 @@ const ensureSingleDefault = (items: ProfileAddress[]) => {
   });
 };
 
-const readLocal = (): ProfileAddress[] => {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return defaultAddresses;
-
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    return toAddressList(parsed);
-  } catch {
-    return defaultAddresses;
-  }
-};
-
-const writeLocal = (items: ProfileAddress[]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(ensureSingleDefault(items)));
-};
 
 class ProfileAddressesService {
   async getAddresses(): Promise<ProfileAddress[]> {
-    if (ENABLE_REMOTE_ADDRESSES) {
       const response = await api.get("/user/me/addresses");
       const data = extractData<unknown>(response);
       return toAddressList(data);
     }
 
-    const items = readLocal();
-    writeLocal(items);
-    return items;
-  }
 
   async createAddress(payload: AddressPayload): Promise<ProfileAddress[]> {
-    if (ENABLE_REMOTE_ADDRESSES) {
       await api.post("/user/me/addresses", toRequestPayload(payload));
       return this.getAddresses();
     }
-
-    const nextAddress: ProfileAddress = {
-      id: `addr-${Date.now()}`,
-      ...toRequestPayload(payload),
-    };
-
-    const current = readLocal();
-    const updated = payload.isDefault
-      ? [...current.map((a) => ({ ...a, isDefault: false })), nextAddress]
-      : [...current, nextAddress];
-
-    writeLocal(updated);
-    return updated;
-  }
 
   async updateAddress(
     id: string,
     payload: AddressPayload,
   ): Promise<ProfileAddress[]> {
-    if (ENABLE_REMOTE_ADDRESSES) {
       await api.patch(`/user/me/addresses/${id}`, toRequestPayload(payload));
       return this.getAddresses();
     }
 
-    const nextPayload = toRequestPayload(payload);
-    const current = readLocal();
-    const updated = current.map((a) => {
-      if (a.id === id) return { ...a, ...nextPayload };
-      if (nextPayload.isDefault) return { ...a, isDefault: false };
-      return a;
-    });
 
-    writeLocal(updated);
-    return updated;
-  }
-
-  async deleteAddress(id: string): Promise<ProfileAddress[]> {
-    if (ENABLE_REMOTE_ADDRESSES) {
+  async deleteAddress(id: string): Promise<ProfileAddress[]>{
       await api.delete(`/user/me/addresses/${id}`);
       return this.getAddresses();
     }
 
-    const current = readLocal();
-    const updated = current.filter((a) => a.id !== id);
-    if (updated.length > 0 && !updated.some((a) => a.isDefault)) {
-      updated[0] = { ...updated[0], isDefault: true };
-    }
-
-    writeLocal(updated);
-    return updated;
-  }
 
   async setDefaultAddress(id: string): Promise<ProfileAddress[]> {
-    if (ENABLE_REMOTE_ADDRESSES) {
       await api.post(`/user/me/addresses/${id}/set-default`);
       return this.getAddresses();
     }
-
-    const current = readLocal();
-    const updated = current.map((a) => ({ ...a, isDefault: a.id === id }));
-    writeLocal(updated);
-    return updated;
-  }
 }
 
 export const profileAddressesService = new ProfileAddressesService();
