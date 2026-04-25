@@ -83,6 +83,13 @@ function isDetailPath(pathname: string): boolean {
   const isMessageDetail = pathname.startsWith("/messages/");
   const isSellerOrderDetail = pathname.startsWith("/seller/orders/");
   const isTrackingDetail = pathname.startsWith("/track/");
+  const isAcceptOffer = pathname.startsWith("/accept-offer/");
+  const isproducts = pathname == "/products";
+  const isNotifications = pathname == "/notifications";
+  const isAddresses = pathname == "/addresses";
+  const isPayments = pathname == "/payments";
+  const isSettings = pathname == "/settings";
+  const isCheckout = pathname == "/checkout";
 
   return (
     isProductDetail ||
@@ -91,7 +98,14 @@ function isDetailPath(pathname: string): boolean {
     isOrderDetail ||
     isMessageDetail ||
     isSellerOrderDetail ||
-    isTrackingDetail
+    isTrackingDetail ||
+    isAcceptOffer ||
+    isproducts ||
+    isNotifications ||
+    isAddresses ||
+    isPayments ||
+    isSettings ||
+    isCheckout
   );
 }
 

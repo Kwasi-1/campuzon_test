@@ -94,7 +94,7 @@ export function MobileMenu({
             <X className="h-5 w-5" />
           </button>
         </div>
-        <nav className="p-4 space-y-1">
+        <nav className="p-4 space-y-1 !tracking-tight">
           {isPublicContext && (
             <>
               {mainCategories.map((cat) => (
@@ -168,6 +168,24 @@ export function MobileMenu({
           {isClientContext && (
             <>
               <button
+                onClick={() => handleProtectedNavigation("/profile")}
+                className="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-muted transition-colors"
+              >
+                Profile
+              </button>
+              <button
+                onClick={() => handleProtectedNavigation("/orders")}
+                className="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-muted transition-colors"
+              >
+                Orders
+              </button>
+              <button
+                onClick={() => handleProtectedNavigation("/wishlist")}
+                className="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-muted transition-colors"
+              >
+                Wishlist
+              </button>
+              <button
                 onClick={() => handleProtectedNavigation("/addresses")}
                 className="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-muted transition-colors"
               >
@@ -197,7 +215,7 @@ export function MobileMenu({
                   <hr className="my-3 border-border" />
                   <button
                     onClick={() => handleSwitchMode("seller")}
-                    className="block w-full text-left px-4 py-2.5 rounded-lg bg-primary/5 text-primary hover:bg-primary/10 transition-colors"
+                    className="block w-full text-left px-4 py-2.5 rounded-sm border border-border text-primary hover:bg-primary/10 transition-colors"
                   >
                     Switch to Seller Mode
                   </button>

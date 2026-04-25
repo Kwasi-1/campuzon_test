@@ -151,10 +151,10 @@ export function MobileBottomNav() {
               key={item.label}
               to={item.path}
               onClick={(e) => handleNavClick(e, item)}
-              className={`relative flex h-11 items-center justify-center rounded-full px-3 transition-all duration-200 ${
+              className={`relative flex h-11 items-center justify-center rounded-full transition-all duration-200 ${
                 isActive
-                  ? "min-w-[92px] bg-primary text-primary-foreground/70 shadow-sm"
-                  : "min-w-[44px] text-foreground/70 hover:bg-primary-foreground/80"
+                  ? "min-w-[92px] bg-primary px-4 text-primary-foreground/70 shadow-sm"
+                  : "min-w-[44px] text-foreground/70 px-3 hover:bg-primary-foreground/80"
               }`}
             >
               <div className="relative flex items-center justify-center">
