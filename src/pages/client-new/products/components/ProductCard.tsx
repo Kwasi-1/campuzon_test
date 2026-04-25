@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
-import { Heart, Star } from "lucide-react";
+import { Heart, Star, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import type { Product, ProductCondition } from "@/types-new";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/hooks";
-import { useAuthStore } from "@/stores";
+import { useAuthStore, useCartStore } from "@/stores";
 import { useAuthPromptStore } from "@/stores/authPromptStore";
+import { Button } from "@/components/ui/button";
 import {
   useAddToWishlist,
   useRemoveFromWishlist,
@@ -19,6 +20,7 @@ interface ProductCardProps {
   index?: number;
   variant?: CardVariant;
   masonryMobile?: boolean;
+  isWishlistView?: boolean;
 }
 
 function getMasonryAspectClass(productId: string, index: number): string {
@@ -86,9 +88,11 @@ export function ProductCard({
   index = 0,
   variant = "grid",
   masonryMobile = false,
+  isWishlistView = false,
 }: ProductCardProps) {
   const { formatGHS } = useCurrency();
   const { isAuthenticated } = useAuthStore();
+  const addItem = useCartStore((state) => state.addItem);
   const { openAuthPrompt } = useAuthPromptStore();
   const { data: isInWishlist } = useIsInWishlist(product.id);
   const addToWishlist = useAddToWishlist();
@@ -110,6 +114,18 @@ export function ProductCard({
     } else {
       addToWishlist.mutate(product.id);
     }
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem(product, 1);
+  };
+
+  const handleRemoveFromWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    removeFromWishlist.mutate(product.id);
   };
 
   const specsString = buildSpecsString(product);
@@ -166,24 +182,26 @@ export function ProductCard({
             />
 
             {/* Wishlist Button - Appear on hover */}
-            <button
-              onClick={handleWishlistToggle}
-              aria-label={
-                isInWishlist ? "Remove from wishlist" : "Add to wishlist"
-              }
-              title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
-              className={cn(
-                "absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-sm sm:opacity-0 sm:group-hover:opacity-100",
-                isInWishlist ? "sm:opacity-100" : "",
-              )}
-            >
-              <Heart
+            {!isWishlistView && (
+              <button
+                onClick={handleWishlistToggle}
+                aria-label={
+                  isInWishlist ? "Remove from wishlist" : "Add to wishlist"
+                }
+                title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
                 className={cn(
-                  "w-4 h-4",
-                  isInWishlist ? "fill-red-500 text-red-500" : "text-gray-600",
+                  "absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-sm sm:opacity-0 sm:group-hover:opacity-100",
+                  isInWishlist ? "sm:opacity-100" : "",
                 )}
-              />
-            </button>
+              >
+                <Heart
+                  className={cn(
+                    "w-4 h-4",
+                    isInWishlist ? "fill-red-500 text-red-500" : "text-gray-600",
+                  )}
+                />
+              </button>
+            )}
             {hasDiscount && (
               <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-medium px-2 py-0.5 rounded-[4px]">
                 {discountPercent}% OFF
@@ -245,9 +263,32 @@ export function ProductCard({
               )}
             </div>
 
-            <p className="mt-0.5 text-[12px] text-gray-500">
-              {(product.soldCount || 0).toLocaleString()} sold
-            </p>
+            {!isWishlistView && (
+              <p className="mt-0.5 text-[12px] text-gray-500">
+                {(product.soldCount || 0).toLocaleString()} sold
+              </p>
+            )}
+
+            {isWishlistView && (
+              <div className="mt-2.5 flex items-center gap-2 -mx-0.5">
+                {!isOutOfStock && (
+                  <Button
+                    onClick={handleAddToCart}
+                    className="h-10 flex-1 roundedsm text-[13px]"
+                  >
+                    Add to Cart
+                  </Button>
+                )}
+                <Button
+                  onClick={handleRemoveFromWishlist}
+                  variant="outline"
+                  className={cn("h-10 rounded- px-2.5 hover:text-primary hover:bg-primary/5", isOutOfStock ? "flex-1 text-[13px]" : "w-10")}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {isOutOfStock && <span className="ml-2">Delete</span>}
+                </Button>
+              </div>
+            )}
 
             {/* Meta tags */}
             <div className="hidden items-center justify-between mt-2 pt-2 border-t border-gray-100">
