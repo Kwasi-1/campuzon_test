@@ -86,9 +86,9 @@ const sellerTabs: NavItem[] = [
     requiresAuth: true,
   },
   {
-    path: "/seller/settings",
-    label: "Settings",
-    icon: "solar:settings-linear",
+    path: "/seller/finances",
+    label: "Finances",
+    icon: "solar:wallet-linear",
     requiresAuth: true,
   },
 ];

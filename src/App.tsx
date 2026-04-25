@@ -67,6 +67,7 @@ import {
   SellerOrdersPage,
   SellerProductsPage,
   SellerSettingsPage,
+  SellerWalletPage,
 } from "./pages/seller";
 import { ProfileLayout } from "./pages/client-new/profile/layout/ProfileLayout";
 import { OrdersPage } from "./pages/client-new/profile/pages/orders";
@@ -138,6 +139,10 @@ const App = () => (
                         <Route
                           path="/seller/messages"
                           element={<SellerMessagesPage />}
+                        />
+                        <Route
+                          path="/seller/finances"
+                          element={<SellerWalletPage />}
                         />
                         <Route
                           path="/seller/settings"

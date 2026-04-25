@@ -13,6 +13,7 @@ import {
   Store,
   Menu,
   X,
+  Wallet,
 } from "lucide-react";
 import { Toaster } from "react-hot-toast";
 import { useAuthStore } from "@/stores";
@@ -27,6 +28,7 @@ const NAV_LINKS = [
   { to: "/seller/products", label: "Products", icon: Package },
   { to: "/seller/orders", label: "Orders", icon: ShoppingBag },
   { to: "/seller/messages", label: "Messages", icon: MessageSquare },
+  { to: "/seller/finances", label: "Finances", icon: Wallet },
   { to: "/seller/settings", label: "Settings", icon: Settings },
 ];
 

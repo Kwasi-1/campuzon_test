@@ -6,3 +6,4 @@ export { SellerOrderDetailPage } from "./pages/orders/pages/order-details";
 export { SellerMessagesPage } from "./pages/messages";
 export { SellerSettingsPage } from "./pages/settings/SellerSettingsPage";
 export { BecomeSellerPage } from "./pages/become-seller";
+export { SellerWalletPage } from "./pages/wallet/SellerWalletPage";
