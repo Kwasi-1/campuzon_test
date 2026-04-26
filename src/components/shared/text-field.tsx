@@ -1,4 +1,4 @@
-﻿import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import apiClient from "@/services/apiClient";
 import { Icon } from "@iconify/react";
 import { Spinner } from "@nextui-org/react";
@@ -49,6 +49,7 @@ interface CustomSelectFieldProps {
   unselectable?: "on" | "off";
   selectedKey?: any;
   searchable?: boolean;
+  selectProps?: Record<string, any>;
 }
 
 export const CustomSelectField: FC<CustomSelectFieldProps> = ({
@@ -65,6 +66,7 @@ export const CustomSelectField: FC<CustomSelectFieldProps> = ({
   selectionMode = "single",
   unselectable = "off",
   isDisabled = false,
+  selectProps = {},
 }) => {
   const [showMsg, setShowMsg] = useState(false);
 
@@ -93,6 +95,7 @@ export const CustomSelectField: FC<CustomSelectFieldProps> = ({
         radius="md"
         isLoading={isLoading}
         {...(inputProps ?? {})}
+        {...selectProps}
         endContent={
           error && (
             <Icon
@@ -108,7 +111,7 @@ export const CustomSelectField: FC<CustomSelectFieldProps> = ({
             `data-[hover=true]:shadow-none shadow-none border dark:border-[#F5F5F580] border-[1px] bg-primary-gray/20 dark:bg-secondary-black rounded-md text-[12px] py-1`,
             className,
           ),
-          label: `dark:text-gray-300 text-xs capitalize ${labelPlacement === "inside" ? "-mt-[2%]" : "mt-1"}`,
+          label: `text-gray-600 dark:text-gray-300 text-xs capitalize ${labelPlacement === "inside" ? "-mt-[2%]" : "mt-1"}`,
           popoverContent: "rounded-md",
         }}
       >
@@ -176,7 +179,7 @@ export const CustomInputTextField = (props: CustomInputTextFieldProps) => {
     disabled,
     value,
     onChange,
-    height = "h-[3.5rem]",
+    height = "h[3.5rem]",
     labelPlacement = "outside",
     startContent,
     endContent,

@@ -24,7 +24,7 @@ import {
   CustomSelectField,
 } from "@/components/shared/text-field";
 import { useAuthStore } from "@/stores";
-import { mockInstitutions } from "@/lib/mockData";
+import { useInstitutions, useHalls } from "@/hooks";
 import { extractError } from "@/lib/api";
 import { parseRedirectTarget } from "@/lib/deepLinkHandler";
 
@@ -107,11 +107,15 @@ export function RegisterPage() {
   });
 
   const residenceType = watch("residenceType");
+  const institutionID = watch("institutionID");
+
+  const { data: institutions, isLoading: isLoadingInstitutions } = useInstitutions();
+  const { data: halls, isLoading: isLoadingHalls } = useHalls(institutionID);
 
   const onSubmit = async (data: RegisterFormData) => {
     setError(null);
     try {
-      const selectedInstitution = mockInstitutions.find(
+      const selectedInstitution = institutions?.find(
         (i) => i.id === data.institutionID,
       );
       const institutionName =
@@ -208,6 +212,30 @@ export function RegisterPage() {
         />
 
         <Controller
+          name="institutionID"
+          control={control}
+          render={({ field }) => (
+            <SearchableSelectField
+              label="Institution"
+              placeholder="Select your institution"
+              labelPlacement="outside"
+              value={field.value}
+              onValueChange={field.onChange}
+              options={institutions?.map((institution) => ({
+                value: institution.id,
+                label: `${institution.name} (${institution.shortName})`,
+                description: institution.shortName,
+              })) || []}
+              isLoading={isLoadingInstitutions}
+              error={errors.institutionID?.message}
+              selectProps={{
+                startContent: <Building className="h-4 w-4" />,
+              }}
+            />
+          )}
+        />
+
+        <Controller
           name="residenceType"
           control={control}
           render={({ field }) => (
@@ -217,8 +245,8 @@ export function RegisterPage() {
               labelPlacement="outside"
               value={field.value}
               className="mt-2"
-              inputProps={{
-                ...field,
+              inputProps={field}
+              selectProps={{
                 startContent:
                   field.value === "hall" ? (
                     <Building className="h-4 w-4" />
@@ -242,13 +270,28 @@ export function RegisterPage() {
         />
 
         {residenceType === "hall" ? (
-          <CustomInputTextField
-            label="Hall / Residence (optional)"
-            placeholder="e.g., Legon Hall"
-            startContent={<Building className="h-4 w-4" />}
-            error={errors.hallName?.message}
-            labelPlacement="outside"
-            inputProps={register("hallName")}
+          <Controller
+            name="hallName"
+            control={control}
+            render={({ field }) => (
+              <CustomSelectField
+                label="Hall / Residence (optional)"
+                placeholder="Select your hall"
+                labelPlacement="outside"
+                className="mt-3"
+                value={field.value}
+                isLoading={isLoadingHalls}
+                inputProps={field}
+                selectProps={{
+                  startContent: <Building className="h-4 w-4" />
+                }}
+                options={halls?.map((hall) => ({
+                  value: hall.name,
+                  label: hall.name,
+                })) || []}
+                error={errors.hallName?.message}
+              />
+            )}
           />
         ) : (
           <>
@@ -271,29 +314,6 @@ export function RegisterPage() {
             />
           </>
         )}
-
-        <Controller
-          name="institutionID"
-          control={control}
-          render={({ field }) => (
-            <SearchableSelectField
-              label="Institution"
-              placeholder="Select your institution"
-              labelPlacement="outside"
-              value={field.value}
-              onValueChange={field.onChange}
-              options={mockInstitutions.map((institution) => ({
-                value: institution.id,
-                label: `${institution.name} (${institution.shortName})`,
-                description: institution.shortName,
-              }))}
-              error={errors.institutionID?.message}
-              selectProps={{
-                startContent: <Building className="h-4 w-4" />,
-              }}
-            />
-          )}
-        />
 
         <CustomInputTextField
           label="Password"
