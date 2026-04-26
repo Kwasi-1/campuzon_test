@@ -10,6 +10,8 @@ import {
   Phone,
   Loader2,
   Building,
+  Home,
+  MapPin,
   Eye,
   EyeOff,
 } from "lucide-react";
@@ -35,6 +37,10 @@ const registerSchema = z
       .min(10, "Phone number must be at least 10 digits")
       .regex(/^[+]?[\d\s-()]+$/, "Please enter a valid phone number"),
     institutionID: z.string().min(1, "Please select your institution"),
+    residenceType: z.enum(["hall", "offCampus"]).default("hall"),
+    hallName: z.string().optional(),
+    primaryAddressName: z.string().optional(),
+    gpsLocation: z.string().optional(),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
@@ -42,6 +48,33 @@ const registerSchema = z
       .regex(/[a-z]/, "Password must contain at least one lowercase letter")
       .regex(/[0-9]/, "Password must contain at least one number"),
     confirmPassword: z.string(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.residenceType === "hall") {
+      return;
+    }
+
+    if (!data.primaryAddressName?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Primary address is required for off-campus users",
+        path: ["primaryAddressName"],
+      });
+    }
+
+    if (!data.gpsLocation?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Ghana Post GPS is required",
+        path: ["gpsLocation"],
+      });
+    } else if (!/^[A-Z]{2}-\d{3}-\d{4}$/i.test(data.gpsLocation.trim())) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Use format like GA-123-4567",
+        path: ["gpsLocation"],
+      });
+    }
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -63,10 +96,16 @@ export function RegisterPage() {
     register,
     control,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      residenceType: "hall",
+    },
   });
+
+  const residenceType = watch("residenceType");
 
   const onSubmit = async (data: RegisterFormData) => {
     setError(null);
@@ -77,6 +116,14 @@ export function RegisterPage() {
       const institutionName =
         selectedInstitution?.name || "Unknown Institution";
 
+      const pendingAddress =
+        data.residenceType === "offCampus"
+          ? {
+              name: data.primaryAddressName?.trim() || "",
+              gpsLocation: data.gpsLocation?.trim().toUpperCase() || "",
+            }
+          : null;
+
       const registerResult = await registerUser({
         firstName: data.firstName,
         lastName: data.lastName,
@@ -85,6 +132,12 @@ export function RegisterPage() {
         password: data.password,
         institutionID: data.institutionID,
         institutionName: institutionName,
+        hallName:
+          data.residenceType === "hall"
+            ? data.hallName?.trim() || undefined
+            : undefined,
+        primaryAddressName: pendingAddress?.name,
+        gpsLocation: pendingAddress?.gpsLocation,
       });
 
       if (registerResult.verificationRequired && registerResult.userId) {
@@ -95,6 +148,7 @@ export function RegisterPage() {
             email: registerResult.email || data.email,
             phoneNumber: registerResult.phoneNumber || data.phoneNumber,
             redirect,
+            pendingAddress,
           },
         });
         return;
@@ -151,6 +205,72 @@ export function RegisterPage() {
           labelPlacement="outside"
           inputProps={register("phoneNumber")}
         />
+
+        <Controller
+          name="residenceType"
+          control={control}
+          render={({ field }) => (
+            <SearchableSelectField
+              label="Residence Type"
+              placeholder="Select your residence type"
+              labelPlacement="outside"
+              value={field.value}
+              onValueChange={field.onChange}
+              options={[
+                {
+                  value: "hall",
+                  label: "Campus hall / residence",
+                  description: "Use your hall name",
+                },
+                {
+                  value: "offCampus",
+                  label: "Off-campus primary address",
+                  description: "Set a saved delivery address",
+                },
+              ]}
+              error={errors.residenceType?.message}
+              selectProps={{
+                startContent:
+                  field.value === "hall" ? (
+                    <Building className="h-4 w-4" />
+                  ) : (
+                    <Home className="h-4 w-4" />
+                  ),
+              }}
+            />
+          )}
+        />
+
+        {residenceType === "hall" ? (
+          <CustomInputTextField
+            label="Hall / Residence (optional)"
+            placeholder="e.g., Legon Hall"
+            startContent={<Building className="h-4 w-4" />}
+            error={errors.hallName?.message}
+            labelPlacement="outside"
+            inputProps={register("hallName")}
+          />
+        ) : (
+          <>
+            <CustomInputTextField
+              label="Primary Address"
+              placeholder="e.g., Ayeduase Hostel"
+              startContent={<Home className="h-4 w-4" />}
+              error={errors.primaryAddressName?.message}
+              labelPlacement="outside"
+              inputProps={register("primaryAddressName")}
+            />
+
+            <CustomInputTextField
+              label="Ghana Post GPS"
+              placeholder="e.g., GA-123-4567"
+              startContent={<MapPin className="h-4 w-4" />}
+              error={errors.gpsLocation?.message}
+              labelPlacement="outside"
+              inputProps={register("gpsLocation")}
+            />
+          </>
+        )}
 
         <Controller
           name="institutionID"
