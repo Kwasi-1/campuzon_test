@@ -21,6 +21,7 @@ import { AuthPage } from "@/components/auth-page";
 import {
   CustomInputTextField,
   SearchableSelectField,
+  CustomSelectField,
 } from "@/components/shared/text-field";
 import { useAuthStore } from "@/stores";
 import { mockInstitutions } from "@/lib/mockData";
@@ -210,26 +211,14 @@ export function RegisterPage() {
           name="residenceType"
           control={control}
           render={({ field }) => (
-            <SearchableSelectField
+            <CustomSelectField
               label="Residence Type"
               placeholder="Select your residence type"
               labelPlacement="outside"
               value={field.value}
-              onValueChange={field.onChange}
-              options={[
-                {
-                  value: "hall",
-                  label: "Campus hall / residence",
-                  description: "Use your hall name",
-                },
-                {
-                  value: "offCampus",
-                  label: "Off-campus primary address",
-                  description: "Set a saved delivery address",
-                },
-              ]}
-              error={errors.residenceType?.message}
-              selectProps={{
+              className="mt-2"
+              inputProps={{
+                ...field,
                 startContent:
                   field.value === "hall" ? (
                     <Building className="h-4 w-4" />
@@ -237,6 +226,17 @@ export function RegisterPage() {
                     <Home className="h-4 w-4" />
                   ),
               }}
+              options={[
+                {
+                  value: "hall",
+                  label: "Campus hall / residence",
+                },
+                {
+                  value: "offCampus",
+                  label: "Off-campus primary address",
+                },
+              ]}
+              error={errors.residenceType?.message}
             />
           )}
         />
