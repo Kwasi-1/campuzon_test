@@ -274,7 +274,7 @@ export function ProductCard({
                 {!isOutOfStock && (
                   <Button
                     onClick={handleAddToCart}
-                    className="h-10 flex-1 roundedsm text-[13px]"
+                    className="h-9 md:h-10 flex-1 roundedsm text-[13px]"
                   >
                     Add to Cart
                   </Button>
@@ -282,7 +282,7 @@ export function ProductCard({
                 <Button
                   onClick={handleRemoveFromWishlist}
                   variant="outline"
-                  className={cn("h-10 rounded- px-2.5 hover:text-primary hover:bg-primary/5", isOutOfStock ? "flex-1 text-[13px]" : "w-10")}
+                  className={cn("h-9 md:h-10 rounded- px-2.5 hover:text-primary hover:bg-primary/5", isOutOfStock ? "flex-1 text-[13px]" : "w-9 md:w-10")}
                 >
                   <Trash2 className="h-4 w-4" />
                   {isOutOfStock && <span className="ml-2">Delete</span>}
